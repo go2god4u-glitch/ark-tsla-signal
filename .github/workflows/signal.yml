@@ -7,6 +7,11 @@ on:
     # 부하가 크면 건너뛰기도 한다. 그래서 여유를 두고, 실제 실행 시각을 로그와 이슈에 남긴다.
     - cron: "0 6 * * 6"
   workflow_dispatch:        # 수동 실행
+    inputs:
+      force_issue:
+        description: "신호와 무관하게 이슈 생성 (알림 경로 점검용)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write           # 갱신된 데이터 커밋
@@ -46,12 +51,12 @@ jobs:
           fi
 
       - name: 신호 발생 시 이슈 생성
-        if: steps.check.outputs.signal == 'true'
+        if: steps.check.outputs.signal == 'true' || inputs.force_issue
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh issue create \
-            --title "🔔 ARK 매수신호 ON — ${{ steps.check.outputs.week }}" \
+            --title "${{ inputs.force_issue && '[점검] ' || '🔔 ' }}ARK 매수신호 ON — ${{ steps.check.outputs.week }}" \
             --label "signal" \
             --body "$(cat <<'EOF'
           **주 ${{ steps.check.outputs.week }} 기준 신호가 발생했다.**
