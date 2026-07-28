@@ -1,0 +1,507 @@
+<title>아크가 사면 매수신호인가 — 테슬라 검증</title>
+
+<style>
+  :root {
+    color-scheme: light;
+    --bg:#f1f3f6; --panel:#ffffff; --ink:#0f1419; --ink-2:#545e69; --ink-3:#8a939d;
+    --line:#e0e4ea; --line-2:#eef0f4; --chip-bg:#e7eaf0;
+    --buy:#0f7a52; --sell:#c0392f; --price:#2b3138; --hold:#4a3aa7; --shade:rgba(15,122,82,.10);
+    --arkk:#2a78d6; --arkq:#eb6834;
+    --shadow:0 1px 2px rgba(15,20,25,.05), 0 8px 24px -12px rgba(15,20,25,.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --bg:#0d1116; --panel:#151b22; --ink:#e8edf3; --ink-2:#98a3af; --ink-3:#6d7883;
+      --line:#242c35; --line-2:#1c232b; --chip-bg:#212a33;
+      --buy:#3fbc8a; --sell:#e8695c; --price:#c6ced7; --hold:#9085e9; --shade:rgba(63,188,138,.14);
+      --arkk:#3987e5; --arkq:#e0693a;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg:#0d1116; --panel:#151b22; --ink:#e8edf3; --ink-2:#98a3af; --ink-3:#6d7883;
+    --line:#242c35; --line-2:#1c232b; --chip-bg:#212a33;
+    --buy:#3fbc8a; --sell:#e8695c; --price:#c6ced7; --hold:#9085e9; --shade:rgba(63,188,138,.14);
+    --arkk:#3987e5; --arkq:#e0693a;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+  :root {
+    --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,"Roboto Mono","Apple SD Gothic Neo",monospace;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans);
+         -webkit-font-smoothing:antialiased; font-size:15px; line-height:1.55; }
+  .wrap { max-width:1180px; margin:0 auto; padding:40px 24px 80px;
+          display:flex; flex-direction:column; gap:30px; }
+
+  .eyebrow { font-family:var(--mono); font-size:11px; letter-spacing:.14em;
+             text-transform:uppercase; color:var(--ink-3); margin:0 0 10px; }
+  h1 { margin:0; font-size:clamp(28px,4.4vw,40px); line-height:1.12;
+       letter-spacing:-.022em; font-weight:750; text-wrap:balance; }
+  .verdict { margin:16px 0 0; max-width:70ch; font-size:16.5px; color:var(--ink-2); }
+  .verdict b { color:var(--ink); font-weight:700; }
+
+  h2 { font-size:19px; letter-spacing:-.015em; margin:0 0 4px; font-weight:700; }
+  .sub { color:var(--ink-2); font-size:14px; margin:0 0 16px; max-width:74ch; }
+
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
+           background:var(--line); border:1px solid var(--line); border-radius:10px;
+           overflow:hidden; box-shadow:var(--shadow); }
+  .stat { background:var(--panel); padding:18px 20px 20px; }
+  .stat-label { font-family:var(--mono); font-size:10.5px; letter-spacing:.11em;
+                text-transform:uppercase; color:var(--ink-3); }
+  .stat-value { font-family:var(--mono); font-variant-numeric:tabular-nums;
+                font-size:28px; font-weight:600; letter-spacing:-.02em; margin-top:8px; line-height:1.1; }
+  .stat-sub { margin-top:7px; font-size:12.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; }
+
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px;
+          box-shadow:var(--shadow); overflow:hidden; }
+  .card-head { display:flex; align-items:baseline; justify-content:space-between; gap:16px;
+               padding:14px 20px; border-bottom:1px solid var(--line); }
+  .card-title { font-family:var(--mono); font-size:11px; letter-spacing:.12em;
+                text-transform:uppercase; color:var(--ink-3); }
+  #cursorDate { font-family:var(--mono); font-variant-numeric:tabular-nums;
+                font-size:13px; font-weight:600; color:var(--ink); }
+
+  .panel { position:relative; border-top:1px solid var(--line-2); }
+  .panel:first-of-type { border-top:none; }
+  .panel-head { position:absolute; top:12px; left:20px; right:20px; display:flex;
+                align-items:baseline; justify-content:space-between; gap:12px;
+                pointer-events:none; z-index:2; }
+  .panel-name { font-size:13px; font-weight:650; letter-spacing:-.008em; }
+  .panel-name .unit { font-weight:400; color:var(--ink-3); font-size:11.5px; }
+  .readout { font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:13px;
+             font-weight:650; display:flex; gap:14px; white-space:nowrap; }
+  svg { display:block; width:100%; touch-action:pan-y; }
+  .grid-line { stroke:var(--line-2); stroke-width:1; }
+  .axis-text { font-family:var(--mono); font-size:10px; fill:var(--ink-3);
+               font-variant-numeric:tabular-nums; }
+  .cross { stroke:var(--ink-2); stroke-width:1; opacity:.55; }
+  .dot { stroke:var(--panel); stroke-width:2; }
+  .zero-line { stroke:var(--ink-3); stroke-width:1; opacity:.5; }
+
+  table { border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums; }
+  th, td { font-family:var(--mono); font-size:12px; text-align:right; padding:9px 14px;
+           white-space:nowrap; border-bottom:1px solid var(--line-2); }
+  th { background:var(--panel); color:var(--ink-3); font-weight:500; font-size:10.5px;
+       letter-spacing:.08em; text-transform:uppercase; border-bottom:1px solid var(--line); }
+  td:first-child, th:first-child { text-align:left; }
+  .table-scroll { overflow-x:auto; }
+  tr.group-start td { border-top:1px solid var(--line); }
+  .pos { color:var(--buy); font-weight:650; }
+  .neg { color:var(--sell); font-weight:650; }
+  .sig { font-family:var(--mono); font-size:10px; padding:2px 6px; border-radius:4px;
+         background:var(--chip-bg); color:var(--ink-2); }
+  .sig.yes { background:color-mix(in srgb, var(--buy) 18%, transparent); color:var(--buy); }
+
+  .notes { border-top:1px solid var(--line); padding-top:22px; color:var(--ink-2); font-size:13.5px; }
+  .notes h2 { font-family:var(--mono); font-size:11px; letter-spacing:.12em;
+              text-transform:uppercase; color:var(--ink-3); margin:0 0 12px; font-weight:500; }
+  .notes ul { margin:0; padding-left:18px; display:flex; flex-direction:column; gap:8px; }
+  .notes b { color:var(--ink); font-weight:650; }
+  code { font-family:var(--mono); font-size:.92em; }
+
+  .warn { border-left:3px solid var(--sell); padding:2px 0 2px 14px; }
+
+  @media (max-width:820px) {
+    .stats { grid-template-columns:1fr; }
+    .wrap { padding:28px 16px 60px; gap:24px; }
+    .panel-head { left:14px; right:14px; }
+    .readout { font-size:11.5px; gap:10px; }
+  }
+  @media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
+</style>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">ARK × TSLA · 매수신호 검증 · 2021–2026</p>
+    <h1>아크가 사면 매수신호인가</h1>
+    <p class="verdict" id="verdict"></p>
+  </header>
+
+  <section class="stats" id="stats"></section>
+
+  <section>
+    <h2>1. 신호 규칙과 현재 상태</h2>
+    <p class="sub">ARKK+ARKQ 합산 보유 주식 수의 주간 증가분이 <b>과거 데이터로만 계산한 상위 10% 문턱</b>을
+      넘으면 신호. 문턱은 매주 그 시점까지의 자료로 다시 계산한다(확장창, 최소 52주).
+      아크 공시는 장 마감 후에 나오므로 금요일 판정 → <b>월요일 종가 진입</b>이다.</p>
+    <div class="card" id="nowCard"></div>
+  </section>
+
+  <section>
+    <h2>2. 신호가 뜬 자리</h2>
+    <p class="sub">세로선이 신호 사건의 시작이다. 주별 순매수 패널의 점선은 그 주의 문턱,
+      낙폭 패널의 점선은 -40% 선이다.</p>
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">커서를 움직이면 값이 바뀝니다 (← → 키 가능)</span>
+        <span id="cursorDate">—</span>
+      </div>
+      <div id="stack" tabindex="0" role="img"
+           aria-label="테슬라 주가, 전고점 대비 낙폭, 아크의 주별 순매수를 나타낸 3단 시계열 차트. 신호 사건은 세로선으로 표시되며, 아래 표에 같은 데이터가 수치로 있습니다."></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. 핵심 대조 — 아크를 봐야 하는가</h2>
+    <p class="sub"><b>사건 단위로 센다.</b> 같은 국면에 붙어 있는 진입일들을 하나로 묶고
+      (<span id="gapTxt"></span>거래일 이상 떨어져야 별개 사건), 각 사건의 첫날에 한 번만 산 것으로 계산한다.
+      날짜 단위로 세면 같은 국면의 날들이 전부 독립 관측처럼 잡혀 p 값이 실제보다 훨씬 좋게 나온다.</p>
+    <div class="card table-scroll">
+      <table>
+        <thead><tr>
+          <th scope="col">신호</th><th scope="col">독립 사건</th><th scope="col">보유</th>
+          <th scope="col">n</th><th scope="col">평균 수익</th><th scope="col">무작위 진입</th>
+          <th scope="col">초과</th><th scope="col">승률</th><th scope="col">p</th>
+        </tr></thead>
+        <tbody id="cmpBody"></tbody>
+      </table>
+    </div>
+    <p class="sub" style="margin-top:14px" id="cmpNote"></p>
+  </section>
+
+  <section>
+    <h2>4. 아크 신호 사건별 성적</h2>
+    <p class="sub">각 사건의 첫 진입일 기준. 아직 기간이 안 지난 건 빈칸이다.</p>
+    <div class="card table-scroll">
+      <table>
+        <thead><tr>
+          <th scope="col">진입일</th><th scope="col">진입가</th><th scope="col">그때 낙폭</th>
+          <th scope="col">신호 지속</th><th scope="col">+3개월</th>
+          <th scope="col">+6개월</th><th scope="col">+12개월</th>
+        </tr></thead>
+        <tbody id="histBody"></tbody>
+      </table>
+    </div>
+    <p class="sub" style="margin-top:14px" id="histNote"></p>
+  </section>
+
+  <section>
+    <h2>5. 낙폭 기준을 바꿔도 마찬가지인가</h2>
+    <p class="sub">"전고점"을 6개월/1년/2년 고점, 사상 최고가 중 무엇으로 잡든 방향은 같다.
+      문제는 방향이 아니라 <b>사건 수</b>다. 깊은 낙폭일수록 초과수익이 커 보이지만
+      그건 사건이 1~3개로 줄어들기 때문이다.</p>
+    <div class="card table-scroll">
+      <table>
+        <thead><tr>
+          <th scope="col">기준 고점</th><th scope="col">-30%</th><th scope="col">-40%</th>
+          <th scope="col">-50%</th><th scope="col">-60%</th>
+        </tr></thead>
+        <tbody id="gridBody"></tbody>
+      </table>
+    </div>
+    <p class="sub" style="margin-top:14px">각 칸은 <b>6개월 초과수익 / 승률 (독립 사건 수)</b>.
+      사건이 1~2개인 칸의 숫자는 통계가 아니라 일화다.</p>
+  </section>
+
+  <section>
+    <h2>6. "이미 다 오른 뒤 아닌가"</h2>
+    <p class="sub">신호 직전에 주가가 이미 올랐는지, 그리고 늦게 사면 소용없는지 확인했다.</p>
+    <div class="card table-scroll" style="margin-bottom:16px">
+      <table>
+        <thead><tr><th scope="col">신호 직전 주가 변화</th><th scope="col">신호 시점</th>
+          <th scope="col">아무 때나</th><th scope="col">해석</th></tr></thead>
+        <tbody id="preBody"></tbody>
+      </table>
+    </div>
+    <div class="card table-scroll">
+      <table>
+        <thead><tr><th scope="col">진입을 늦추면 (6개월 기준)</th><th scope="col">n</th>
+          <th scope="col">초과</th><th scope="col">승률</th><th scope="col">p</th></tr></thead>
+        <tbody id="lagBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="notes">
+    <h2>이 결과를 믿기 전에 읽을 것</h2>
+    <ul>
+      <li class="warn"><b>완료된 사건이 7개다.</b> 종목 1개, 5년. p=0.011 이지만 사건 7개로
+        확정할 수 있는 것은 없다. 그중 2023년 1월 한 건이 +127% 로 평균을 크게 끌어올린다
+        — <span id="exNote"></span></li>
+      <li class="warn"><b>최근 성적이 나쁘다.</b> 2025-10 진입은 6개월 -24%,
+        직전 신호(2026-07-13, $395)는 현재 손실 중이다. 효과가 약해지는 중인지
+        표본이 작아서인지 이 데이터로는 구분되지 않는다.</li>
+      <li class="warn"><b>생존한 종목을 뒤돌아본 것이다.</b> 이 기간 테슬라는 -72% 낙폭에서
+        회복했다. 회복하지 못하는 종목에 같은 규칙을 쓰면 정반대가 된다.
+        "앞으로도 통한다"의 근거가 되기 어렵다.</li>
+      <li><b>수정 이력.</b> 처음에는 문턱을 5년 전체로 계산했고(룩어헤드), 다음에는 주 단위로
+        세어 겹치는 관측을 독립으로 취급했다. 후자 때문에 한때 "낙폭만으로 충분하다"는
+        정반대 결론이 나왔다. 사건 단위로 고치자 뒤집혔다.</li>
+      <li><b>데이터 품질.</b> arkfunds.io 에 며칠짜리 왕복 왜곡이 있다(펀드 파일 전체가 스케일링됨.
+        예: 2025-08 ARKK 내재 AUM 7.3B→12.65B→7.1B). 되돌림 검출로 30행을 제거했고,
+        순매수는 주 단위로 집계했다. 각 달의 말일 하루는 소스 오류로 결측.</li>
+      <li><b>액면분할</b> 2022-08-25 3:1 은 행마다 <code>market_value ÷ shares</code>를 종가와
+        대조해 보정했다(날짜로 자르면 아크가 분할 당일에도 분할 전 수치를 보고해 하루가 어긋난다).</li>
+      <li>수수료·슬리피지·세금 미반영. 보유 데이터 arkfunds.io · 주가 Yahoo Finance.
+        <b>투자 판단의 근거로 쓰라고 만든 것이 아니다.</b></li>
+    </ul>
+  </section>
+</div>
+
+<script>
+const D = /*__DATA__*/null;
+
+/* 날짜는 전부 UTC. 로컬 자정으로 만들면 UTC+9 에서 하루씩 밀린다. */
+const BASE = new Date(D.base + "T00:00:00Z");
+const DATES = D.t.map(n => new Date(BASE.getTime() + n * 86400000));
+const N = DATES.length;
+const fmtDate = d => d.toISOString().slice(0, 10);
+const fmtK = v => v == null ? "—" : (v >= 0 ? "+" : "-") +
+  (Math.abs(v) >= 1000 ? (Math.abs(v) / 1000).toFixed(2) + "M" : Math.abs(v).toFixed(0) + "k");
+const pct = (v, n = 1) => v == null ? "—" : (v >= 0 ? "+" : "") + (v * 100).toFixed(n) + "%";
+const cls = v => v == null ? "" : v >= 0 ? "pos" : "neg";
+
+const cmp = id => D.compare.find(c => c.id === id);
+const ark6 = cmp("ark").h["126"], dd40 = cmp("dd40").h["126"], dd50 = cmp("dd50").h["126"];
+const now = D.now;
+
+document.getElementById("verdict").innerHTML =
+  `짧은 답: <b>그렇다 — 그리고 낙폭만 봐서는 안 된다.</b> 사건 단위로 세면 아크 신호는 ` +
+  `<b>${cmp("ark").eps}개 국면</b>에 흩어져 뜨고, 6개월 초과수익 <b>${pct(ark6.edge)}</b>, ` +
+  `승률 <b>${(ark6.hit * 100).toFixed(0)}%</b>(n=${ark6.n}, p=${ark6.p.toFixed(3)})다. ` +
+  `반면 아크를 무시하고 낙폭만 쓰면 -40% 기준은 <b>${pct(dd40.edge)}</b>(승률 ` +
+  `${(dd40.hit * 100).toFixed(0)}%)로 <b>무작위 진입보다 못하다</b>. ` +
+  `아크는 단순한 낙폭 대리지표가 아니라, 낙폭이 깊지 않을 때도 자리를 골라낸다.`;
+
+document.getElementById("stats").innerHTML = `
+  <div class="stat">
+    <div class="stat-label">현재 신호 상태 (${now.date} 기준)</div>
+    <div class="stat-value ${now.on ? "pos" : ""}">${now.on ? "ON" : "OFF"}</div>
+    <div class="stat-sub">직전 주 ${fmtK(now.net)}주 / 문턱 ${fmtK(now.thr)}주 ·
+      TSLA $${now.px.toFixed(0)} (사상최고 대비 ${now.ddNow.toFixed(1)}%)</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">아크 신호 · 6개월 초과 (사건 단위)</div>
+    <div class="stat-value pos">${pct(ark6.edge)}</div>
+    <div class="stat-sub">사건 ${cmp("ark").eps}개 중 ${ark6.n}개 완료 · 승률
+      ${(ark6.hit * 100).toFixed(0)}% · p=${ark6.p.toFixed(3)}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">낙폭 -40% 만 (아크 무시)</div>
+    <div class="stat-value ${cls(dd40.edge)}">${pct(dd40.edge)}</div>
+    <div class="stat-sub">사건 ${cmp("dd40").eps}개 · 승률 ${(dd40.hit * 100).toFixed(0)}% ·
+      p=${dd40.p.toFixed(3)} — 사실상 무작위</div>
+  </div>`;
+
+document.getElementById("gapTxt").textContent = D.gap;
+
+const lastEp = D.hist[D.hist.length - 1];
+document.getElementById("nowCard").innerHTML = `
+  <div class="card-head"><span class="card-title">판정</span>
+    <span class="${now.on ? "pos" : "neg"}" style="font-family:var(--mono);font-weight:650">
+      ${now.on ? "신호 ON" : "신호 OFF"}</span></div>
+  <div style="padding:18px 20px;display:grid;gap:10px;font-family:var(--mono);font-size:13px">
+    <div>기준일 <b>${now.date}</b> (금)</div>
+    <div>그 주 순매수 <b class="${cls(now.net)}">${fmtK(now.net)}주</b>
+         / 문턱 <b>${fmtK(now.thr)}주</b>
+         → 차이 <b class="${cls(now.net - now.thr)}">${fmtK(now.net - now.thr)}주</b></div>
+    <div style="color:var(--ink-2)">최근 신호 사건 시작 ${lastEp.date} $${lastEp.px.toFixed(0)}
+      → 현재 $${now.px.toFixed(0)}
+      <b class="${cls(now.px / lastEp.px - 1)}">${pct(now.px / lastEp.px - 1)}</b></div>
+    <div style="color:var(--ink-2)">사상최고 $${now.ath.toFixed(0)} (${now.athDate}) 대비
+      <b class="neg">${now.ddNow.toFixed(1)}%</b></div>
+  </div>`;
+
+const HL = { 63: "3개월", 126: "6개월", 252: "12개월" };
+document.getElementById("cmpBody").innerHTML = D.compare.map(c => {
+  const hs = Object.keys(c.h).map(Number).sort((a, b) => a - b);
+  return hs.map((h, k) => {
+    const r = c.h[String(h)];
+    const s = r.p < 0.01 ? "p<0.01" : r.p < 0.05 ? "p<0.05" : r.p < 0.10 ? "p<0.10" : "n.s.";
+    return `<tr class="${k === 0 ? "group-start" : ""}">
+      <td>${k === 0 ? c.label : ""}</td><td>${k === 0 ? c.eps + "개" : ""}</td>
+      <td>${HL[h]}</td><td>${r.n}</td><td>${pct(r.mean)}</td>
+      <td style="color:var(--ink-3)">${pct(r.base_mean)}</td>
+      <td class="${cls(r.edge)}">${pct(r.edge)}</td><td>${(r.hit * 100).toFixed(0)}%</td>
+      <td><span class="sig ${r.p < 0.05 ? "yes" : ""}">${s}</span></td></tr>`;
+  }).join("");
+}).join("");
+
+document.getElementById("cmpNote").innerHTML =
+  `낙폭 -50% 는 초과 ${pct(dd50.edge)} 로 양수지만 <b>사건이 ${cmp("dd50").eps}개뿐</b>이고 p=${dd50.p.toFixed(3)} 이다. ` +
+  `-30%·-40% 로 넓히면 사건 수는 늘지만 초과수익이 <b>음수</b>가 된다. ` +
+  `즉 낙폭만으로는 "깊으면 좋다"는 방향성조차 사건 수를 확보하는 순간 사라진다. ` +
+  `아크 신호는 사건 ${cmp("ark").eps}개를 확보하면서도 초과가 양수로 남는 유일한 쪽이다.`;
+
+document.getElementById("histBody").innerHTML = D.hist.map(h => `
+  <tr>
+    <td>${h.date}</td><td>$${h.px.toFixed(0)}</td>
+    <td class="neg">${h.dd.toFixed(0)}%</td><td>${h.weeks}주</td>
+    <td class="${cls(h.r3)}">${pct(h.r3)}</td>
+    <td class="${cls(h.r6)}">${pct(h.r6)}</td>
+    <td class="${cls(h.r12)}">${pct(h.r12)}</td>
+  </tr>`).join("");
+
+const ex = D.arkEx;
+document.getElementById("histNote").innerHTML =
+  `2023년 1월 건(+127%)을 빼면 남은 ${ex.n}개 사건 평균은 <b>${pct(ex.mean)}</b>, 승률 ` +
+  `<b>${(ex.hit * 100).toFixed(0)}%</b>다. 한 건에만 기댄 결과는 아니지만, 표본이 작다는 사실은 변하지 않는다.`;
+document.getElementById("exNote").innerHTML =
+  `그 건을 빼면 ${ex.n}개 평균 ${pct(ex.mean)}, 승률 ${(ex.hit * 100).toFixed(0)}% 로 낮아진다.`;
+
+const THS = [-30, -40, -50, -60];
+const refs = [...new Set(D.grid.map(g => g.ref))];
+document.getElementById("gridBody").innerHTML = refs.map(ref => {
+  const cells = THS.map(th => {
+    const g = D.grid.find(x => x.ref === ref && x.th === th);
+    if (!g || g.edge == null) return `<td style="color:var(--ink-3)">—</td>`;
+    const weak = g.eps <= 2;
+    return `<td><span class="${cls(g.edge)}">${pct(g.edge, 0)}</span>
+      <span style="color:var(--ink-3)"> / ${(g.hit * 100).toFixed(0)}%</span>
+      <span style="color:${weak ? "var(--sell)" : "var(--ink-3)"}"> (${g.eps})</span></td>`;
+  }).join("");
+  return `<tr><td>${ref}</td>${cells}</tr>`;
+}).join("");
+
+document.getElementById("preBody").innerHTML = D.pre.map(p => `
+  <tr><td>${p.label}</td><td class="${cls(p.sig)}">${pct(p.sig)}</td>
+    <td style="color:var(--ink-3)">${pct(p.base)}</td>
+    <td style="text-align:left;color:var(--ink-2)">${p.sig < p.base ? "빠진 뒤에 뜬다" : "오른 뒤에 뜬다"}</td>
+  </tr>`).join("");
+
+document.getElementById("lagBody").innerHTML = D.lag.map(l => `
+  <tr><td>${l.label}</td><td>${l.n}</td>
+    <td class="${cls(l.edge)}">${pct(l.edge)}</td>
+    <td>${(l.hit * 100).toFixed(0)}%</td>
+    <td><span class="sig ${l.p < 0.05 ? "yes" : ""}">${l.p.toFixed(3)}</span></td></tr>`).join("");
+
+/* ---------- chart stack ---------- */
+// 세로선은 '사건 시작일'만 찍는다. 매 신호 주를 다 찍으면 같은 국면이 여러 줄로 보인다.
+const SIGX = D.sigDates.map(s => DATES.findIndex(d => fmtDate(d) >= s)).filter(i => i >= 0);
+const PANELS = [
+  { name: "테슬라 주가", unit: "종가 USD · 분할 반영", h: 190, kind: "line",
+    color: "var(--price)", get: i => D.p[i], fmt: v => v == null ? "—" : "$" + v.toFixed(2),
+    tick: t => "$" + Math.round(t) },
+  { name: "전고점 대비 낙폭", unit: "점선 = -40%", h: 150, kind: "line",
+    color: "var(--sell)", get: i => D.dd[i], fmt: v => v == null ? "—" : v.toFixed(1) + "%",
+    tick: t => Math.round(t) + "%", mark: -40 },
+  { name: "아크 주별 순매수", unit: "점선 = 그 주의 신호 문턱", h: 165, kind: "bar",
+    fmt: fmtK, tick: t => (t / 1000).toFixed(1) + "M" },
+];
+const PAD = { l: 58, r: 78, t: 42, b: 10 }, AXIS_H = 26;
+let cursor = null, W = 900;
+const stack = document.getElementById("stack");
+
+function niceTicks(min, max, c) {
+  const raw = ((max - min) || 1) / c, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / mag, step = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * mag, out = [];
+  for (let t = Math.ceil(min / step) * step; t <= max + step * 1e-9; t += step) out.push(t);
+  return out;
+}
+const xOf = i => PAD.l + (i / (N - 1)) * (W - PAD.l - PAD.r);
+const wIdx = k => { const t = D.wt[k]; let i = 0; while (i < N - 1 && D.t[i] < t) i++; return i; };
+
+function draw() {
+  W = Math.max(340, stack.clientWidth || 900);
+  const parts = [];
+  PANELS.forEach((p, pi) => {
+    const isLast = pi === PANELS.length - 1, h = p.h + (isLast ? AXIS_H : 0);
+    const top_ = PAD.t, bot = p.h - PAD.b;
+    let min = Infinity, max = -Infinity;
+    if (p.kind === "bar") {
+      for (const v of D.wnet) if (v != null) { min = Math.min(min, v); max = Math.max(max, v); }
+      const m = Math.max(Math.abs(min), Math.abs(max)); min = -m; max = m;
+    } else {
+      for (let i = 0; i < N; i++) { const v = p.get(i); if (v == null) continue;
+        min = Math.min(min, v); max = Math.max(max, v); }
+      const pd = (max - min) * 0.14 || 1; min -= pd; max += pd;
+    }
+    const yOf = v => bot - (v - min) / ((max - min) || 1) * (bot - top_);
+    let svg = `<svg viewBox="0 0 ${W} ${h}" height="${h}" role="presentation">`;
+    for (const i of SIGX)
+      svg += `<line x1="${xOf(i)}" y1="${top_}" x2="${xOf(i)}" y2="${bot}"
+               stroke="var(--buy)" stroke-width="1" opacity=".38"/>`;
+    for (const t of niceTicks(min, max, 4)) {
+      const y = yOf(t);
+      if (y < top_ - 2 || y > bot + 2) continue;
+      svg += `<line class="grid-line" x1="${PAD.l}" y1="${y}" x2="${W - PAD.r}" y2="${y}"/>`
+           + `<text class="axis-text" x="${PAD.l - 9}" y="${y + 3.5}" text-anchor="end">${p.tick(t)}</text>`;
+    }
+    if (p.mark != null && p.mark > min && p.mark < max)
+      svg += `<line x1="${PAD.l}" y1="${yOf(p.mark)}" x2="${W - PAD.r}" y2="${yOf(p.mark)}"
+               stroke="var(--sell)" stroke-width="1" stroke-dasharray="3 3" opacity=".7"/>`;
+    if (p.kind === "bar") {
+      const bw = Math.max(1.2, (W - PAD.l - PAD.r) / D.wnet.length * 0.6);
+      svg += `<line class="zero-line" x1="${PAD.l}" y1="${yOf(0)}" x2="${W - PAD.r}" y2="${yOf(0)}"/>`;
+      const thr = D.wthr.map((v, k) => `${xOf(wIdx(k)).toFixed(1)},${yOf(v).toFixed(1)}`);
+      svg += `<polyline points="${thr.join(" ")}" fill="none" stroke="var(--ink-3)"
+               stroke-width="1" stroke-dasharray="3 3" opacity=".8"/>`;
+      D.wnet.forEach((v, k) => {
+        if (v == null) return;
+        const x = xOf(wIdx(k)), y0 = yOf(0), y1 = yOf(v);
+        svg += `<rect x="${(x - bw / 2).toFixed(1)}" y="${Math.min(y0, y1).toFixed(1)}"
+                 width="${bw.toFixed(1)}" height="${Math.max(1, Math.abs(y1 - y0)).toFixed(1)}"
+                 fill="${v >= 0 ? "var(--buy)" : "var(--sell)"}" opacity=".85"/>`;
+      });
+    } else {
+      const segs = []; let cur = [];
+      for (let i = 0; i < N; i++) { const v = p.get(i);
+        if (v == null) { if (cur.length) segs.push(cur); cur = []; continue; }
+        cur.push(`${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`); }
+      if (cur.length) segs.push(cur);
+      for (const s of segs)
+        svg += `<polyline points="${s.join(" ")}" fill="none" stroke="${p.color}"
+                 stroke-width="1.8" stroke-linejoin="round"/>`;
+    }
+    if (isLast) for (let i = 1; i < N; i++)
+      if (DATES[i].getUTCFullYear() !== DATES[i - 1].getUTCFullYear())
+        svg += `<text class="axis-text" x="${xOf(i)}" y="${p.h + 14}" text-anchor="middle">${DATES[i].getUTCFullYear()}</text>`;
+    svg += `<g class="cursor-layer"></g></svg>`;
+    parts.push(`<div class="panel" data-min="${min}" data-max="${max}">
+      <div class="panel-head"><span class="panel-name">${p.name}
+        <span class="unit">${p.unit}</span></span>
+        <span class="readout" data-r="${pi}"></span></div>${svg}</div>`);
+  });
+  stack.innerHTML = parts.join("");
+  renderCursor();
+}
+
+function renderCursor() {
+  const i = cursor == null ? N - 1 : cursor;
+  document.getElementById("cursorDate").textContent =
+    fmtDate(DATES[i]) + (cursor == null ? "  (최신)" : "");
+  stack.querySelectorAll(".panel").forEach((el, pi) => {
+    const p = PANELS[pi], min = +el.dataset.min, max = +el.dataset.max;
+    const bot = p.h - PAD.b, top_ = PAD.t;
+    const yOf = v => bot - (v - min) / ((max - min) || 1) * (bot - top_);
+    const x = xOf(i);
+    let g = `<line class="cross" x1="${x}" y1="${top_}" x2="${x}" y2="${bot}"/>`, txt;
+    if (p.kind === "bar") {
+      let k = 0; while (k < D.wt.length - 1 && D.wt[k + 1] <= D.t[i]) k++;
+      const v = D.wnet[k];
+      if (v != null) g += `<circle class="dot" cx="${x}" cy="${yOf(v)}" r="3.6"
+                            fill="${v >= 0 ? "var(--buy)" : "var(--sell)"}"/>`;
+      txt = `<span class="${cls(v)}">${p.fmt(v)}</span>`;
+    } else {
+      const v = p.get(i);
+      if (v != null) g += `<circle class="dot" cx="${x}" cy="${yOf(v)}" r="3.6" fill="${p.color}"/>`;
+      txt = `<span style="color:${p.color}">${p.fmt(v)}</span>`;
+    }
+    el.querySelector(".cursor-layer").innerHTML = g;
+    el.querySelector("[data-r]").innerHTML = txt;
+  });
+}
+
+stack.addEventListener("pointermove", e => {
+  const r = stack.getBoundingClientRect();
+  const f = Math.min(1, Math.max(0, (e.clientX - r.left - PAD.l) / (W - PAD.l - PAD.r)));
+  cursor = Math.round(f * (N - 1)); renderCursor();
+});
+stack.addEventListener("pointerleave", () => { cursor = null; renderCursor(); });
+stack.addEventListener("keydown", e => {
+  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+  e.preventDefault();
+  const c = cursor == null ? N - 1 : cursor;
+  cursor = Math.min(N - 1, Math.max(0, c + (e.key === "ArrowRight" ? 1 : -1)));
+  renderCursor();
+});
+
+let raf = null;
+addEventListener("resize", () => { if (raf) cancelAnimationFrame(raf); raf = requestAnimationFrame(draw); });
+draw();
+</script>

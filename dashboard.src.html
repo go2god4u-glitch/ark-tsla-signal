@@ -1,0 +1,781 @@
+<title>ARK × 테슬라 보유 추이</title>
+
+<style>
+  :root {
+    color-scheme: light;
+    --bg:        #f1f3f6;
+    --panel:     #ffffff;
+    --ink:       #0f1419;
+    --ink-2:     #545e69;
+    --ink-3:     #8a939d;
+    --line:      #e0e4ea;
+    --line-2:    #eef0f4;
+    --arkk:      #2a78d6;
+    --arkq:      #eb6834;
+    --total:     #4a3aa7;
+    --price:     #2b3138;
+    --total-fill: rgba(74, 58, 167, .09);
+    --chip-bg:   #e7eaf0;
+    --pos:       #0f7a52;
+    --neg:       #c0392f;
+    --shadow:    0 1px 2px rgba(15, 20, 25, .05), 0 8px 24px -12px rgba(15, 20, 25, .18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --bg:        #0d1116;
+      --panel:     #151b22;
+      --ink:       #e8edf3;
+      --ink-2:     #98a3af;
+      --ink-3:     #6d7883;
+      --line:      #242c35;
+      --line-2:    #1c232b;
+      --arkk:      #3987e5;
+      --arkq:      #e0693a;
+      --total:     #9085e9;
+      --price:     #c6ced7;
+      --total-fill: rgba(144, 133, 233, .12);
+      --chip-bg:   #212a33;
+      --pos:       #3fbc8a;
+      --neg:       #e8695c;
+      --shadow:    0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .6);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg:        #0d1116;
+    --panel:     #151b22;
+    --ink:       #e8edf3;
+    --ink-2:     #98a3af;
+    --ink-3:     #6d7883;
+    --line:      #242c35;
+    --line-2:    #1c232b;
+    --arkk:      #3987e5;
+    --arkq:      #e0693a;
+    --total:     #9085e9;
+    --price:     #c6ced7;
+    --total-fill: rgba(144, 133, 233, .12);
+    --chip-bg:   #212a33;
+    --pos:       #3fbc8a;
+    --neg:       #e8695c;
+    --shadow:    0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .6);
+  }
+
+  /* 시스템 서체만 쓴다. Artifact 의 CSP 가 폰트 CDN 을 막기 때문에
+     웹폰트를 링크하면 조용히 폴백된다. 한글은 Apple SD Gothic Neo 로 받는다. */
+  :root {
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo",
+            "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, "Roboto Mono",
+            "Apple SD Gothic Neo", monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 40px 24px 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  /* ---------- masthead ---------- */
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 10px;
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(28px, 4.4vw, 40px);
+    line-height: 1.12;
+    letter-spacing: -.022em;
+    font-weight: 750;
+    text-wrap: balance;
+  }
+  .lede {
+    margin: 12px 0 0;
+    max-width: 62ch;
+    color: var(--ink-2);
+    font-size: 15.5px;
+  }
+
+  /* ---------- stat rail ---------- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .stat { background: var(--panel); padding: 18px 20px 20px; }
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .stat-value {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 27px;
+    font-weight: 600;
+    letter-spacing: -.02em;
+    margin-top: 8px;
+    line-height: 1.1;
+  }
+  .stat-sub {
+    margin-top: 7px;
+    font-size: 12.5px;
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .delta { font-family: var(--mono); font-weight: 600; }
+  .delta.pos { color: var(--pos); }
+  .delta.neg { color: var(--neg); }
+  .swatch {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    margin-right: 5px;
+    vertical-align: baseline;
+  }
+
+  /* ---------- controls ---------- */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .controls .spacer { flex: 1 1 auto; }
+  .ctl-group { display: flex; align-items: center; gap: 8px; }
+  .ctl-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .divider {
+    width: 1px;
+    align-self: stretch;
+    background: var(--line);
+    margin: 2px 6px;
+  }
+  button {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--chip-bg);
+    border: 1px solid transparent;
+    border-radius: 7px;
+    padding: 7px 13px;
+    cursor: pointer;
+    transition: color .12s, background .12s, border-color .12s;
+  }
+  button:hover { color: var(--ink); }
+  button[aria-pressed="true"] {
+    background: var(--panel);
+    border-color: var(--line);
+    color: var(--ink);
+    box-shadow: var(--shadow);
+  }
+  button:focus-visible { outline: 2px solid var(--arkk); outline-offset: 2px; }
+
+  /* ---------- chart card ---------- */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .card-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .card-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  #cursorDate {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* 세 패널은 서로 다른 그래프가 아니라 하나의 계기판이다.
+     그래서 패널마다 축을 반복하지 않고 헤어라인으로만 나눈다. */
+  .panel { position: relative; border-top: 1px solid var(--line-2); }
+  .panel:first-of-type { border-top: none; }
+  .panel-head {
+    position: absolute;
+    top: 12px; left: 20px; right: 20px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .panel-name { font-size: 13px; font-weight: 650; letter-spacing: -.008em; }
+  .panel-name .unit { font-weight: 400; color: var(--ink-3); font-size: 11.5px; }
+  .readout {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    font-weight: 650;
+    display: flex;
+    gap: 14px;
+    white-space: nowrap;
+  }
+  svg { display: block; width: 100%; touch-action: pan-y; }
+  .grid-line { stroke: var(--line-2); stroke-width: 1; }
+  .axis-text {
+    font-family: var(--mono);
+    font-size: 10px;
+    fill: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .split-line { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 2 4; opacity: .65; }
+  .split-label { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-3); letter-spacing: .05em; }
+  .cross { stroke: var(--ink-2); stroke-width: 1; opacity: .55; }
+  .dot { stroke: var(--panel); stroke-width: 2; }
+  .hidden { display: none; }
+
+  /* ---------- table ---------- */
+  .table-scroll { overflow-x: auto; max-height: 460px; overflow-y: auto; }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  th, td {
+    font-family: var(--mono);
+    font-size: 12px;
+    text-align: right;
+    padding: 8px 14px;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--line-2);
+  }
+  th {
+    position: sticky; top: 0;
+    background: var(--panel);
+    color: var(--ink-3);
+    font-weight: 500;
+    font-size: 10.5px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--line);
+  }
+  td:first-child, th:first-child { text-align: left; }
+
+  /* ---------- notes ---------- */
+  .notes {
+    border-top: 1px solid var(--line);
+    padding-top: 22px;
+    color: var(--ink-2);
+    font-size: 13.5px;
+  }
+  .notes h2 {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 12px;
+    font-weight: 500;
+  }
+  .notes ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; }
+  .notes b { color: var(--ink); font-weight: 650; }
+
+  @media (max-width: 780px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .wrap { padding: 28px 16px 56px; gap: 22px; }
+    .readout { font-size: 11.5px; gap: 10px; }
+    .panel-head { left: 14px; right: 14px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">ARK Invest × TSLA · 2021 – 2026</p>
+    <h1>ARK 는 테슬라를 언제 사고 언제 팔았나</h1>
+    <p class="lede">
+      ARKK 와 ARKQ 가 보유한 테슬라 주식 수를 주가와 나란히 놓은 것이다.
+      비중(%)은 주가가 오르기만 해도 올라가므로, 실제 매매는 <b>주식 수</b>로 봐야 한다.
+      2022년 3:1 액면분할은 보정했다.
+    </p>
+  </header>
+
+  <section class="stats" id="stats"></section>
+
+  <div class="controls">
+    <button type="button" data-range="180" aria-pressed="false">6개월</button>
+    <button type="button" data-range="365" aria-pressed="false">1년</button>
+    <button type="button" data-range="1095" aria-pressed="false">3년</button>
+    <button type="button" data-range="0" aria-pressed="true">전체 5년</button>
+    <span class="divider"></span>
+    <span class="ctl-group">
+      <span class="ctl-label" id="scaleLabel">합산 보유 축</span>
+      <button type="button" data-scale="zero" aria-pressed="true" aria-describedby="scaleLabel">0 기준</button>
+      <button type="button" data-scale="auto" aria-pressed="false" aria-describedby="scaleLabel">자동</button>
+      <button type="button" data-scale="log" aria-pressed="false" aria-describedby="scaleLabel">로그</button>
+    </span>
+    <span class="spacer"></span>
+    <button type="button" id="tableToggle" aria-pressed="false" aria-controls="tableCard">표로 보기</button>
+  </div>
+
+  <section class="card">
+    <div class="card-head">
+      <span class="card-title">차트 위에서 커서를 움직이면 값이 바뀝니다 (← → 키 가능)</span>
+      <span id="cursorDate">—</span>
+    </div>
+    <div id="stack" tabindex="0" role="img"
+         aria-label="ARKK와 ARKQ의 테슬라 보유 주식 수, 테슬라 주가, 펀드별 테슬라 비중을 나타낸 3단 시계열 차트. 아래 표로 보기 버튼에서 같은 데이터를 표로 확인할 수 있습니다."></div>
+  </section>
+
+  <section class="card hidden" id="tableCard">
+    <div class="card-head">
+      <span class="card-title">월별 (각 달의 마지막 관측일)</span>
+      <span id="tableCount"></span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">날짜</th>
+            <th scope="col">합산 보유</th>
+            <th scope="col">ARKK 주식수</th>
+            <th scope="col">ARKQ 주식수</th>
+            <th scope="col">ARKK 비중</th>
+            <th scope="col">ARKQ 비중</th>
+            <th scope="col">TSLA 종가</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="notes">
+    <h2>데이터 처리</h2>
+    <ul>
+      <li><b>액면분할</b> — 2022-08-25 3:1. 날짜로 자르지 않고, 행마다
+        <code>market_value ÷ shares</code>(내재 주가)를 종가와 대조해 판정했다.
+        ARK 가 분할 당일에도 분할 전 주식 수를 보고했기 때문에 날짜 기준으로 자르면 그 하루가 1/3 로 꺼진다.</li>
+      <li><b>중복 제거</b> — 수집 시점이 다른 두 파일 묶음이 19개월 겹친다. 그대로 합치면
+        앞부분 보유수가 정확히 2배가 되고, 그 모양이 &ldquo;2023년 대량 매도&rdquo;처럼 보인다.
+        (날짜, 펀드) 키로 한 행만 남겼다.</li>
+      <li><b>이상치 12행 제거</b> — 비중은 10% 그대로인데 주식 수만 하루 튀는 행.
+        펀드 AUM 이 하루에 60% 늘었다는 뜻이라 소스 오류다. 보간하지 않고 버렸다.</li>
+      <li><b>알려진 결측</b> — 각 달의 말일 하루(데이터 소스가 월말일에만 500 을 반환),
+        그리고 한쪽 펀드만 있는 13일. 총 1,218 거래일이 남았다.</li>
+      <li><b>ARKW 제외</b> — 응답의 <code>totals</code> 는 ARKW·ARKX 까지 더한 값이라 쓰지 않았다.
+        ARKK 와 ARKQ 만 골라 합산했다.</li>
+      <li>보유 데이터 arkfunds.io · 주가 Yahoo Finance · 축이 두 개인 그래프는 눈금 설정에 따라
+        두 선의 교차점이 임의로 바뀌므로, x축을 공유하는 3단으로 나눴다.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+
+/* 날짜는 전부 UTC 로 다룬다. 로컬 자정으로 만들면 UTC+9(한국) 같은 지역에서
+   toISOString() 이 하루 앞 날짜를 돌려줘 시계열 전체가 하루씩 밀린다. */
+const BASE = new Date(DATA.base + "T00:00:00Z");
+const N = DATA.t.length;
+const DATES = DATA.t.map(d => new Date(BASE.getTime() + d * 86400000));
+const SPLIT = new Date("2022-08-25T00:00:00Z");
+
+const fmtDate = d => d.toISOString().slice(0, 10);
+const fmtM = v => (v / 1000).toFixed(2) + "M";
+const fmtPct = v => v == null ? "—" : v.toFixed(1) + "%";
+const fmtUsd = v => v == null ? "—" : "$" + v.toFixed(2);
+const fmtInt = v => Math.round(v * 1000).toLocaleString("en-US");
+
+const combined = DATA.k.map((v, i) => v + DATA.q[i]);
+
+/* 로그 축 눈금도 1/2/3/5/7×10^n 으로 고정한다. */
+function logTicks(min, max) {
+  const out = [];
+  for (let e = Math.floor(Math.log10(min)); e <= Math.ceil(Math.log10(max)); e++) {
+    for (const m of [1, 2, 3, 5, 7]) {
+      const v = m * Math.pow(10, e);
+      if (v >= min && v <= max) out.push(v);
+    }
+  }
+  return out;
+}
+
+/* 선형이든 로그든 값 -> 화면 y 를 만드는 곳을 한 군데로 모은다.
+   draw() 와 renderCursor() 가 서로 다른 매핑을 쓰면 점이 선에서 떨어진다. */
+function makeScale(min, max, log, top, bot) {
+  if (log) {
+    const a = Math.log10(min), b = Math.log10(max);
+    return v => bot - (Math.log10(v) - a) / ((b - a) || 1) * (bot - top);
+  }
+  return v => bot - (v - min) / ((max - min) || 1) * (bot - top);
+}
+
+/* 축 눈금은 1/2/5×10^n 만 쓴다. 3.7 같은 간격이 나오면 읽는 사람이 암산을 못 한다. */
+function niceTicks(min, max, count) {
+  const span = (max - min) || 1;
+  const raw = span / count;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const norm = raw / mag;
+  const step = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10) * mag;
+  const ticks = [];
+  for (let t = Math.ceil(min / step) * step; t <= max + step * 1e-9; t += step) ticks.push(t);
+  return ticks;
+}
+
+const PANELS = [
+  {
+    name: "합산 보유 주식 수", unit: "ARKK + ARKQ · 분할 보정", h: 210, scaleId: "shares",
+    series: [{ key: "combined", get: i => combined[i], color: "var(--total)",
+               fill: "var(--total-fill)", label: "", fmt: fmtM }]
+  },
+  {
+    name: "테슬라 주가", unit: "종가 USD · 분할 반영", h: 180, zero: false,
+    series: [{ key: "p", get: i => DATA.p[i], color: "var(--price)",
+               fill: null, label: "", fmt: fmtUsd }]
+  },
+  {
+    name: "펀드 내 테슬라 비중", unit: "%", h: 180, zero: false,
+    series: [
+      { key: "kw", get: i => DATA.kw[i], color: "var(--arkk)", fill: null, label: "ARKK", fmt: fmtPct },
+      { key: "qw", get: i => DATA.qw[i], color: "var(--arkq)", fill: null, label: "ARKQ", fmt: fmtPct }
+    ]
+  }
+];
+
+const PAD = { l: 56, r: 76, t: 44, b: 10 };
+const AXIS_H = 26;
+
+let rangeDays = 0;
+let sharesScale = "zero";   // zero | auto | log
+let lo = 0, hi = N - 1;
+let cursor = null;
+let W = 900;
+
+const modeOf = p => p.scaleId === "shares" ? sharesScale : (p.zero ? "zero" : "auto");
+
+const stack = document.getElementById("stack");
+
+function applyRange() {
+  if (!rangeDays) { lo = 0; }
+  else {
+    const cut = DATES[N - 1].getTime() - rangeDays * 86400000;
+    lo = DATES.findIndex(d => d.getTime() >= cut);
+    if (lo < 0) lo = 0;
+  }
+  hi = N - 1;
+  cursor = null;
+}
+
+function xOf(i, w) {
+  const inner = w - PAD.l - PAD.r;
+  return PAD.l + (hi === lo ? inner / 2 : (i - lo) / (hi - lo) * inner);
+}
+
+function draw() {
+  W = Math.max(340, stack.clientWidth || 900);
+  const parts = [];
+
+  PANELS.forEach((p, pi) => {
+    const isLast = pi === PANELS.length - 1;
+    const h = p.h + (isLast ? AXIS_H : 0);
+    const plotTop = PAD.t, plotBot = p.h - PAD.b;
+
+    let min = Infinity, max = -Infinity;
+    for (const s of p.series) {
+      for (let i = lo; i <= hi; i++) {
+        const v = s.get(i);
+        if (v == null) continue;
+        if (v < min) min = v;
+        if (v > max) max = v;
+      }
+    }
+    if (!isFinite(min)) { min = 0; max = 1; }
+    const mode = modeOf(p);
+    const isLog = mode === "log";
+    if (mode === "zero") min = 0;
+    else if (isLog) { min = Math.max(min / 1.10, 1e-6); max = max * 1.10; }
+    else { const pad = (max - min) * 0.16 || 1; min -= pad; max += pad; }
+    const yOf = makeScale(min, max, isLog, plotTop, plotBot);
+
+    let svg = `<svg viewBox="0 0 ${W} ${h}" height="${h}" role="presentation">`;
+
+    const ticks = isLog ? logTicks(min, max) : niceTicks(min, max, 4);
+    // 축이 좁아지면 0.1M 단위까지 내려가므로 눈금 간격에서 소수 자릿수를 정한다.
+    const gap = ticks.length > 1 ? Math.min(...ticks.slice(1).map((v, i) => v - ticks[i])) : 1000;
+    for (const t of ticks) {
+      const y = yOf(t);
+      if (y < plotTop - 2 || y > plotBot + 2) continue;
+      const lbl = p.series[0].key === "p" ? "$" + Math.round(t)
+                : p.series[0].key === "combined" ? (t / 1000).toFixed(gap < 100 ? 2 : 1) + "M"
+                : t.toFixed(0) + "%";
+      svg += `<line class="grid-line" x1="${PAD.l}" y1="${y}" x2="${W - PAD.r}" y2="${y}"/>`
+           + `<text class="axis-text" x="${PAD.l - 9}" y="${y + 3.5}" text-anchor="end">${lbl}</text>`;
+    }
+
+    if (SPLIT >= DATES[lo] && SPLIT <= DATES[hi]) {
+      let si = lo;
+      while (si < hi && DATES[si] < SPLIT) si++;
+      const x = xOf(si, W);
+      svg += `<line class="split-line" x1="${x}" y1="${plotTop}" x2="${x}" y2="${plotBot}"/>`;
+      if (pi === 0) svg += `<text class="split-label" x="${x + 5}" y="${plotTop + 10}">3:1 분할</text>`;
+    }
+
+    for (const s of p.series) {
+      const segs = [];
+      let cur = [];
+      for (let i = lo; i <= hi; i++) {
+        const v = s.get(i);
+        if (v == null) { if (cur.length) segs.push(cur); cur = []; continue; }
+        cur.push(`${xOf(i, W).toFixed(1)},${yOf(v).toFixed(1)}`);
+      }
+      if (cur.length) segs.push(cur);
+
+      // 면적은 0 기준일 때만 칠한다. 바닥이 0 이 아닌 채로 칠하면
+      // 면적 비율이 실제 값 비율과 달라져 눈을 속인다.
+      if (s.fill && mode === "zero" && segs.length) {
+        for (const seg of segs) {
+          const x0 = seg[0].split(",")[0], x1 = seg[seg.length - 1].split(",")[0];
+          svg += `<polygon points="${x0},${plotBot} ${seg.join(" ")} ${x1},${plotBot}"
+                   fill="${s.fill}" stroke="none"/>`;
+        }
+      }
+      for (const seg of segs) {
+        svg += `<polyline points="${seg.join(" ")}" fill="none" stroke="${s.color}"
+                 stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>`;
+      }
+    }
+
+    if (isLast) {
+      const yearTicks = [];
+      for (let i = lo; i <= hi; i++) {
+        if (i === lo) continue;
+        const d = DATES[i], prev = DATES[i - 1];
+        const useMonth = (hi - lo) < 400;
+        if (useMonth ? d.getUTCMonth() !== prev.getUTCMonth()
+                     : d.getUTCFullYear() !== prev.getUTCFullYear()) {
+          if (useMonth && d.getUTCMonth() % ((hi - lo) < 200 ? 1 : 3) !== 0) continue;
+          yearTicks.push([i, useMonth
+            ? `${d.getUTCFullYear()}.${String(d.getUTCMonth() + 1).padStart(2, "0")}`
+            : String(d.getUTCFullYear())]);
+        }
+      }
+      for (const [i, lbl] of yearTicks) {
+        const x = xOf(i, W);
+        svg += `<text class="axis-text" x="${x}" y="${p.h + 14}" text-anchor="middle">${lbl}</text>`;
+      }
+    }
+
+    svg += `<g class="cursor-layer" data-panel="${pi}"></g></svg>`;
+
+    const legend = p.series.filter(s => s.label).map(s =>
+      `<span style="color:${s.color}"><span class="swatch" style="background:${s.color}"></span>${s.label}</span>`
+    ).join(" ");
+
+    parts.push(
+      `<div class="panel" data-h="${p.h}" data-min="${min}" data-max="${max}" data-log="${isLog ? 1 : 0}">
+         <div class="panel-head">
+           <span class="panel-name">${p.name} <span class="unit">${p.unit}${
+             p.scaleId === "shares" && mode !== "zero"
+               ? (mode === "log" ? " · 로그 축" : " · 자동 축(0 아님)") : ""}</span></span>
+           <span class="readout" data-readout="${pi}">${legend}</span>
+         </div>
+         ${svg}
+       </div>`
+    );
+  });
+
+  stack.innerHTML = parts.join("");
+  renderCursor();
+}
+
+function renderCursor() {
+  const i = cursor == null ? hi : cursor;
+  document.getElementById("cursorDate").textContent =
+    fmtDate(DATES[i]) + (cursor == null ? "  (최신)" : "");
+
+  stack.querySelectorAll(".panel").forEach((panelEl, pi) => {
+    const p = PANELS[pi];
+    const min = +panelEl.dataset.min, max = +panelEl.dataset.max;
+    const plotTop = PAD.t, plotBot = p.h - PAD.b;
+    const yOf = makeScale(min, max, panelEl.dataset.log === "1", plotTop, plotBot);
+    const x = xOf(i, W);
+    const layer = panelEl.querySelector(".cursor-layer");
+
+    let g = `<line class="cross" x1="${x}" y1="${plotTop}" x2="${x}" y2="${plotBot}"/>`;
+    const out = [];
+    for (const s of p.series) {
+      const v = s.get(i);
+      if (v != null) g += `<circle class="dot" cx="${x}" cy="${yOf(v)}" r="3.6" fill="${s.color}"/>`;
+      out.push(`<span style="color:${s.color}">`
+        + (s.label ? `<span class="swatch" style="background:${s.color}"></span>${s.label} ` : "")
+        + s.fmt(v) + `</span>`);
+    }
+    layer.innerHTML = g;
+    panelEl.querySelector("[data-readout]").innerHTML = out.join("");
+  });
+}
+
+function indexFromX(clientX) {
+  const rect = stack.getBoundingClientRect();
+  const px = clientX - rect.left;
+  const inner = W - PAD.l - PAD.r;
+  const frac = Math.min(1, Math.max(0, (px - PAD.l) / inner));
+  return lo + Math.round(frac * (hi - lo));
+}
+
+stack.addEventListener("pointermove", e => { cursor = indexFromX(e.clientX); renderCursor(); });
+stack.addEventListener("pointerleave", () => { cursor = null; renderCursor(); });
+stack.addEventListener("keydown", e => {
+  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+  e.preventDefault();
+  const cur = cursor == null ? hi : cursor;
+  cursor = Math.min(hi, Math.max(lo, cur + (e.key === "ArrowRight" ? 1 : -1)));
+  renderCursor();
+});
+
+/* ---------- stat rail ---------- */
+function renderStats() {
+  const last = N - 1;
+  let pi = last; while (pi > 0 && DATA.p[pi] == null) pi--;
+  const price = DATA.p[pi];
+  const prevPrice = (() => { let j = pi - 1; while (j > 0 && DATA.p[j] == null) j--; return DATA.p[j]; })();
+  const priceChg = (price / prevPrice - 1) * 100;
+
+  const first = combined[0], now = combined[last];
+  const chg = (now / first - 1) * 100;
+  const peak = combined.reduce((a, v, i) => v > combined[a] ? i : a, 0);
+  const value = now * 1000 * price;
+
+  const sign = v => (v >= 0 ? "+" : "") + v.toFixed(1) + "%";
+  const cls = v => v >= 0 ? "pos" : "neg";
+
+  document.getElementById("stats").innerHTML = `
+    <div class="stat">
+      <div class="stat-label">현재 합산 보유</div>
+      <div class="stat-value" style="color:var(--total)">${fmtM(now)}</div>
+      <div class="stat-sub">5년 전 대비 <span class="delta ${cls(chg)}">${sign(chg)}</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">최고 보유</div>
+      <div class="stat-value">${fmtM(combined[peak])}</div>
+      <div class="stat-sub">${fmtDate(DATES[peak])} · 지금은 그 대비 ${(now / combined[peak] * 100).toFixed(0)}%</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">TSLA 종가</div>
+      <div class="stat-value">${fmtUsd(price)}</div>
+      <div class="stat-sub">${fmtDate(DATES[pi])} · <span class="delta ${cls(priceChg)}">${sign(priceChg)}</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">현재 비중</div>
+      <div class="stat-value" style="font-size:22px">
+        <span style="color:var(--arkk)">${DATA.kw[last].toFixed(1)}%</span>
+        <span style="color:var(--ink-3)"> / </span><span style="color:var(--arkq)">${DATA.qw[last].toFixed(1)}%</span>
+      </div>
+      <div class="stat-sub">
+        <span class="swatch" style="background:var(--arkk)"></span>ARKK
+        <span class="swatch" style="background:var(--arkq);margin-left:10px"></span>ARKQ
+        · 합산 평가액 $${(value / 1e6).toFixed(0)}M
+      </div>
+    </div>`;
+}
+
+/* ---------- table ---------- */
+function renderTable() {
+  const rows = [];
+  for (let i = lo; i <= hi; i++) {
+    const isLastOfMonth = i === hi || DATES[i + 1].getUTCMonth() !== DATES[i].getUTCMonth();
+    if (isLastOfMonth) rows.push(i);
+  }
+  document.getElementById("tableBody").innerHTML = rows.reverse().map(i => `
+    <tr>
+      <td>${fmtDate(DATES[i])}</td>
+      <td style="color:var(--total)">${fmtM(combined[i])}</td>
+      <td>${fmtInt(DATA.k[i])}</td>
+      <td>${fmtInt(DATA.q[i])}</td>
+      <td style="color:var(--arkk)">${DATA.kw[i].toFixed(2)}%</td>
+      <td style="color:var(--arkq)">${DATA.qw[i].toFixed(2)}%</td>
+      <td>${fmtUsd(DATA.p[i])}</td>
+    </tr>`).join("");
+  document.getElementById("tableCount").textContent = rows.length + "개월";
+}
+
+/* ---------- wiring ---------- */
+document.querySelectorAll("[data-range]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("[data-range]").forEach(b => b.setAttribute("aria-pressed", "false"));
+    btn.setAttribute("aria-pressed", "true");
+    rangeDays = +btn.dataset.range;
+    applyRange();
+    draw();
+    renderTable();
+  });
+});
+
+document.querySelectorAll("[data-scale]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("[data-scale]").forEach(b => b.setAttribute("aria-pressed", "false"));
+    btn.setAttribute("aria-pressed", "true");
+    sharesScale = btn.dataset.scale;
+    draw();
+  });
+});
+
+const tableCard = document.getElementById("tableCard");
+document.getElementById("tableToggle").addEventListener("click", e => {
+  const on = e.currentTarget.getAttribute("aria-pressed") === "true";
+  e.currentTarget.setAttribute("aria-pressed", String(!on));
+  e.currentTarget.textContent = on ? "표로 보기" : "표 숨기기";
+  tableCard.classList.toggle("hidden", on);
+});
+
+let raf = null;
+addEventListener("resize", () => {
+  if (raf) cancelAnimationFrame(raf);
+  raf = requestAnimationFrame(draw);
+});
+
+applyRange();
+renderStats();
+draw();
+renderTable();
+</script>
