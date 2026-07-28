@@ -1,0 +1,194 @@
+"""주간 신호 판정 — 수집부터 판정까지 한 번에. GitHub Actions 에서 이 파일만 돌린다.
+
+판정 주기가 왜 '주간'인가 (일간을 시험했고 실패했다):
+  일간 판정은 검증을 통과하지 못했다. 최선의 정제(미래를 쓰는 룩어헤드 정제)를
+  적용해도 6개월 초과수익 -1.9%, p=0.53 이다. 필터 문제가 아니라 일간 단위 자체가
+  소스 노이즈에 묻힌다. 주간(금요일 판정)만 사건 9개에서 유의했다.
+
+정제가 왜 '인과적'이어야 하는가:
+  백테스트에 쓴 clean_holdings.py 의 왕복 검출은 '이후 구간의 중앙값'을 본다.
+  실전에서는 그날 미래를 모른다. 검증한 것과 배포한 것이 다른 물건이 되면 안 되므로
+  여기서는 당일까지의 정보만 쓰는 필터로 통일했다.
+
+필터 파라미터에 대한 정직한 경고:
+  AUM 급변 임계를 8%/10%/12% 로 바꾸면 같은 규칙의 6개월 초과수익이
+  +45.6% / +14.7% / +20.2% (p=0.007 / 0.164 / 0.101) 로 흔들린다.
+  전부 양수지만 유의성은 파라미터에 좌우된다.
+  성적이 제일 좋은 값을 고르면 그게 과적합이므로, 사전 근거로 골랐다:
+  대형 ETF 의 AUM 이 하루에 10% 넘게 움직이면서 그 종목 주가는 6% 미만이라면
+  시장 요인으로 설명되지 않는다. 성적과 무관하게 이 값을 고정한다.
+"""
+
+import glob
+import json
+import os
+import sys
+import time
+import urllib.request
+from calendar import monthrange
+from datetime import date, datetime, timezone
+
+import numpy as np
+import pandas as pd
+
+BASE = os.path.dirname(os.path.abspath(__file__))
+RAW = os.path.join(BASE, "data", "raw")
+FUNDS = ("ARKK", "ARKQ")
+
+AUM_JUMP = 0.10      # AUM 이 이만큼 튀고
+PX_CALM = 0.06       # 주가는 이만큼도 안 움직였으면 -> 소스 오류
+RE_BAND = 0.18       # 원래 수준의 이 범위로 돌아오면 정상 복귀
+MIN_HIST = 52        # 문턱 계산에 필요한 최소 주 수
+QUANT = 0.90
+
+ARK_API = "https://arkfunds.io/api/v2/stock/fund-ownership"
+YF = ("https://query1.finance.yahoo.com/v8/finance/chart/TSLA"
+      "?period1=1625097600&period2=9999999999&interval=1d&events=split")
+UA = {"User-Agent": "Mozilla/5.0"}
+
+
+def _get(url: str, tries: int = 4) -> bytes:
+    delay = 3.0
+    for k in range(tries):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=60) as r:
+                return r.read()
+        except Exception as e:                                   # noqa: BLE001
+            print(f"    재시도 {k+1}/{tries} ({getattr(e,'code',None) or type(e).__name__})",
+                  file=sys.stderr)
+            if k == tries - 1:
+                raise
+            time.sleep(delay)
+            delay *= 2
+
+
+def refresh_ark() -> None:
+    """이번 달과 지난 달을 다시 받는다. arkfunds.io 는 월말일에만 500 을 내므로
+    각 달을 [1일 ~ 말일-1] 로 잘라 요청한다."""
+    os.makedirs(RAW, exist_ok=True)
+    today = date.today()
+    months = {(today.year, today.month)}
+    prev = (today.year, today.month - 1) if today.month > 1 else (today.year - 1, 12)
+    months.add(prev)
+    for y, m in sorted(months):
+        b = min(date(y, m, monthrange(y, m)[1] - 1), today)
+        a = date(y, m, 1)
+        if a > b:
+            continue
+        url = f"{ARK_API}?symbol=TSLA&date_from={a}&date_to={b}&limit=100"
+        payload = json.loads(_get(url).decode())
+        with open(os.path.join(RAW, f"m_{y}-{m:02d}.json"), "w") as f:
+            json.dump(payload, f)
+        print(f"  ARK {y}-{m:02d}: {len(payload.get('data', []))}일")
+        time.sleep(1.2)
+
+
+def refresh_prices() -> pd.Series:
+    raw = _get(YF)
+    with open(os.path.join(BASE, "data", "tsla_yahoo.json"), "wb") as f:
+        f.write(raw)
+    r = json.loads(raw)["chart"]["result"][0]
+    idx = pd.to_datetime(pd.Series(r["timestamp"]), unit="s").dt.normalize()
+    px = pd.Series(r["indicators"]["quote"][0]["close"], index=idx).dropna().sort_index()
+    print(f"  주가: {len(px)}일, 최종 {px.index[-1]:%Y-%m-%d} ${px.iloc[-1]:.2f}")
+    return px
+
+
+def load_raw() -> pd.DataFrame:
+    rows = {}
+    for p in glob.glob(os.path.join(RAW, "*.json")):
+        for day in json.load(open(p)).get("data", []):
+            for o in day.get("ownership", []):
+                if o["fund"] in FUNDS:
+                    rows[(o["date"], o["fund"])] = o          # (날짜,펀드) 중복 제거
+    d = pd.DataFrame(rows.values())
+    d["date"] = pd.to_datetime(d["date"])
+    return d.sort_values(["fund", "date"]).reset_index(drop=True)
+
+
+def causal_clean(g: pd.DataFrame) -> pd.DataFrame:
+    """AUM 이 주가로 설명되지 않는 크기로 튄 구간을 버린다. 당일까지의 정보만 쓴다."""
+    g = g.sort_values("date").reset_index(drop=True)
+    a, p = g["aum"].values, g["close"].values
+    keep = np.ones(len(g), bool)
+    anchor = a[0]
+    for i in range(1, len(g)):
+        moved = abs(np.log(a[i] / anchor))
+        px_move = abs(np.log(p[i] / p[i - 1])) if p[i - 1] > 0 else 0.0
+        if moved > AUM_JUMP and px_move < PX_CALM:
+            keep[i] = False
+        elif moved < RE_BAND or keep[i]:
+            anchor = a[i]
+    return g[keep]
+
+
+def build(px: pd.Series) -> pd.DataFrame:
+    d = load_raw()
+    d["close"] = d["date"].map(px)
+    d = d.dropna(subset=["close"])
+    # 분할 보정: 날짜가 아니라 내재 주가로 판정 (ARK 는 분할 당일에도 분할 전 수치를 보고했다)
+    ratio = (d["market_value"] / d["shares"]) / d["close"]
+    d["shares_adj"] = np.where(ratio > 2, d["shares"] * 3, d["shares"])
+    d["aum"] = d["market_value"] / (d["weight"] / 100)
+
+    cleaned = pd.concat([causal_clean(g) for _, g in d.groupby("fund")])
+    print(f"  정제: {len(d) - len(cleaned)}행 제외 / 전체 {len(d)}행")
+
+    wide = cleaned.pivot(index="date", columns="fund", values="shares_adj")
+    idx = wide[list(FUNDS)].dropna().index
+    sh = wide.loc[idx, list(FUNDS)].sum(axis=1)
+
+    w = sh.resample("W-FRI").last().dropna().to_frame("shares")
+    w["net"] = w["shares"].diff()
+    w["thr"] = w["net"].expanding(MIN_HIST).quantile(QUANT).shift(1)   # 과거만 사용
+    w["sig"] = w["net"] >= w["thr"]
+    return w.dropna(subset=["thr"])
+
+
+def main() -> None:
+    started = datetime.now(timezone.utc)
+    print(f"실행 시각(UTC) {started:%Y-%m-%d %H:%M} — Actions 스케줄은 수십 분 밀릴 수 있다")
+    refresh_ark()
+    px = refresh_prices()
+    w = build(px)
+
+    cur = w.iloc[-1]
+    on = bool(cur["sig"])
+    prev = w[w["sig"]]
+    state = {
+        "checked_utc": started.isoformat(timespec="seconds"),
+        "week": w.index[-1].strftime("%Y-%m-%d"),
+        "signal": on,
+        "net": int(cur["net"]),
+        "threshold": int(cur["thr"]),
+        "gap": int(cur["net"] - cur["thr"]),
+        "shares": int(cur["shares"]),
+        "price": round(float(px.iloc[-1]), 2),
+        "price_date": px.index[-1].strftime("%Y-%m-%d"),
+        "drawdown_from_ath": round(float(px.iloc[-1] / px.max() - 1) * 100, 1),
+        "prev_signal_week": prev.index[-2].strftime("%Y-%m-%d") if len(prev) > 1 else None,
+        "signal_weeks_total": int(w["sig"].sum()),
+    }
+    path = os.path.join(BASE, "data", "signal_state.json")
+    with open(path, "w") as f:
+        json.dump(state, f, ensure_ascii=True, indent=2)
+
+    print("\n" + "=" * 60)
+    print(f"주 {state['week']}  순매수 {state['net']:+,}주 / 문턱 {state['threshold']:+,}주")
+    print(f"차이 {state['gap']:+,}주  ->  {'*** 신호 ON ***' if on else '신호 OFF'}")
+    print(f"TSLA ${state['price']} ({state['price_date']}), 사상최고 대비 {state['drawdown_from_ath']}%")
+    print("=" * 60)
+
+    # GitHub Actions 로 결과 전달
+    if out := os.environ.get("GITHUB_OUTPUT"):
+        with open(out, "a") as f:
+            f.write(f"signal={'true' if on else 'false'}\n")
+            f.write(f"week={state['week']}\n")
+            f.write(f"net={state['net']}\n")
+            f.write(f"threshold={state['threshold']}\n")
+            f.write(f"price={state['price']}\n")
+            f.write(f"drawdown={state['drawdown_from_ath']}\n")
+
+
+if __name__ == "__main__":
+    main()

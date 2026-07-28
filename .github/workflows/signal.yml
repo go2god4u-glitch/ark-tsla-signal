@@ -1,0 +1,88 @@
+name: ARK 매수신호 점검
+
+on:
+  schedule:
+    # 토요일 06:00 UTC (= 토 15:00 KST). ARK 는 금요일 장 마감 후 공시하므로 넉넉히 뒤로 잡았다.
+    # 주의: Actions 의 cron 은 정시에 뜨지 않는다. 수십 분~수시간 밀리는 것이 정상이고,
+    # 부하가 크면 건너뛰기도 한다. 그래서 여유를 두고, 실제 실행 시각을 로그와 이슈에 남긴다.
+    - cron: "0 6 * * 6"
+  workflow_dispatch:        # 수동 실행
+
+permissions:
+  contents: write           # 갱신된 데이터 커밋
+  issues: write             # 신호 발생 시 이슈 생성
+
+concurrency:
+  group: ark-signal
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: 신호 판정
+        id: check
+        run: python signal_check.py
+
+      - name: 데이터 갱신분 커밋
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --staged --quiet; then
+            echo "변경 없음"
+          else
+            git commit -m "데이터 갱신 ${{ steps.check.outputs.week }} (신호 ${{ steps.check.outputs.signal }})"
+            git push
+          fi
+
+      - name: 신호 발생 시 이슈 생성
+        if: steps.check.outputs.signal == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "🔔 ARK 매수신호 ON — ${{ steps.check.outputs.week }}" \
+            --label "signal" \
+            --body "$(cat <<'EOF'
+          **주 ${{ steps.check.outputs.week }} 기준 신호가 발생했다.**
+
+          | 항목 | 값 |
+          |---|---|
+          | 그 주 순매수 | ${{ steps.check.outputs.net }} 주 |
+          | 문턱 | ${{ steps.check.outputs.threshold }} 주 |
+          | TSLA 종가 | $${{ steps.check.outputs.price }} |
+          | 사상최고 대비 | ${{ steps.check.outputs.drawdown }}% |
+
+          백테스트상 진입 시점은 **다음 거래일(월요일) 종가**다.
+
+          ---
+
+          ### 읽기 전에
+
+          - 완료된 사건 7개에서 나온 결과다. 확정된 것이 아니다.
+          - 측정된 강도는 데이터 정제 파라미터에 민감하다(6개월 초과수익 +14.7% ~ +45.6%).
+          - 최근 신호 성적이 나쁘다. 2025-10 진입은 6개월 -24%.
+          - 이 기간 테슬라가 -72% 낙폭에서 회복했다는 사실이 결과에 이미 들어가 있다.
+
+          **투자 자문이 아니다.** 자세한 한계는 [README](https://github.com/go2god4u-glitch/ark-tsla-signal#한계) 참조.
+          EOF
+          )"
+
+      - name: 요약
+        if: always()
+        run: |
+          echo "### ARK 신호 점검 — ${{ steps.check.outputs.week }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- 신호: **${{ steps.check.outputs.signal }}**" >> $GITHUB_STEP_SUMMARY
+          echo "- 순매수 ${{ steps.check.outputs.net }} / 문턱 ${{ steps.check.outputs.threshold }}" >> $GITHUB_STEP_SUMMARY
+          echo "- TSLA \$${{ steps.check.outputs.price }} (사상최고 대비 ${{ steps.check.outputs.drawdown }}%)" >> $GITHUB_STEP_SUMMARY

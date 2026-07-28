@@ -1,0 +1,14 @@
+{
+  "checked_utc": "2026-07-28T15:11:44+00:00",
+  "week": "2026-07-31",
+  "signal": false,
+  "net": 54267,
+  "threshold": 111230,
+  "gap": -56963,
+  "shares": 2324492,
+  "price": 304.14,
+  "price_date": "2026-07-28",
+  "drawdown_from_ath": -37.9,
+  "prev_signal_week": "2026-04-24",
+  "signal_weeks_total": 18
+}
