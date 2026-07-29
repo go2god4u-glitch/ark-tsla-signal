@@ -1,14 +1,14 @@
 {
-  "checked_utc": "2026-07-29T14:17:49+00:00",
+  "checked_utc": "2026-07-29T22:48:20+00:00",
   "week": "2026-07-31",
   "signal": false,
   "net": 48647,
   "threshold": 111230,
   "gap": -62583,
   "shares": 2318872,
-  "price": 304.25,
+  "price": 298.32,
   "price_date": "2026-07-29",
-  "drawdown_from_ath": -37.9,
+  "drawdown_from_ath": -39.1,
   "ath": 489.88,
   "ath_date": "2025-12-16",
   "prev_signal_week": "2026-04-24",
@@ -165,7 +165,7 @@
     {
       "d": "2026-07-29",
       "s": 2318872,
-      "c": 304.25
+      "c": 298.32
     }
   ],
   "weekly": [
