@@ -122,7 +122,8 @@ def causal_clean(g: pd.DataFrame) -> pd.DataFrame:
     return g[keep]
 
 
-def build(px: pd.Series) -> pd.DataFrame:
+def build_daily(px: pd.Series) -> pd.DataFrame:
+    """정제까지 끝난 일별 합산 보유량. 판정은 주간이지만 표시는 일별로 한다."""
     d = load_raw()
     d["close"] = d["date"].map(px)
     d = d.dropna(subset=["close"])
@@ -130,14 +131,17 @@ def build(px: pd.Series) -> pd.DataFrame:
     ratio = (d["market_value"] / d["shares"]) / d["close"]
     d["shares_adj"] = np.where(ratio > 2, d["shares"] * 3, d["shares"])
     d["aum"] = d["market_value"] / (d["weight"] / 100)
-
     cleaned = pd.concat([causal_clean(g) for _, g in d.groupby("fund")])
-    print(f"  정제: {len(d) - len(cleaned)}행 제외 / 전체 {len(d)}행")
-
     wide = cleaned.pivot(index="date", columns="fund", values="shares_adj")
     idx = wide[list(FUNDS)].dropna().index
-    sh = wide.loc[idx, list(FUNDS)].sum(axis=1)
+    out = pd.DataFrame({"shares": wide.loc[idx, list(FUNDS)].sum(axis=1)})
+    out["close"] = px.reindex(out.index).ffill()
+    return out
 
+
+def build(px: pd.Series) -> pd.DataFrame:
+    """주간 판정용. 일간은 검증에 실패했으므로(README 참조) 금요일 기준으로 묶는다."""
+    sh = build_daily(px)["shares"]
     w = sh.resample("W-FRI").last().dropna().to_frame("shares")
     w["net"] = w["shares"].diff()
     w["thr"] = w["net"].expanding(MIN_HIST).quantile(QUANT).shift(1)   # 과거만 사용
@@ -155,6 +159,12 @@ def main() -> None:
     cur = w.iloc[-1]
     on = bool(cur["sig"])
     prev = w[w["sig"]]
+
+    # 대시보드가 '오늘'을 보여줄 수 있도록 일별 최근값도 같이 싣는다.
+    # 판정은 주간이지만, 표시까지 주간으로 묶으면 화면이 최대 6일 묵는다.
+    daily = build_daily(px)
+    recent = daily.tail(30)
+
     state = {
         "checked_utc": started.isoformat(timespec="seconds"),
         "week": w.index[-1].strftime("%Y-%m-%d"),
@@ -166,8 +176,19 @@ def main() -> None:
         "price": round(float(px.iloc[-1]), 2),
         "price_date": px.index[-1].strftime("%Y-%m-%d"),
         "drawdown_from_ath": round(float(px.iloc[-1] / px.max() - 1) * 100, 1),
+        "ath": round(float(px.max()), 2),
+        "ath_date": px.idxmax().strftime("%Y-%m-%d"),
         "prev_signal_week": prev.index[-2].strftime("%Y-%m-%d") if len(prev) > 1 else None,
         "signal_weeks_total": int(w["sig"].sum()),
+        "holdings_date": daily.index[-1].strftime("%Y-%m-%d"),
+        "holdings": int(daily["shares"].iloc[-1]),
+        "holdings_chg": int(daily["shares"].diff().iloc[-1]),
+        "recent": [{"d": d.strftime("%Y-%m-%d"), "s": int(r["shares"]),
+                    "c": (None if pd.isna(r["close"]) else round(float(r["close"]), 2))}
+                   for d, r in recent.iterrows()],
+        "weekly": [{"d": d.strftime("%Y-%m-%d"), "net": int(r["net"]),
+                    "thr": int(r["thr"]), "sig": bool(r["sig"])}
+                   for d, r in w.tail(16).iterrows()],
     }
     path = os.path.join(BASE, "data", "signal_state.json")
     with open(path, "w") as f:

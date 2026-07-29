@@ -2,10 +2,12 @@ name: ARK 매수신호 점검
 
 on:
   schedule:
-    # 토요일 06:00 UTC (= 토 15:00 KST). ARK 는 금요일 장 마감 후 공시하므로 넉넉히 뒤로 잡았다.
+    # 매일 22:00 UTC (= 다음날 07:00 KST). 미국 장 마감(20:00/21:00 UTC) 이후라
+    # 그날 종가와 ARK 공시가 모두 확정된 뒤다.
+    # 판정 자체는 주간이지만 대시보드가 묵지 않도록 데이터는 매일 갱신한다.
     # 주의: Actions 의 cron 은 정시에 뜨지 않는다. 수십 분~수시간 밀리는 것이 정상이고,
     # 부하가 크면 건너뛰기도 한다. 그래서 여유를 두고, 실제 실행 시각을 로그와 이슈에 남긴다.
-    - cron: "0 6 * * 6"
+    - cron: "0 22 * * *"
   workflow_dispatch:        # 수동 실행
     inputs:
       force_issue:
@@ -54,7 +56,15 @@ jobs:
         if: steps.check.outputs.signal == 'true' || inputs.force_issue
         env:
           GH_TOKEN: ${{ github.token }}
+          WEEK: ${{ steps.check.outputs.week }}
         run: |
+          # 매일 돌기 때문에, 같은 판정 주에 이미 이슈를 냈으면 다시 내지 않는다.
+          if [ "${{ inputs.force_issue }}" != "true" ] \
+             && gh issue list --state all --label signal --limit 100 \
+                  --json title -q '.[].title' | grep -qF -- "$WEEK"; then
+            echo "주 $WEEK 이슈가 이미 있다. 건너뛴다."
+            exit 0
+          fi
           gh issue create \
             --title "${{ inputs.force_issue && '[점검] ' || '🔔 ' }}ARK 매수신호 ON — ${{ steps.check.outputs.week }}" \
             --label "signal" \

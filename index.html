@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARK 매수신호 — 현재 상태</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg:#f1f3f6; --panel:#ffffff; --ink:#0f1419; --ink-2:#545e69; --ink-3:#8a939d;
+    --line:#e0e4ea; --line-2:#eef0f4; --chip-bg:#e7eaf0;
+    --buy:#0f7a52; --sell:#c0392f; --price:#2b3138; --hold:#4a3aa7; --shade:rgba(15,122,82,.10);
+    --arkk:#2a78d6; --arkq:#eb6834;
+    --shadow:0 1px 2px rgba(15,20,25,.05), 0 8px 24px -12px rgba(15,20,25,.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --bg:#0d1116; --panel:#151b22; --ink:#e8edf3; --ink-2:#98a3af; --ink-3:#6d7883;
+      --line:#242c35; --line-2:#1c232b; --chip-bg:#212a33;
+      --buy:#3fbc8a; --sell:#e8695c; --price:#c6ced7; --hold:#9085e9; --shade:rgba(63,188,138,.14);
+      --arkk:#3987e5; --arkq:#e0693a;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg:#0d1116; --panel:#151b22; --ink:#e8edf3; --ink-2:#98a3af; --ink-3:#6d7883;
+    --line:#242c35; --line-2:#1c232b; --chip-bg:#212a33;
+    --buy:#3fbc8a; --sell:#e8695c; --price:#c6ced7; --hold:#9085e9; --shade:rgba(63,188,138,.14);
+    --arkk:#3987e5; --arkq:#e0693a;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+  :root {
+    --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,"Roboto Mono","Apple SD Gothic Neo",monospace;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans);
+         -webkit-font-smoothing:antialiased; font-size:15px; line-height:1.55; }
+  .wrap { max-width:1180px; margin:0 auto; padding:40px 24px 80px;
+          display:flex; flex-direction:column; gap:30px; }
+
+  .eyebrow { font-family:var(--mono); font-size:11px; letter-spacing:.14em;
+             text-transform:uppercase; color:var(--ink-3); margin:0 0 10px; }
+  h1 { margin:0; font-size:clamp(28px,4.4vw,40px); line-height:1.12;
+       letter-spacing:-.022em; font-weight:750; text-wrap:balance; }
+  .verdict { margin:16px 0 0; max-width:70ch; font-size:16.5px; color:var(--ink-2); }
+  .verdict b { color:var(--ink); font-weight:700; }
+
+  h2 { font-size:19px; letter-spacing:-.015em; margin:0 0 4px; font-weight:700; }
+  .sub { color:var(--ink-2); font-size:14px; margin:0 0 16px; max-width:74ch; }
+
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
+           background:var(--line); border:1px solid var(--line); border-radius:10px;
+           overflow:hidden; box-shadow:var(--shadow); }
+  .stat { background:var(--panel); padding:18px 20px 20px; }
+  .stat-label { font-family:var(--mono); font-size:10.5px; letter-spacing:.11em;
+                text-transform:uppercase; color:var(--ink-3); }
+  .stat-value { font-family:var(--mono); font-variant-numeric:tabular-nums;
+                font-size:28px; font-weight:600; letter-spacing:-.02em; margin-top:8px; line-height:1.1; }
+  .stat-sub { margin-top:7px; font-size:12.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; }
+
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px;
+          box-shadow:var(--shadow); overflow:hidden; }
+  .card-head { display:flex; align-items:baseline; justify-content:space-between; gap:16px;
+               padding:14px 20px; border-bottom:1px solid var(--line); }
+  .card-title { font-family:var(--mono); font-size:11px; letter-spacing:.12em;
+                text-transform:uppercase; color:var(--ink-3); }
+  #cursorDate { font-family:var(--mono); font-variant-numeric:tabular-nums;
+                font-size:13px; font-weight:600; color:var(--ink); }
+
+  .panel { position:relative; border-top:1px solid var(--line-2); }
+  .panel:first-of-type { border-top:none; }
+  .panel-head { position:absolute; top:12px; left:20px; right:20px; display:flex;
+                align-items:baseline; justify-content:space-between; gap:12px;
+                pointer-events:none; z-index:2; }
+  .panel-name { font-size:13px; font-weight:650; letter-spacing:-.008em; }
+  .panel-name .unit { font-weight:400; color:var(--ink-3); font-size:11.5px; }
+  .readout { font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:13px;
+             font-weight:650; display:flex; gap:14px; white-space:nowrap; }
+  svg { display:block; width:100%; touch-action:pan-y; }
+  .grid-line { stroke:var(--line-2); stroke-width:1; }
+  .axis-text { font-family:var(--mono); font-size:10px; fill:var(--ink-3);
+               font-variant-numeric:tabular-nums; }
+  .cross { stroke:var(--ink-2); stroke-width:1; opacity:.55; }
+  .dot { stroke:var(--panel); stroke-width:2; }
+  .zero-line { stroke:var(--ink-3); stroke-width:1; opacity:.5; }
+
+  table { border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums; }
+  th, td { font-family:var(--mono); font-size:12px; text-align:right; padding:9px 14px;
+           white-space:nowrap; border-bottom:1px solid var(--line-2); }
+  th { background:var(--panel); color:var(--ink-3); font-weight:500; font-size:10.5px;
+       letter-spacing:.08em; text-transform:uppercase; border-bottom:1px solid var(--line); }
+  td:first-child, th:first-child { text-align:left; }
+  .table-scroll { overflow-x:auto; }
+  tr.group-start td { border-top:1px solid var(--line); }
+  .pos { color:var(--buy); font-weight:650; }
+  .neg { color:var(--sell); font-weight:650; }
+  .sig { font-family:var(--mono); font-size:10px; padding:2px 6px; border-radius:4px;
+         background:var(--chip-bg); color:var(--ink-2); }
+  .sig.yes { background:color-mix(in srgb, var(--buy) 18%, transparent); color:var(--buy); }
+
+  .notes { border-top:1px solid var(--line); padding-top:22px; color:var(--ink-2); font-size:13.5px; }
+  .notes h2 { font-family:var(--mono); font-size:11px; letter-spacing:.12em;
+              text-transform:uppercase; color:var(--ink-3); margin:0 0 12px; font-weight:500; }
+  .notes ul { margin:0; padding-left:18px; display:flex; flex-direction:column; gap:8px; }
+  .notes b { color:var(--ink); font-weight:650; }
+  code { font-family:var(--mono); font-size:.92em; }
+
+  .warn { border-left:3px solid var(--sell); padding:2px 0 2px 14px; }
+
+  @media (max-width:820px) {
+    .stats { grid-template-columns:1fr; }
+    .wrap { padding:28px 16px 60px; gap:24px; }
+    .panel-head { left:14px; right:14px; }
+    .readout { font-size:11.5px; gap:10px; }
+  }
+  @media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
+</style>
+<style>
+  .refresh-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  button.refresh { font-family:var(--mono); font-size:12px; letter-spacing:.05em;
+    background:var(--chip-bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:8px; padding:9px 16px; cursor:pointer; }
+  button.refresh:hover { border-color:var(--ink-3); }
+  button.refresh:disabled { opacity:.5; cursor:default; }
+  button.refresh:focus-visible { outline:2px solid var(--buy); outline-offset:2px; }
+  .stamp { font-family:var(--mono); font-size:11.5px; color:var(--ink-3); }
+  .big { font-family:var(--mono); font-size:52px; font-weight:650; letter-spacing:-.03em; line-height:1; }
+  .big.on { color:var(--buy); } .big.off { color:var(--ink-3); }
+  .kv { display:grid; grid-template-columns:auto 1fr; gap:8px 18px;
+        font-family:var(--mono); font-size:13px; align-items:baseline; }
+  .kv dt { color:var(--ink-3); } .kv dd { margin:0; font-weight:650; }
+  .bar-wrap { height:10px; background:var(--line-2); border-radius:5px; overflow:hidden; }
+  .bar-fill { height:100%; background:var(--buy); border-radius:5px; }
+  a { color:var(--arkk); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">ARK × TSLA · 주간 매수신호</p>
+    <h1>지금 신호가 떠 있나</h1>
+    <p class="verdict">판정은 <b>주 단위</b>다 — 금요일 기준으로 그 주의 순매수가 문턱을 넘으면 신호,
+      진입은 다음 거래일 종가. 일간 판정은 검증에 실패해 쓰지 않는다.
+      아래 데이터는 매일 갱신된다.</p>
+  </header>
+
+  <div class="refresh-row">
+    <button class="refresh" id="btn" type="button">새로고침</button>
+    <span class="stamp" id="stamp">불러오는 중…</span>
+  </div>
+
+  <section class="card">
+    <div class="card-head">
+      <span class="card-title">현재 판정</span>
+      <span class="card-title" id="weekLabel"></span>
+    </div>
+    <div style="padding:24px 20px" id="verdictBox"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><span class="card-title">최근 30거래일 — 합산 보유 주식 수</span>
+      <span class="readout" id="recentNow"></span></div>
+    <div id="recentChart"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><span class="card-title">최근 16주 — 주간 순매수 vs 문턱</span></div>
+    <div id="weeklyChart"></div>
+  </section>
+
+  <section class="notes">
+    <h2>읽기 전에</h2>
+    <ul>
+      <li>완료된 사건 7개에서 나온 결과다. 확정된 것이 아니다.</li>
+      <li>측정된 강도는 데이터 정제 파라미터에 민감하다 (6개월 초과수익 +14.7% ~ +45.6%).</li>
+      <li>최근 신호 성적이 나쁘다. 2025-10 진입은 6개월 -24%.</li>
+      <li>이 기간 테슬라가 -72% 낙폭에서 회복했다는 사실이 결과에 이미 들어가 있다.</li>
+      <li><b>투자 자문이 아니다.</b> 전체 분석은
+        <a href="app.html">상세 대시보드</a>,
+        한계는 <a href="https://github.com/go2god4u-glitch/ark-tsla-signal#한계">README</a> 참조.</li>
+    </ul>
+  </section>
+</div>
+<script>
+const F = {
+  int: v => v.toLocaleString("en-US"),
+  sgn: v => (v >= 0 ? "+" : "") + v.toLocaleString("en-US"),
+  usd: v => "$" + v.toFixed(2),
+};
+let S = null;
+
+async function load() {
+  const btn = document.getElementById("btn"), stamp = document.getElementById("stamp");
+  btn.disabled = true; stamp.textContent = "불러오는 중…";
+  try {
+    // Pages 와 CDN 이 캐시하므로 쿼리로 무력화한다. no-store 만으로는 부족하다.
+    const r = await fetch("data/signal_state.json?t=" + Date.now(), { cache: "no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    S = await r.json();
+    render();
+    stamp.innerHTML = `데이터 기준 <b>${S.holdings_date}</b> · 마지막 점검 ` +
+      `${S.checked_utc.replace("T", " ").slice(0, 16)} UTC · 화면 갱신 ` +
+      new Date().toLocaleTimeString("ko-KR");
+  } catch (e) {
+    stamp.textContent = "불러오지 못했습니다: " + e.message + " — 잠시 후 다시 시도해 주세요.";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function render() {
+  document.getElementById("weekLabel").textContent = "판정 주 " + S.week;
+  const on = S.signal;
+  const ratio = Math.max(0, Math.min(1, S.net / S.threshold));
+  document.getElementById("verdictBox").innerHTML = `
+    <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start">
+      <div>
+        <div class="big ${on ? "on" : "off"}">${on ? "ON" : "OFF"}</div>
+        <div class="stamp" style="margin-top:8px">${on
+          ? "다음 거래일 종가 진입 시점이다" : "문턱 미달"}</div>
+      </div>
+      <dl class="kv" style="flex:1;min-width:280px">
+        <dt>그 주 순매수</dt><dd class="${S.net >= 0 ? "pos" : "neg"}">${F.sgn(S.net)} 주</dd>
+        <dt>문턱</dt><dd>${F.sgn(S.threshold)} 주</dd>
+        <dt>차이</dt><dd class="${S.gap >= 0 ? "pos" : "neg"}">${F.sgn(S.gap)} 주</dd>
+        <dt>합산 보유</dt><dd>${F.int(S.holdings)} 주
+          <span class="${S.holdings_chg >= 0 ? "pos" : "neg"}">(${F.sgn(S.holdings_chg)})</span></dd>
+        <dt>TSLA</dt><dd>${F.usd(S.price)} <span style="color:var(--ink-3)">(${S.price_date})</span></dd>
+        <dt>사상최고 대비</dt><dd class="neg">${S.drawdown_from_ath}%</dd>
+        <dt>직전 신호</dt><dd>${S.prev_signal_week || "—"}</dd>
+      </dl>
+    </div>
+    <div style="margin-top:20px">
+      <div class="bar-wrap"><div class="bar-fill" style="width:${(ratio * 100).toFixed(1)}%;
+        background:${on ? "var(--buy)" : "var(--ink-3)"}"></div></div>
+      <div class="stamp" style="margin-top:6px">문턱 대비 ${(ratio * 100).toFixed(0)}%</div>
+    </div>`;
+
+  line("recentChart", S.recent.map(r => r.s), S.recent.map(r => r.d), "var(--hold)",
+       v => (v / 1e6).toFixed(2) + "M");
+  document.getElementById("recentNow").innerHTML =
+    `<span style="color:var(--hold)">${(S.holdings / 1e6).toFixed(2)}M</span>`;
+  bars("weeklyChart", S.weekly);
+}
+
+function line(id, vals, labels, color, fmt) {
+  const el = document.getElementById(id);
+  const W = Math.max(320, el.clientWidth || 800), H = 180;
+  const P = { l: 58, r: 16, t: 16, b: 26 };
+  const lo = Math.min(...vals), hi = Math.max(...vals);
+  const pad = (hi - lo) * 0.15 || 1, min = lo - pad, max = hi + pad;
+  const X = i => P.l + i / (vals.length - 1) * (W - P.l - P.r);
+  const Y = v => H - P.b - (v - min) / (max - min) * (H - P.t - P.b);
+  let s = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img"
+    aria-label="최근 30거래일 합산 보유 주식 수 추이. 현재 ${fmt(vals[vals.length-1])}">`;
+  for (let k = 0; k <= 3; k++) {
+    const v = min + (max - min) * k / 3, y = Y(v);
+    s += `<line class="grid-line" x1="${P.l}" y1="${y}" x2="${W - P.r}" y2="${y}"/>
+          <text class="axis-text" x="${P.l - 8}" y="${y + 3.5}" text-anchor="end">${fmt(v)}</text>`;
+  }
+  s += `<polyline points="${vals.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ")}"
+        fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>`;
+  s += `<circle cx="${X(vals.length - 1)}" cy="${Y(vals[vals.length - 1])}" r="4"
+        fill="${color}" stroke="var(--panel)" stroke-width="2"/>`;
+  [0, Math.floor(labels.length / 2), labels.length - 1].forEach(i =>
+    s += `<text class="axis-text" x="${X(i)}" y="${H - 8}" text-anchor="middle">${labels[i].slice(5)}</text>`);
+  el.innerHTML = s + "</svg>";
+}
+
+function bars(id, wk) {
+  const el = document.getElementById(id);
+  const W = Math.max(320, el.clientWidth || 800), H = 190;
+  const P = { l: 58, r: 16, t: 16, b: 26 };
+  const vals = wk.map(x => x.net), thr = wk.map(x => x.thr);
+  const m = Math.max(...vals.map(Math.abs), ...thr.map(Math.abs)) * 1.15;
+  const X = i => P.l + (i + 0.5) / wk.length * (W - P.l - P.r);
+  const Y = v => H - P.b - (v + m) / (2 * m) * (H - P.t - P.b);
+  const bw = (W - P.l - P.r) / wk.length * 0.6;
+  let s = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img"
+    aria-label="최근 16주 주간 순매수와 신호 문턱 비교">`;
+  for (const v of [-m / 2, 0, m / 2]) {
+    s += `<line class="grid-line" x1="${P.l}" y1="${Y(v)}" x2="${W - P.r}" y2="${Y(v)}"/>
+          <text class="axis-text" x="${P.l - 8}" y="${Y(v) + 3.5}" text-anchor="end">${(v / 1e6).toFixed(1)}M</text>`;
+  }
+  s += `<line x1="${P.l}" y1="${Y(0)}" x2="${W - P.r}" y2="${Y(0)}" class="zero-line"/>`;
+  wk.forEach((x, i) => {
+    const y0 = Y(0), y1 = Y(x.net);
+    s += `<rect x="${(X(i) - bw / 2).toFixed(1)}" y="${Math.min(y0, y1).toFixed(1)}"
+      width="${bw.toFixed(1)}" height="${Math.max(1.5, Math.abs(y1 - y0)).toFixed(1)}"
+      fill="${x.sig ? "var(--buy)" : x.net >= 0 ? "var(--arkk)" : "var(--sell)"}" opacity=".9"/>`;
+  });
+  s += `<polyline points="${thr.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ")}"
+        fill="none" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  [0, wk.length - 1].forEach(i =>
+    s += `<text class="axis-text" x="${X(i)}" y="${H - 8}" text-anchor="middle">${wk[i].d.slice(5)}</text>`);
+  el.innerHTML = s + "</svg>";
+}
+
+document.getElementById("btn").addEventListener("click", load);
+addEventListener("resize", () => { if (S) render(); });
+load();
+</script>
+</body>
+</html>
