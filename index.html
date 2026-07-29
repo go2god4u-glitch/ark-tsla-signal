@@ -192,6 +192,26 @@ const F = {
 };
 let S = null;
 
+/* 보는 사람이 어디에 있든 한국시간으로 고정해 보여준다.
+   서버가 남기는 checked_utc 는 UTC 라 그대로 쓰면 9시간 어긋난 것처럼 읽힌다. */
+const kst = iso => {
+  // toLocaleString 의 한국어 출력("2026. 07. 29. 23:17")을 문자열 치환으로 다듬으면
+  // 구분자가 어긋난다. 부분(parts)을 직접 조립한다.
+  const p = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hour12: false,
+  }).formatToParts(new Date(iso)).reduce((a, x) => (a[x.type] = x.value, a), {});
+  return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute} KST`;
+};
+
+const ago = iso => {
+  const m = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000));
+  if (m < 1) return "방금";
+  if (m < 60) return `${m}분 전`;
+  const h = Math.round(m / 60);
+  return h < 48 ? `${h}시간 전` : `${Math.round(h / 24)}일 전`;
+};
+
 async function load() {
   const btn = document.getElementById("btn"), stamp = document.getElementById("stamp");
   btn.disabled = true; stamp.textContent = "불러오는 중…";
@@ -201,9 +221,9 @@ async function load() {
     if (!r.ok) throw new Error("HTTP " + r.status);
     S = await r.json();
     render();
-    stamp.innerHTML = `데이터 기준 <b>${S.holdings_date}</b> · 마지막 점검 ` +
-      `${S.checked_utc.replace("T", " ").slice(0, 16)} UTC · 화면 갱신 ` +
-      new Date().toLocaleTimeString("ko-KR");
+    stamp.innerHTML = `데이터 기준 <b>${S.holdings_date}</b> · 마지막 업데이트 ` +
+      `<b>${kst(S.checked_utc)}</b> <span style="color:var(--ink-3)">(${ago(S.checked_utc)})</span>` +
+      ` · 화면 갱신 ${kst(new Date().toISOString())}`;
   } catch (e) {
     stamp.textContent = "불러오지 못했습니다: " + e.message + " — 잠시 후 다시 시도해 주세요.";
   } finally {
