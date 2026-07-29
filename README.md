@@ -53,13 +53,25 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt
 | `build_chart.py` | 보유량 추이 PNG (초기 산출물) |
 | `dashboard.src.html` | 보유량 대시보드 (초기 산출물) |
 
+## 실시간 상태 페이지
+
+**https://go2god4u-glitch.github.io/ark-tsla-signal/**
+
+새로고침 버튼이 있는 현재 상태 페이지. 매일 갱신된다.
+게시용 정적 아티팩트는 데이터가 파일에 박혀 있어 새로고침이 불가능하므로,
+같은 출처에서 `data/signal_state.json` 을 fetch 할 수 있는 Pages 로 올렸다.
+전체 분석은 [상세 대시보드](https://go2god4u-glitch.github.io/ark-tsla-signal/app.html).
+
 ## 자동화 — 신호 알림
 
-매주 토요일 GitHub Actions 가 `signal_check.py` 를 돌려 신호를 판정하고,
-**신호가 켜지면 이슈를 자동 생성**한다. 수동 실행은 Actions 탭의 `Run workflow`.
+매일 22:00 UTC(미국 장 마감 후) GitHub Actions 가 `signal_check.py` 를 돌려 신호를 판정하고,
+**신호가 켜지면 이슈를 자동 생성**한다(같은 판정 주에는 한 번만).
+수동 실행은 Actions 탭의 `Run workflow`.
+
+데이터 갱신은 매일, **판정은 주간**이다. 표시까지 주간으로 묶으면 화면이 최대 6일 묵는다.
 
 ```
-.github/workflows/signal.yml   # 토 06:00 UTC (= 토 15:00 KST) + 수동 트리거
+.github/workflows/signal.yml   # 매일 22:00 UTC (= 07:00 KST) + 수동 트리거
 signal_check.py                # 수집 -> 정제 -> 판정, data/signal_state.json 기록
 ```
 
