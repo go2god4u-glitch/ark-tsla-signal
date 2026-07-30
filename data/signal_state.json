@@ -1,5 +1,5 @@
 {
-  "checked_utc": "2026-07-30T13:52:51+00:00",
+  "checked_utc": "2026-07-30T14:11:34+00:00",
   "week": "2026-07-31",
   "signal": false,
   "net": 74932,
@@ -7,7 +7,7 @@
   "gap": -16364,
   "net_pct": 2.74,
   "threshold_pct": 3.34,
-  "dd_now": -37.4,
+  "dd_now": -37.6,
   "big_sell": -7.0,
   "big_sell_on": false,
   "big_sells": [
@@ -64,9 +64,9 @@
   "thr_ok": false,
   "dd_ok": true,
   "shares": 2805275,
-  "price": 306.73,
+  "price": 305.9,
   "price_date": "2026-07-30",
-  "drawdown_from_ath": -37.4,
+  "drawdown_from_ath": -37.6,
   "ath": 489.88,
   "ath_date": "2025-12-16",
   "prev_signal_week": "2026-07-24",
@@ -357,14 +357,14 @@
           "exit": null,
           "exit_price": null,
           "days": 3,
-          "ret": -0.008052,
+          "ret": -0.010737,
           "score": 78.0,
           "why": null,
           "open": true
         }
       ],
       "avg_price": 309.22,
-      "run_ret": -0.008052,
+      "run_ret": -0.010737,
       "open": true
     }
   ],
@@ -1237,7 +1237,7 @@
       380.84,
       374.01,
       309.22,
-      306.73
+      305.9
     ],
     "dd": [
       -29.4,
@@ -1672,7 +1672,7 @@
       -22.3,
       -23.7,
       -36.9,
-      -37.4
+      -37.6
     ]
   },
   "holdings_date": "2026-07-30",
@@ -1827,16 +1827,16 @@
     {
       "d": "2026-07-30",
       "s": 2805275,
-      "c": 306.73
+      "c": 305.9
     }
   ],
   "tech": {
-    "rsi": 29.58,
-    "macd": -25.7,
-    "macd_signal": -17.09,
-    "ma50": 392.58,
+    "rsi": 29.19,
+    "macd": -25.77,
+    "macd_signal": -17.11,
+    "ma50": 392.56,
     "ma200": 412.21,
-    "bb_low": 285.29,
+    "bb_low": 285.12,
     "flags": {
       "rsi_oversold": true,
       "macd_above_signal": false,
@@ -1847,14 +1847,14 @@
   },
   "score": {
     "week": "2026-07-31",
-    "total": 74.7,
+    "total": 74.9,
     "components": {
       "ark": 79.3,
-      "rsi": 96.3,
-      "dd": 88.0,
+      "rsi": 96.7,
+      "dd": 88.5,
       "macd": 0.4,
-      "ma": 96.6,
-      "bb": 87.7
+      "ma": 96.7,
+      "bb": 87.8
     },
     "history": [
       {
@@ -2095,7 +2095,7 @@
       },
       {
         "d": "2026-07-31",
-        "s": 74.7
+        "s": 74.9
       }
     ]
   },
