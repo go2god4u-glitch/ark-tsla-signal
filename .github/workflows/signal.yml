@@ -47,6 +47,13 @@ jobs:
       - name: 보유기간별 수익률 갱신
         run: python holding_returns.py
 
+      - name: 신호 확률 갱신
+        run: python signal_probability.py
+
+      - name: 보유 상태 추적 (매수/매도 판정)
+        id: pos
+        run: python position_tracker.py
+
       - name: 데이터 갱신분 커밋
         run: |
           git config user.name  "github-actions[bot]"
@@ -103,6 +110,43 @@ jobs:
           EOF
           )"
 
+      - name: 텔레그램 매도 알림
+        if: steps.pos.outputs.action == 'SELL'
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          REASON: ${{ steps.pos.outputs.reason }}
+          RSI: ${{ steps.pos.outputs.rsi }}
+          ENTRY: ${{ steps.pos.outputs.entry_date }}
+          EP: ${{ steps.pos.outputs.entry_price }}
+          PRICE: ${{ steps.check.outputs.price }}
+          RET: ${{ steps.pos.outputs.unrealized }}
+          DAYS: ${{ steps.pos.outputs.held_days }}
+        run: |
+          if [ -z "$TG_TOKEN" ]; then echo "시크릿 미설정 - 건너뜀"; exit 0; fi
+          TEXT=$(printf '%s\n' \
+            "ARK 테슬라 매도 신호" \
+            "" \
+            "사유: ${REASON}" \
+            "현재 RSI: ${RSI}" \
+            "" \
+            "진입: ${ENTRY} \$${EP}" \
+            "현재: \$${PRICE}  (${RET}%, ${DAYS}거래일 보유)" \
+            "" \
+            "청산은 다음 거래일 종가 기준입니다." \
+            "한국시간 화요일 새벽 5~6시." \
+            "" \
+            "주의: 매매 7건에서 나온 규칙입니다." \
+            "큰 상승을 놓칠 수 있습니다(과거 +39%에 팔았으나 6개월 보유였다면 +127%)." \
+            "" \
+            "https://go2god4u-glitch.github.io/ark-tsla-signal/")
+          curl -sS -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TG_CHAT}" \
+            --data-urlencode "text=${TEXT}" \
+            --data-urlencode "disable_web_page_preview=true" \
+            -o /tmp/sell.json -w "HTTP %{http_code}\n"
+          python3 -c "import json,sys;d=json.load(open('/tmp/sell.json'));print('전송:',d.get('ok'));sys.exit(0 if d.get('ok') else 1)"
+
       - name: 텔레그램 알림
         if: steps.check.outputs.signal == 'true' || inputs.force_issue
         env:
@@ -132,6 +176,9 @@ jobs:
             "TSLA: \$${PRICE} (사상최고 대비 ${DD}%)" \
             "" \
             "진입은 다음 거래일 종가. 한국시간 화요일 새벽 5~6시." \
+            "" \
+            "청산 규칙: RSI(14)가 70을 넘었다가 다시 70 아래로 내려오면 매도." \
+            "6개월 안에 안 걸리면 6개월째 정리. 그때 다시 알림 갑니다." \
             "" \
             "주의: 완료 사건 7건에서 나온 결과다. 확정된 것이 아니다." \
             "MDD -45% 를 견뎌야 나오는 수익이다." \
@@ -163,6 +210,13 @@ jobs:
           AGO: ${{ steps.check.outputs.prev_ago }}
           HDATE: ${{ steps.check.outputs.holdings_date }}
           SCORE: ${{ steps.check.outputs.score }}
+          PROB: ${{ steps.check.outputs.prob }}
+          PROG: ${{ steps.check.outputs.prog }}
+          POS: ${{ steps.pos.outputs.pos_open }}
+          PRSI: ${{ steps.pos.outputs.rsi }}
+          PENTRY: ${{ steps.pos.outputs.entry_date }}
+          PRET: ${{ steps.pos.outputs.unrealized }}
+          PLEFT: ${{ steps.pos.outputs.days_left }}
           FORCE_HB: ${{ inputs.force_heartbeat }}
         run: |
           # 한국 토요일 아침에만 보낸다 (= 금요일 UTC). 수동 테스트는 예외.
@@ -176,11 +230,14 @@ jobs:
             "ARK 테슬라 주간 점검 - 신호 없음" \
             "" \
             "판정 주: ${WEEK}" \
-            "순매수: ${NETP}% / 문턱: ${THRP}%  (${PROG}%)" \
+            "순매수: ${NETP}% / 문턱: ${THRP}%  (진행률 ${PROG}%)" \
+            "이번 주 신호 확률: ${PROB}%" \
             "" \
             "TSLA: \$${PRICE} (사상최고 대비 ${DD}%)" \
             "종합 점수: ${SCORE}/100" \
             "직전 신호: ${PREV} (${AGO}주 전)" \
+            "" \
+            "보유: $([ "$POS" = "true" ] && echo "있음 (${PENTRY} 진입, ${PRET}%, 상한까지 ${PLEFT}일) RSI ${PRSI}" || echo "없음")" \
             "" \
             "데이터 기준일: ${HDATE}" \
             "https://go2god4u-glitch.github.io/ark-tsla-signal/")
