@@ -284,6 +284,17 @@ def main() -> None:
         # [-2] 를 쓰면 현재 주가 OFF 일 때 가장 최근 신호를 건너뛴다(실제로 그랬다).
         "prev_signal_week": (past_sig[-1].strftime("%Y-%m-%d") if len(past_sig) else None),
         "prev_signal_weeks_ago": (int(len(w.loc[past_sig[-1]:]) - 1) if len(past_sig) else None),
+        # 최근 신호의 '진입일/진입가' 까지 싣는다. 신호 확정일과 매수일이 다르므로
+        # (공시가 장 마감 후라 다음 거래일 종가 진입) 둘 다 보여줘야 오해가 없다.
+        "prev_signal_entry": (px.index[px.index.searchsorted(past_sig[-1], side="right")]
+                              .strftime("%Y-%m-%d")
+                              if len(past_sig) and
+                              px.index.searchsorted(past_sig[-1], side="right") < len(px)
+                              else None),
+        "prev_signal_price": (round(float(px.iloc[px.index.searchsorted(past_sig[-1], side="right")]), 2)
+                              if len(past_sig) and
+                              px.index.searchsorted(past_sig[-1], side="right") < len(px)
+                              else None),
         "signal_weeks_total": int(w["sig"].sum()),
         "holdings_date": daily.index[-1].strftime("%Y-%m-%d"),
         "holdings": int(daily["shares"].iloc[-1]),

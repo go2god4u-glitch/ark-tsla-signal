@@ -154,6 +154,12 @@
     <span class="stamp" id="stamp">불러오는 중…</span>
   </div>
 
+  <section class="card" id="lastSigCard" style="border-width:2px">
+    <div class="card-head"><span class="card-title">최근 매수 신호</span>
+      <span class="card-title" id="lastSigAgo"></span></div>
+    <div style="padding:20px" id="lastSigBox"></div>
+  </section>
+
   <section class="card">
     <div class="card-head">
       <span class="card-title">현재 판정</span>
@@ -385,6 +391,7 @@ function render() {
         문턱 ${S.thr_ok ? "통과" : "미달"} · 낙폭 ${S.dd_ok ? "통과" : "미달"}</div>
     </div>`;
 
+  renderLastSignal();
   renderMode();
   renderProb();
   renderSell();
@@ -396,6 +403,42 @@ function render() {
   document.getElementById("recentNow").innerHTML =
     `<span style="color:var(--hold)">${(S.holdings / 1e6).toFixed(2)}M</span>`;
   bars("weeklyChart", S.weekly);
+}
+
+/* 최근 신호는 화면 맨 위에 크게 둔다. 알림을 못 봤거나 알림을 안 쓰더라도
+   "마지막으로 살 기회가 언제였나" 는 들어오자마자 보여야 한다. */
+function renderLastSignal() {
+  const box = document.getElementById("lastSigBox");
+  if (!S.prev_signal_week) {
+    box.innerHTML = `<span class="stamp">아직 신호 이력이 없습니다.</span>`;
+    return;
+  }
+  const ago = S.prev_signal_weeks_ago;
+  const ep = S.prev_signal_price, now = S.price;
+  const chg = ep ? now / ep - 1 : null;
+  const fresh = ago != null && ago <= 2;
+  document.getElementById("lastSigAgo").textContent =
+    ago == null ? "" : (ago === 0 ? "이번 주" : `${ago}주 전`);
+  box.innerHTML = `
+    <div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start">
+      <div style="min-width:150px">
+        <div class="stamp">신호 확정일 (금)</div>
+        <div style="font-family:var(--mono);font-size:30px;font-weight:700;line-height:1.1;
+          color:${fresh ? "var(--buy)" : "var(--ink)"}">${S.prev_signal_week}</div>
+        <div class="stamp" style="margin-top:4px">${
+          ago === 0 ? "이번 주" : `${ago}주 전`} · 총 ${S.signal_weeks_total}회 중 최근</div>
+      </div>
+      <dl class="kv" style="flex:1;min-width:280px">
+        <dt>매수일 (다음 거래일)</dt><dd>${S.prev_signal_entry || "—"}</dd>
+        <dt>그날 종가</dt><dd>${ep ? "$" + ep.toFixed(2) : "—"}</dd>
+        <dt>현재가</dt><dd>$${now.toFixed(2)}
+          ${chg != null ? `<span class="${cls(chg)}">(${pct(chg)})</span>` : ""}</dd>
+      </dl>
+    </div>
+    <p class="stamp" style="margin:16px 0 0;line-height:1.6">
+      신호는 <b>금요일 미국 종가</b>로 확정되고, 매수는 <b>다음 거래일 종가</b>다
+      (아크 공시가 장 마감 후이므로). 한국시간으로 신호는 토요일 새벽,
+      매수는 화요일 새벽 5~6시.</p>`;
 }
 
 /* 매수/매도 중 무엇을 기다리는지는 '보유 여부'로 갈린다.

@@ -1,5 +1,5 @@
 {
-  "checked_utc": "2026-07-30T11:37:07+00:00",
+  "checked_utc": "2026-07-30T11:46:53+00:00",
   "week": "2026-07-31",
   "signal": false,
   "net": 54604,
@@ -19,6 +19,8 @@
   "ath_date": "2025-12-16",
   "prev_signal_week": "2026-07-24",
   "prev_signal_weeks_ago": 1,
+  "prev_signal_entry": "2026-07-27",
+  "prev_signal_price": 309.22,
   "signal_weeks_total": 16,
   "holdings_date": "2026-07-29",
   "holdings": 2784947,
