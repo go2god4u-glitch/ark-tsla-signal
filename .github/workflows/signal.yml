@@ -211,7 +211,6 @@ jobs:
           HDATE: ${{ steps.check.outputs.holdings_date }}
           SCORE: ${{ steps.check.outputs.score }}
           PROB: ${{ steps.check.outputs.prob }}
-          PROG: ${{ steps.check.outputs.prog }}
           POS: ${{ steps.pos.outputs.pos_open }}
           PRSI: ${{ steps.pos.outputs.rsi }}
           PENTRY: ${{ steps.pos.outputs.entry_date }}
