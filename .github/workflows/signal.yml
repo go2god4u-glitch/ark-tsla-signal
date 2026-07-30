@@ -219,6 +219,7 @@ jobs:
           HDATE: ${{ steps.check.outputs.holdings_date }}
           SCORE: ${{ steps.check.outputs.score }}
           PSCORE: ${{ steps.check.outputs.prev_score }}
+          ASCORE: ${{ steps.check.outputs.ark_score }}
           PROB: ${{ steps.prob.outputs.prob }}
           PDAY: ${{ steps.prob.outputs.day }}
           POSN: ${{ steps.pos.outputs.open_count }}
@@ -243,7 +244,8 @@ jobs:
             "낙폭 필터: ${DDNOW}% / 기준 ${DDF}% -> $([ "$DDOK" = "true" ] && echo 통과 || echo 미달)" \
             "" \
             "TSLA: \$${PRICE} (사상최고 대비 ${DD}%)" \
-            "이번 주 점수: ${SCORE}/100 (신호 아님 — 참고값)" \
+            "이번 주 점수: ${SCORE}/100 (참고값 — 6개 항목 평균)" \
+            "  이 중 아크 ${ASCORE}/90 — 신호는 아크만 본다" \
             "직전 신호: ${PREV} (${AGO}주 전) · 그때 점수 ${PSCORE}/100" \
             "" \
             "보유 포지션: ${POSN}건 (평균 ${PRET}%) · RSI ${PRSI}" \

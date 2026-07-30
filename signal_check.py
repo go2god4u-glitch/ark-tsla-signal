@@ -437,6 +437,7 @@ def main() -> None:
                 if _pv is not None:
                     break
             f.write(f"prev_score={_pv if _pv is not None else '-'}\n")
+            f.write(f"ark_score={state.get('score', {}).get('components', {}).get('ark', '-')}\n")
             # 신호 확률은 signal_probability.py 스텝이 직접 내보낸다.
             # 여기서 읽으면 실행 순서상 하루 전 값이 나간다.
 
