@@ -178,6 +178,39 @@
     <div style="padding:18px 20px" id="techBox"></div>
   </section>
 
+  <section>
+    <h2 style="font-size:17px;font-weight:700;margin:8px 0 4px">신호 후 보유 기간별 수익률</h2>
+    <p id="btIntro" style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px"></p>
+    <div class="card table-scroll" style="margin-bottom:14px">
+      <div class="card-head"><span class="card-title">A. 신호 하나당 기대치 (사건 단위)</span></div>
+      <table><thead><tr>
+        <th scope="col">보유</th><th scope="col">n</th><th scope="col">평균</th>
+        <th scope="col">중앙값</th><th scope="col">승률</th><th scope="col">최악</th>
+        <th scope="col">무작위 진입</th><th scope="col">초과</th><th scope="col">p</th>
+      </tr></thead><tbody id="periodBody"></tbody></table>
+    </div>
+    <div class="card table-scroll" style="margin-bottom:14px">
+      <div class="card-head"><span class="card-title">B. 단일 포지션 복리 (실제 계좌)</span></div>
+      <table><thead><tr>
+        <th scope="col">보유</th><th scope="col">매매</th><th scope="col">누적</th>
+        <th scope="col">CAGR</th><th scope="col">MDD</th><th scope="col">노출</th>
+        <th scope="col">무조건보유 대비</th>
+      </tr></thead><tbody id="compBody"></tbody></table>
+    </div>
+    <p class="stamp" id="btNote" style="line-height:1.6"></p>
+  </section>
+
+  <section>
+    <h2 style="font-size:17px;font-weight:700;margin:8px 0 14px">신호별 개별 성과</h2>
+    <div class="card table-scroll">
+      <table><thead><tr>
+        <th scope="col">진입일</th><th scope="col">진입가</th><th scope="col">1개월</th>
+        <th scope="col">3개월</th><th scope="col">6개월</th><th scope="col">9개월</th>
+        <th scope="col">12개월</th>
+      </tr></thead><tbody id="sigBody"></tbody></table>
+    </div>
+  </section>
+
   <section class="card">
     <div class="card-head"><span class="card-title">최근 30거래일 — 합산 보유 주식 수</span>
       <span class="readout" id="recentNow"></span></div>
@@ -203,12 +236,17 @@
   </section>
 </div>
 <script>
+/* 퍼센트/부호 헬퍼. 백테스트 표가 이 둘을 쓴다 —
+   없으면 소개 문구만 그려지고 표는 조용히 비어 버린다(실제로 그랬다). */
+const pct = (v, n = 1) => v == null ? "—" : (v >= 0 ? "+" : "") + (v * 100).toFixed(n) + "%";
+const cls = v => v == null ? "" : v >= 0 ? "pos" : "neg";
+
 const F = {
   int: v => v.toLocaleString("en-US"),
   sgn: v => (v >= 0 ? "+" : "") + v.toLocaleString("en-US"),
   usd: v => "$" + v.toFixed(2),
 };
-let S = null;
+let S = null, B = null;
 
 /* 보는 사람이 어디에 있든 한국시간으로 고정해 보여준다.
    서버가 남기는 checked_utc 는 UTC 라 그대로 쓰면 9시간 어긋난 것처럼 읽힌다. */
@@ -235,9 +273,14 @@ async function load() {
   btn.disabled = true; stamp.textContent = "불러오는 중…";
   try {
     // Pages 와 CDN 이 캐시하므로 쿼리로 무력화한다. no-store 만으로는 부족하다.
-    const r = await fetch("data/signal_state.json?t=" + Date.now(), { cache: "no-store" });
+    const q = "?t=" + Date.now();
+    const [r, r2] = await Promise.all([
+      fetch("data/signal_state.json" + q, { cache: "no-store" }),
+      fetch("data/holding_returns.json" + q, { cache: "no-store" }),
+    ]);
     if (!r.ok) throw new Error("HTTP " + r.status);
     S = await r.json();
+    B = r2.ok ? await r2.json() : null;
     render();
     stamp.innerHTML = `데이터 기준 <b>${S.holdings_date}</b> · 마지막 업데이트 ` +
       `<b>${kst(S.checked_utc)}</b> <span style="color:var(--ink-3)">(${ago(S.checked_utc)})</span>` +
@@ -277,6 +320,7 @@ function render() {
       <div class="stamp" style="margin-top:6px">문턱 대비 ${(ratio * 100).toFixed(0)}%</div>
     </div>`;
 
+  renderBacktest();
   renderScore();
   renderTech();
   line("recentChart", S.recent.map(r => r.s), S.recent.map(r => r.d), "var(--hold)",
@@ -284,6 +328,66 @@ function render() {
   document.getElementById("recentNow").innerHTML =
     `<span style="color:var(--hold)">${(S.holdings / 1e6).toFixed(2)}M</span>`;
   bars("weeklyChart", S.weekly);
+}
+
+/* 백테스트 결과. A(사건 단위 기대치)와 B(단일 포지션 복리)를 나눠 보여준다.
+   섞으면 오해가 생긴다 — 12개월 보유는 A 로 +49% 인데 B 로는 0.69배다. */
+function renderBacktest() {
+  if (!B) {
+    document.getElementById("btIntro").textContent = "백테스트 데이터를 불러오지 못했습니다.";
+    return;
+  }
+  document.getElementById("btIntro").innerHTML =
+    `검증 구간 ${B.years.toFixed(1)}년 · 신호 사건 <b>${B.episodes}개</b> · ` +
+    `같은 기간 <b>무조건 보유는 ${B.buy_hold.toFixed(2)}배</b>(테슬라가 오히려 내린 구간이다).`;
+
+  const best = B.by_period.reduce((a, x) => (x.edge > a.edge ? x : a), B.by_period[0]);
+  const hl = ' style="background:color-mix(in srgb,var(--buy) 7%,transparent)"';
+  document.getElementById("periodBody").innerHTML = B.by_period.map(r => `
+    <tr${r.label === best.label ? hl : ""}>
+      <td>${r.label}</td><td>${r.n}</td>
+      <td class="${cls(r.mean)}">${pct(r.mean)}</td>
+      <td>${pct(r.median)}</td><td>${(r.hit * 100).toFixed(0)}%</td>
+      <td class="neg">${pct(r.worst)}</td>
+      <td style="color:var(--ink-3)">${pct(r.base)}</td>
+      <td class="${cls(r.edge)}">${pct(r.edge)}</td>
+      <td><span class="sig ${r.p < 0.05 ? "yes" : ""}">${r.p.toFixed(3)}</span></td>
+    </tr>`).join("");
+
+  const bestC = B.compound.reduce((a, x) => (x.final > a.final ? x : a), B.compound[0]);
+  document.getElementById("compBody").innerHTML = B.compound.map(r => `
+    <tr${r.label === bestC.label ? hl : ""}>
+      <td>${r.label}</td><td>${r.trades}</td>
+      <td class="${r.final >= 1 ? "pos" : "neg"}">${r.final.toFixed(2)}x</td>
+      <td class="${cls(r.cagr)}">${pct(r.cagr)}</td>
+      <td class="neg">${(r.mdd * 100).toFixed(0)}%</td>
+      <td>${(r.exposure * 100).toFixed(0)}%</td>
+      <td class="${r.vs_bh >= 1 ? "pos" : "neg"}">${r.vs_bh.toFixed(2)}배</td>
+    </tr>`).join("");
+
+  const p12 = B.by_period.find(x => x.h === 252);
+  const c12 = B.compound.find(x => x.label === "12개월");
+  const maxN = Math.max(...B.by_period.map(x => x.n));
+  document.getElementById("btNote").innerHTML =
+    `<b>A 와 B 가 갈리는 지점을 보라.</b> 12개월 보유는 기대치로 ` +
+    `${p12 ? pct(p12.mean) : "—"} 인데 실제 복리로는 ${c12 ? c12.final.toFixed(2) : "—"}배다. ` +
+    `신호가 겹쳐 매매가 줄고 노출이 커지면서 하락을 그대로 맞았기 때문이다. ` +
+    `기대치와 계좌 잔고는 다르다.<br><br>` +
+    `<b>한계.</b> 완료 사건이 ${maxN}개 이하다. 2023-01 건(6개월 +127%)이 평균을 크게 끌어올린다. ` +
+    `보유 기간 8개를 시험했으므로 Bonferroni 기준이면 p &lt; 0.006 이어야 하는데 통과하는 것이 없다. ` +
+    `분위수를 상위 15% 로 넓히면 6개월 초과가 +31.8% → +7.0% 로 떨어진다. ` +
+    `그리고 어느 규칙이든 MDD 가 -37~-72% 다.`;
+
+  const HS = ["21", "63", "126", "189", "252"];
+  document.getElementById("sigBody").innerHTML = B.signals.map(x => `
+    <tr>
+      <td>${x.d}</td><td>$${x.px.toFixed(0)}</td>
+      ${HS.map(h => {
+        const v = x.r[h];
+        return v == null ? `<td style="color:var(--ink-3)">진행중</td>`
+                         : `<td class="${cls(v)}">${pct(v)}</td>`;
+      }).join("")}
+    </tr>`).join("");
 }
 
 /* 종합 점수는 '지금 무엇이 켜져 있나'를 한눈에 보는 용도다. 판정 규칙이 아니다.

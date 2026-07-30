@@ -129,7 +129,10 @@ def main() -> None:
     with open(f"{BASE}/data/holding_returns.json", "w") as f:
         json.dump({"episodes": len(E), "years": yrs, "buy_hold": float(bh),
                    "by_period": rows, "compound": comp,
-                   "signals": [{"d": px.index[i].strftime("%Y-%m-%d"), "px": float(V[i])}
+                   "signals": [{"d": px.index[i].strftime("%Y-%m-%d"), "px": float(V[i]),
+                                "r": {str(h): (float(V[i + h] / V[i] - 1)
+                                               if i + h < len(V) else None)
+                                      for h, _ in MONTHS}}
                                for i in E]}, f, ensure_ascii=True, indent=2, default=float)
     print("\n저장: data/holding_returns.json")
 
