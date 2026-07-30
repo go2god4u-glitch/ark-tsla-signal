@@ -238,7 +238,7 @@
 
   <section class="card">
     <div class="card-head">
-      <span class="card-title">종합 점수 — 참고용, 판정에 쓰지 않음</span>
+      <span class="card-title">이번 주 종합 점수 — 참고용, 판정에 쓰지 않음</span>
       <span class="card-title" id="scoreNote"></span>
     </div>
     <div style="padding:18px 20px" id="scoreBox"></div>
@@ -739,12 +739,22 @@ function renderScore() {
       <div style="flex:1;min-width:280px;display:grid;gap:9px">${rows}</div>
     </div>
     <p class="stamp" style="margin:16px 0 0;line-height:1.6">
+      <b>이번 주는 신호가 아니므로 이 점수는 수익률과 연결되지 않는다.</b>
+      점수가 의미를 갖는 것은 <b>신호가 뜬 주</b>의 점수이고, 그것은 아래 신호 이력 표에 있다
+      (완료 15건 기준 점수와 수익률 상관 r=+0.54).<br><br>
       <b>점수가 높다고 사는 것이 아니다.</b> 점수 구간별 6개월 초과수익은 단조롭지 않았고
       (55~65점 +6.5% / 75점 이상 -0.4%), 아크를 빼면 정보가 사라졌다
       (70점 이상: 아크 포함 +8.1%·승률 71% / 제외 -2.8%·57%).
       단독 기여도 아크 +12.2% 뿐이고 RSI -17.4%, 낙폭 -12.9%, MACD -12.3% 로 음수다.
       기술적 지표는 신호를 강화하지 않고 희석한다. 그래서 판정은 아크 단독이다.</p>`;
-  document.getElementById("scoreNote").textContent = "주 " + sc.week;
+  const lastSig = (() => {
+    for (let i = (S.runs || []).length - 1; i >= 0; i--)
+      for (let j = S.runs[i].entries.length - 1; j >= 0; j--)
+        if (S.runs[i].entries[j].score != null) return S.runs[i].entries[j];
+    return null;
+  })();
+  document.getElementById("scoreNote").innerHTML =
+    `주 ${sc.week}` + (lastSig ? ` · 직전 신호(${lastSig.signal}) 점수 <b>${lastSig.score.toFixed(0)}</b>` : "");
 }
 
 /* 지표는 '기록'이지 '판정'이 아니다. RSI 등을 합류시키면 신호가 더 확실해진다는

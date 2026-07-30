@@ -385,6 +385,8 @@ def main() -> None:
                    for d, r in recent.iterrows()],
         # 판정에는 쓰지 않는다. 사건이 쌓였을 때 답하기 위한 기록이다.
         "tech": tech_state(px),
+        # 이번 주 점수. 이번 주가 신호가 아니면 참고값일 뿐이며
+        # 수익률과 연결되지 않는다 — 화면·알림에서 그 점을 명시한다.
         "score": score_state(px, daily["shares"]),
         "weekly": [{"d": d.strftime("%Y-%m-%d"), "net": int(r["net"]),
                     "thr": int(r["thr"]), "sig": bool(r["sig"])}
@@ -424,6 +426,17 @@ def main() -> None:
             f.write(f"holdings_date={state['holdings_date']}\n")
             f.write(f"holdings={state['holdings']}\n")
             f.write(f"score={state.get('score', {}).get('total', '-')}\n")
+            # 직전 '신호' 의 점수. 이번 주 점수와 구분해야 한다 —
+            # 신호가 아닌 주의 점수는 수익률과 연결되지 않는다.
+            _pv = None
+            for _r in reversed(state.get("runs", [])):
+                for _e in reversed(_r.get("entries", [])):
+                    if _e.get("score") is not None:
+                        _pv = _e["score"]
+                        break
+                if _pv is not None:
+                    break
+            f.write(f"prev_score={_pv if _pv is not None else '-'}\n")
             # 신호 확률은 signal_probability.py 스텝이 직접 내보낸다.
             # 여기서 읽으면 실행 순서상 하루 전 값이 나간다.
 
