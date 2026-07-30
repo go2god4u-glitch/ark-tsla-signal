@@ -233,6 +233,7 @@ def main() -> None:
     cur = w.iloc[-1]
     on = bool(cur["sig"])
     prev = w[w["sig"]]
+    past_sig = prev.index[prev.index < w.index[-1]]
 
     # 대시보드가 '오늘'을 보여줄 수 있도록 일별 최근값도 같이 싣는다.
     # 판정은 주간이지만, 표시까지 주간으로 묶으면 화면이 최대 6일 묵는다.
@@ -254,7 +255,10 @@ def main() -> None:
         "drawdown_from_ath": round(float(px.iloc[-1] / px.max() - 1) * 100, 1),
         "ath": round(float(px.max()), 2),
         "ath_date": px.idxmax().strftime("%Y-%m-%d"),
-        "prev_signal_week": prev.index[-2].strftime("%Y-%m-%d") if len(prev) > 1 else None,
+        # 현재 판정 주보다 '앞선' 신호 중 가장 최근 것.
+        # [-2] 를 쓰면 현재 주가 OFF 일 때 가장 최근 신호를 건너뛴다(실제로 그랬다).
+        "prev_signal_week": (past_sig[-1].strftime("%Y-%m-%d") if len(past_sig) else None),
+        "prev_signal_weeks_ago": (int(len(w.loc[past_sig[-1]:]) - 1) if len(past_sig) else None),
         "signal_weeks_total": int(w["sig"].sum()),
         "holdings_date": daily.index[-1].strftime("%Y-%m-%d"),
         "holdings": int(daily["shares"].iloc[-1]),

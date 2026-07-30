@@ -311,7 +311,10 @@ function render() {
           <span class="${S.holdings_chg >= 0 ? "pos" : "neg"}">(${F.sgn(S.holdings_chg)})</span></dd>
         <dt>TSLA</dt><dd>${F.usd(S.price)} <span style="color:var(--ink-3)">(${S.price_date})</span></dd>
         <dt>사상최고 대비</dt><dd class="neg">${S.drawdown_from_ath}%</dd>
-        <dt>직전 신호</dt><dd>${S.prev_signal_week || "—"}</dd>
+        <dt>직전 신호</dt><dd>${S.prev_signal_week || "—"}${
+          S.prev_signal_weeks_ago != null
+            ? ` <span style="color:var(--ink-3);font-weight:400">(${S.prev_signal_weeks_ago}주 전)</span>`
+            : ""}</dd>
       </dl>
     </div>
     <div style="margin-top:20px">
