@@ -14,6 +14,10 @@ on:
         description: "신호와 무관하게 이슈 생성 (알림 경로 점검용)"
         type: boolean
         default: false
+      force_heartbeat:
+        description: "요일과 무관하게 주간 상태 알림 발송 (점검용)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write           # 갱신된 데이터 커밋
@@ -139,6 +143,53 @@ jobs:
             --data-urlencode "disable_web_page_preview=true" \
             -o /tmp/tg.json -w "HTTP %{http_code}\n"
           python3 -c "import json,sys;d=json.load(open('/tmp/tg.json'));print('전송:',d.get('ok'));sys.exit(0 if d.get('ok') else 1)"
+
+      - name: 주간 상태 알림 (하트비트)
+        # 신호가 없어도 매주 한 번 보낸다. 신호는 연 2회꼴이라, 조용하면
+        # 고장인지 신호가 없는 건지 구분할 수 없다. 살아있음을 알리는 용도다.
+        # 금요일 22:00 UTC 실행 = 한국 토요일 07:00. 그 주 판정이 확정된 직후다.
+        if: steps.check.outputs.signal != 'true'
+
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          WEEK: ${{ steps.check.outputs.week }}
+          NETP: ${{ steps.check.outputs.net_pct }}
+          THRP: ${{ steps.check.outputs.thr_pct }}
+          PROG: ${{ steps.check.outputs.progress }}
+          PRICE: ${{ steps.check.outputs.price }}
+          DD: ${{ steps.check.outputs.drawdown }}
+          PREV: ${{ steps.check.outputs.prev_week }}
+          AGO: ${{ steps.check.outputs.prev_ago }}
+          HDATE: ${{ steps.check.outputs.holdings_date }}
+          SCORE: ${{ steps.check.outputs.score }}
+          FORCE_HB: ${{ inputs.force_heartbeat }}
+        run: |
+          # 한국 토요일 아침에만 보낸다 (= 금요일 UTC). 수동 테스트는 예외.
+          if [ "$FORCE_HB" != "true" ] && [ "$(date -u +%u)" != "5" ]; then
+            echo "금요일(UTC) 이 아니라 건너뜀"; exit 0
+          fi
+          if [ -z "$TG_TOKEN" ] || [ -z "$TG_CHAT" ]; then
+            echo "텔레그램 시크릿 미설정 - 건너뜀"; exit 0
+          fi
+          TEXT=$(printf '%s\n' \
+            "ARK 테슬라 주간 점검 - 신호 없음" \
+            "" \
+            "판정 주: ${WEEK}" \
+            "순매수: ${NETP}% / 문턱: ${THRP}%  (${PROG}%)" \
+            "" \
+            "TSLA: \$${PRICE} (사상최고 대비 ${DD}%)" \
+            "종합 점수: ${SCORE}/100" \
+            "직전 신호: ${PREV} (${AGO}주 전)" \
+            "" \
+            "데이터 기준일: ${HDATE}" \
+            "https://go2god4u-glitch.github.io/ark-tsla-signal/")
+          curl -sS -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TG_CHAT}" \
+            --data-urlencode "text=${TEXT}" \
+            --data-urlencode "disable_web_page_preview=true" \
+            -o /tmp/hb.json -w "HTTP %{http_code}\n"
+          python3 -c "import json,sys;d=json.load(open('/tmp/hb.json'));print('전송:',d.get('ok'));sys.exit(0 if d.get('ok') else 1)"
 
       - name: 요약
         if: always()

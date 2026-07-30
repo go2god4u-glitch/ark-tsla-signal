@@ -303,6 +303,15 @@ def main() -> None:
             f.write(f"threshold={state['threshold']}\n")
             f.write(f"price={state['price']}\n")
             f.write(f"drawdown={state['drawdown_from_ath']}\n")
+            # 주간 상태 알림(하트비트)에 필요한 값들
+            f.write(f"net_pct={state['net_pct']}\n")
+            f.write(f"thr_pct={state['threshold_pct']}\n")
+            f.write(f"progress={round(state['net_pct'] / state['threshold_pct'] * 100) if state['threshold_pct'] else 0}\n")
+            f.write(f"prev_week={state['prev_signal_week'] or '-'}\n")
+            f.write(f"prev_ago={state['prev_signal_weeks_ago'] if state['prev_signal_weeks_ago'] is not None else '-'}\n")
+            f.write(f"holdings_date={state['holdings_date']}\n")
+            f.write(f"holdings={state['holdings']}\n")
+            f.write(f"score={state.get('score', {}).get('total', '-')}\n")
 
 
 if __name__ == "__main__":
