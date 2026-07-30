@@ -1,5 +1,5 @@
 {
-  "checked_utc": "2026-07-30T12:38:39+00:00",
+  "checked_utc": "2026-07-30T12:42:16+00:00",
   "week": "2026-07-31",
   "signal": false,
   "net": 54604,
@@ -36,6 +36,7 @@
           "exit_price": 335.02,
           "days": 38,
           "ret": 0.154659,
+          "score": 70.0,
           "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         }
@@ -57,6 +58,7 @@
           "exit_price": 259.67,
           "days": 188,
           "ret": 1.168072,
+          "score": 78.0,
           "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         },
@@ -68,6 +70,7 @@
           "exit_price": 244.88,
           "days": 172,
           "ret": 0.862347,
+          "score": 88.0,
           "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         },
@@ -79,6 +82,7 @@
           "exit_price": 267.48,
           "days": 160,
           "ret": 0.860731,
+          "score": 76.0,
           "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         }
@@ -100,6 +104,7 @@
           "exit_price": 251.49,
           "days": 118,
           "ret": 0.372387,
+          "score": 70.0,
           "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         }
@@ -121,6 +126,7 @@
           "exit_price": 265.28,
           "days": 101,
           "ret": 0.63199,
+          "score": 78.0,
           "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         }
@@ -142,6 +148,7 @@
           "exit_price": 410.44,
           "days": 235,
           "ret": 1.149688,
+          "score": 78.0,
           "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         },
@@ -153,6 +160,7 @@
           "exit_price": 436.17,
           "days": 221,
           "ret": 1.408981,
+          "score": 76.0,
           "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         },
@@ -164,6 +172,7 @@
           "exit_price": 463.02,
           "days": 213,
           "ret": 1.46117,
+          "score": 83.0,
           "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         }
@@ -185,6 +194,7 @@
           "exit_price": 350.0,
           "days": 156,
           "ret": 0.997489,
+          "score": 82.0,
           "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         },
@@ -196,6 +206,7 @@
           "exit_price": 259.52,
           "days": 142,
           "ret": 0.500289,
+          "score": 90.0,
           "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         }
@@ -217,6 +228,7 @@
           "exit_price": 421.62,
           "days": 126,
           "ret": 0.771438,
+          "score": 73.0,
           "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         }
@@ -238,6 +250,7 @@
           "exit_price": 421.62,
           "days": 40,
           "ret": 0.283509,
+          "score": 64.0,
           "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         },
@@ -249,6 +262,7 @@
           "exit_price": 421.62,
           "days": 35,
           "ret": 0.294941,
+          "score": 71.0,
           "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         }
@@ -270,6 +284,7 @@
           "exit_price": 421.62,
           "days": 20,
           "ret": 0.257966,
+          "score": 53.0,
           "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         }
@@ -291,6 +306,7 @@
           "exit_price": null,
           "days": 2,
           "ret": -0.03525,
+          "score": 78.0,
           "why": null,
           "open": true
         }

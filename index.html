@@ -179,9 +179,9 @@
     <p id="runsIntro" style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px"></p>
     <div class="card table-scroll">
       <table><thead><tr>
-        <th scope="col">국면</th><th scope="col">신호일(금)</th><th scope="col">매수일</th>
-        <th scope="col">매수가</th><th scope="col">청산일</th><th scope="col">청산가</th>
-        <th scope="col">보유</th><th scope="col">수익</th>
+        <th scope="col">국면</th><th scope="col">신호일(금)</th><th scope="col">점수</th>
+        <th scope="col">매수일</th><th scope="col">매수가</th><th scope="col">청산일</th>
+        <th scope="col">청산가</th><th scope="col">보유</th><th scope="col">수익</th>
       </tr></thead><tbody id="runsBody"></tbody></table>
     </div>
     <p class="stamp" id="runsNote" style="line-height:1.6;margin-top:12px"></p>
@@ -454,7 +454,9 @@ function renderRuns() {
     r.entries.forEach((e, k) => {
       html += `<tr${bg}>
         <td>${k === 0 ? `<b>${no}</b>${isLast ? " ← 지난주" : ""}` : ""}</td>
-        <td>${e.signal}</td><td>${e.date}</td><td>$${e.price.toFixed(2)}</td>
+        <td>${e.signal}</td>
+        <td class="${e.score >= 76 ? "pos" : ""}">${e.score == null ? "—" : e.score.toFixed(0)}</td>
+        <td>${e.date}</td><td>$${e.price.toFixed(2)}</td>
         <td>${e.open ? "보유중" : e.exit}</td>
         <td>${e.open ? "$" + S.price.toFixed(2) : "$" + e.exit_price.toFixed(2)}</td>
         <td>${e.days}일</td>
@@ -462,7 +464,7 @@ function renderRuns() {
     });
     if (r.weeks > 1) {
       html += `<tr${bg} style="border-top:1px solid var(--line)">
-        <td></td><td colspan="2" style="color:var(--ink-3)">└ ${r.weeks}회 합산</td>
+        <td></td><td colspan="3" style="color:var(--ink-3)">└ ${r.weeks}회 합산</td>
         <td>평균 $${r.avg_price.toFixed(2)}</td>
         <td colspan="2" style="color:var(--ink-3)">투입 ${r.weeks * 100} →
           ${Math.round(r.weeks * 100 * (1 + r.run_ret))}</td>
@@ -480,6 +482,13 @@ function renderRuns() {
      <b>같은 국면이라도 청산일은 갈린다.</b> 아크 감소를 각 포지션의 진입 시점 대비로
      재기 때문이다 — 2023-01 국면은 09-12 / 09-22 / 10-09 로 나뉘어 청산됐다.<br><br>
      2023-01-17 만 화요일 매수인데, 1월 16일이 미국 휴장(MLK Day)이라 하루 밀렸다.<br><br>
+     <b>점수는 신호가 뜬 그 주의 종합 점수다</b>(아크·RSI·낙폭·MACD·200일선·볼린저 백분위 평균).
+     완료 15건에서 <b>점수와 수익률의 상관 r = +0.54</b> 였다 —
+     점수 76 이상 8건 평균 <b>+95.4%</b> vs 76 미만 7건 <b>+50.6%</b>.
+     구성요소별로는 200일선 이격(+0.66)과 RSI(+0.58)가 가장 강하고 MACD 는 -0.10 이다.
+     다만 n=15 이고, 낙폭은 이미 진입 필터에 쓰이므로 일부 순환이 있다.
+     <b>점수가 낮다고 신호가 무효인 것은 아니다</b> — 15건 전부 수익이었고
+     최저 점수(53)인 2025-08-15 도 +25.8% 였다.<br><br>
      <b>이 승률은 착시다.</b> RSI 70 을 찍어야 청산되므로 반등하지 못한 국면은
      아직 통계에 들어가지 않는다. 지난주 신호가 바로 그 상태다(RSI ${S.tech ? S.tech.rsi : "—"}).`;
 }

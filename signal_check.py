@@ -280,6 +280,16 @@ def _signal_runs(w: pd.DataFrame, px: pd.Series) -> list:
                 return j, "아크 -20% + 낙폭 회복"
         return (e + MAX_HOLD, "상한 도달") if e + MAX_HOLD < len(V) else (None, None)
 
+    # 신호 시점의 종합 점수도 함께 싣는다 (수익률과 r=+0.54 로 상관이 있다)
+    try:
+        from score_model import components
+        _sh = build_daily(px)["shares"]
+        _c = components(px, _sh.resample("W-FRI").last().dropna().diff())
+        _cols = ["ark", "rsi", "dd", "macd", "ma", "bb"]
+        _score = _c[_cols].mean(axis=1) * 100
+    except Exception:
+        _score = None
+
     out = []
     for rn in runs:
         entries, rets = [], []
@@ -298,6 +308,8 @@ def _signal_runs(w: pd.DataFrame, px: pd.Series) -> list:
                 "exit_price": None if x is None else round(float(V[x]), 2),
                 "days": int((x if x is not None else len(V) - 1) - k),
                 "ret": round(float(ret), 6),
+                "score": (None if _score is None or t not in _score.index
+                          or pd.isna(_score[t]) else round(float(_score[t]), 0)),
                 "why": why, "open": x is None})
         if not entries:
             continue

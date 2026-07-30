@@ -246,7 +246,7 @@ jobs:
             "직전 신호: ${PREV} (${AGO}주 전)" \
             "" \
             "보유 포지션: ${POSN}건 (평균 ${PRET}%) · RSI ${PRSI}" \
-            "누적 전체: ${ALLRET}%" \
+            "과거 신호 16건 평균 수익: ${ALLRET}%" \
             "" \
             "데이터 기준일: ${HDATE}" \
             "https://go2god4u-glitch.github.io/ark-tsla-signal/")
