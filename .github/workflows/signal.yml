@@ -117,11 +117,11 @@ jobs:
           TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
           REASON: ${{ steps.pos.outputs.reason }}
           RSI: ${{ steps.pos.outputs.rsi }}
-          ENTRY: ${{ steps.pos.outputs.entry_date }}
-          EP: ${{ steps.pos.outputs.entry_price }}
+          ENTRY: ${{ steps.pos.outputs.sold_entry }}
           PRICE: ${{ steps.check.outputs.price }}
-          RET: ${{ steps.pos.outputs.unrealized }}
-          DAYS: ${{ steps.pos.outputs.held_days }}
+          RET: ${{ steps.pos.outputs.sold_ret }}
+          DAYS: ${{ steps.pos.outputs.sold_days }}
+          LEFT: ${{ steps.pos.outputs.open_count }}
         run: |
           if [ -z "$TG_TOKEN" ]; then echo "시크릿 미설정 - 건너뜀"; exit 0; fi
           TEXT=$(printf '%s\n' \
@@ -130,8 +130,9 @@ jobs:
             "사유: ${REASON}" \
             "현재 RSI: ${RSI}" \
             "" \
-            "진입: ${ENTRY} \$${EP}" \
-            "현재: \$${PRICE}  (${RET}%, ${DAYS}거래일 보유)" \
+            "진입: ${ENTRY}" \
+            "청산가: \$${PRICE}  (${RET}%, ${DAYS}거래일 보유)" \
+            "남은 보유 포지션: ${LEFT}건" \
             "" \
             "청산은 다음 거래일 종가 기준입니다." \
             "한국시간 화요일 새벽 5~6시." \
@@ -211,11 +212,10 @@ jobs:
           HDATE: ${{ steps.check.outputs.holdings_date }}
           SCORE: ${{ steps.check.outputs.score }}
           PROB: ${{ steps.check.outputs.prob }}
-          POS: ${{ steps.pos.outputs.pos_open }}
+          POSN: ${{ steps.pos.outputs.open_count }}
           PRSI: ${{ steps.pos.outputs.rsi }}
-          PENTRY: ${{ steps.pos.outputs.entry_date }}
-          PRET: ${{ steps.pos.outputs.unrealized }}
-          PLEFT: ${{ steps.pos.outputs.days_left }}
+          PRET: ${{ steps.pos.outputs.live_mean }}
+          ALLRET: ${{ steps.pos.outputs.all_mean }}
           FORCE_HB: ${{ inputs.force_heartbeat }}
         run: |
           # 한국 토요일 아침에만 보낸다 (= 금요일 UTC). 수동 테스트는 예외.
@@ -236,7 +236,8 @@ jobs:
             "종합 점수: ${SCORE}/100" \
             "직전 신호: ${PREV} (${AGO}주 전)" \
             "" \
-            "보유: $([ "$POS" = "true" ] && echo "있음 (${PENTRY} 진입, ${PRET}%, 상한까지 ${PLEFT}일) RSI ${PRSI}" || echo "없음")" \
+            "보유 포지션: ${POSN}건 (평균 ${PRET}%) · RSI ${PRSI}" \
+            "누적 전체: ${ALLRET}%" \
             "" \
             "데이터 기준일: ${HDATE}" \
             "https://go2god4u-glitch.github.io/ark-tsla-signal/")

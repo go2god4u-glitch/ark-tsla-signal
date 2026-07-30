@@ -401,18 +401,30 @@ function renderMode() {
   const p = P || {};
   const open = !!p.open;
   document.getElementById("modeIntro").innerHTML =
-    `판정 기준은 <b>보유 여부</b>다. 보유가 없으면 매수 신호만, 보유가 있으면 매도 신호만 판정한다.`;
-  const rows = open ? `
-      <dl class="kv" style="margin-top:14px">
-        <dt>진입일</dt><dd>${p.entry_date}</dd>
-        <dt>진입가</dt><dd>$${(p.entry_price || 0).toFixed(2)}</dd>
-        <dt>평가손익</dt><dd class="${cls(p.unrealized)}">${pct(p.unrealized)}</dd>
-        <dt>보유</dt><dd>${p.held_days}거래일 · 상한까지 ${p.days_left}일 (~${p.deadline})</dd>
-        <dt>현재 RSI</dt><dd>${p.rsi} / 기준 ${p.rsi_level}
-          ${p.armed ? "— 이미 70 돌파, 70 아래로 내려오면 매도"
-                    : "— 아직 70 미돌파. 70 위로 갔다 내려와야 매도 신호"}</dd>
-        <dt>완료 매매</dt><dd>${(p.closed_trades || []).length}건 · 누적 ${p.cumulative}배</dd>
-      </dl>` : `
+    `<b>신호마다 독립 포지션</b>이다. 신호가 뜰 때마다 새로 100 을 넣고,
+     각 포지션은 자기 진입일 기준으로 청산 조건을 본다.
+     보유 중에 새 매수 신호가 떠도 그것대로 진입한다.`;
+  const live = p.live || [];
+  const st = p.stats || {};
+  const rows = live.length ? `
+      <div class="table-scroll" style="margin-top:14px">
+        <table><thead><tr>
+          <th scope="col">진입일</th><th scope="col">진입가</th><th scope="col">평가</th>
+          <th scope="col">보유</th><th scope="col">RSI 70 돌파</th><th scope="col">상한</th>
+        </tr></thead><tbody>
+        ${live.map(x => `<tr>
+          <td>${x.entry}</td><td>$${x.entry_price.toFixed(2)}</td>
+          <td class="${cls(x.ret)}">${pct(x.ret)}</td>
+          <td>${x.days}일 (${x.days_left}일 남음)</td>
+          <td>${x.armed ? "예 — 70 아래로 내려오면 매도" : "아니오"}</td>
+          <td>${x.deadline}</td></tr>`).join("")}
+        </tbody></table>
+      </div>
+      <p class="stamp" style="margin:12px 0 0">
+        완료 ${st.closed_n}건 평균 ${pct(st.closed_mean)} (승률 ${(st.closed_hit*100).toFixed(0)}%) ·
+        보유 ${live.length}건 평균 ${pct(st.live_mean)} ·
+        <b>전체 ${st.all_n}건 ${pct(st.all_mean)} (승률 ${(st.all_hit*100).toFixed(0)}%)</b> ·
+        투입 ${st.invested} → 평가 ${st.value}</p>` : `
       <dl class="kv" style="margin-top:14px">
         <dt>다음 판정</dt><dd>금요일 미국 종가 기준 (한국 토요일 새벽)</dd>
         <dt>진입 시점</dt><dd>신호 다음 거래일 종가 (한국 화요일 새벽 5~6시)</dd>
@@ -421,9 +433,11 @@ function renderMode() {
   document.getElementById("modeBox").innerHTML = `
     <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
       <span style="font-family:var(--mono);font-size:26px;font-weight:700;
-        color:${open ? "var(--sell)" : "var(--buy)"}">${open ? "매도 신호 대기" : "매수 신호 대기"}</span>
-      <span class="stamp">${open ? "보유 중 — RSI 70 이탈 또는 6개월 상한을 기다린다"
-                                 : "보유 없음 — 아크 주간 매수 신호를 기다린다"}</span>
+        color:${live.length ? "var(--sell)" : "var(--buy)"}">${
+          live.length ? `매도 신호 대기 (보유 ${live.length}건)` : "매수 신호 대기"}</span>
+      <span class="stamp">${live.length
+        ? `각 포지션이 자기 진입일 기준으로 RSI ${p.rsi_level} 이탈 또는 ${p.max_hold}거래일 상한을 기다린다`
+        : "보유 없음 — 아크 주간 매수 신호를 기다린다"}</span>
     </div>${rows}`;
 }
 
