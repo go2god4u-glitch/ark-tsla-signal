@@ -68,7 +68,10 @@ jobs:
             echo "주 $WEEK 이슈가 이미 있다. 건너뛴다."
             exit 0
           fi
+          # 담당자 지정: Watch 설정과 무관하게 GitHub 이 담당자에게 알림을 보낸다.
+          # 레포 구독만 믿으면 알림이 조용히 안 갈 수 있다.
           gh issue create \
+            --assignee "${{ github.repository_owner }}" \
             --title "${{ inputs.force_issue && '[점검] ' || '🔔 ' }}ARK 매수신호 ON — ${{ steps.check.outputs.week }}" \
             --label "signal" \
             --body "$(cat <<'EOF'
