@@ -244,6 +244,33 @@ def build(px: pd.Series) -> pd.DataFrame:
     return w.dropna(subset=["thr_pct"])
 
 
+def _signal_runs(w: pd.DataFrame, px: pd.Series) -> list:
+    """연속(7일 이내) 신호를 한 묶음으로 정리한다."""
+    sg = list(w[w["sig"]].index)
+    if not sg:
+        return []
+    runs, cur = [], [sg[0]]
+    for t in sg[1:]:
+        if (t - cur[-1]).days <= 7:
+            cur.append(t)
+        else:
+            runs.append(cur)
+            cur = [t]
+    runs.append(cur)
+    out = []
+    for rn in runs:
+        entries = []
+        for t in rn:
+            k = px.index.searchsorted(t, side="right")
+            if k < len(px):
+                entries.append({"date": px.index[k].strftime("%Y-%m-%d"),
+                                "price": round(float(px.iloc[k]), 2)})
+        out.append({"start": rn[0].strftime("%Y-%m-%d"),
+                    "end": rn[-1].strftime("%Y-%m-%d"),
+                    "weeks": len(rn), "entries": entries})
+    return out
+
+
 def main() -> None:
     started = datetime.now(timezone.utc)
     print(f"실행 시각(UTC) {started:%Y-%m-%d %H:%M} — Actions 스케줄은 수십 분 밀릴 수 있다")
@@ -296,6 +323,9 @@ def main() -> None:
                               px.index.searchsorted(past_sig[-1], side="right") < len(px)
                               else None),
         "signal_weeks_total": int(w["sig"].sum()),
+        # 신호 묶음: 7일 이내로 이어진 신호는 한 국면으로 본다.
+        # "연속으로 뜨는 일이 흔한가" 를 화면에서 바로 볼 수 있게 싣는다.
+        "runs": _signal_runs(w, px),
         "holdings_date": daily.index[-1].strftime("%Y-%m-%d"),
         "holdings": int(daily["shares"].iloc[-1]),
         "holdings_chg": int(daily["shares"].diff().iloc[-1]),

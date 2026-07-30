@@ -175,6 +175,18 @@
   </section>
 
   <section>
+    <h2 style="font-size:17px;font-weight:700;margin:8px 0 4px">매수 신호 이력 — 연속으로 뜨는 일은 흔치 않다</h2>
+    <p id="runsIntro" style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px"></p>
+    <div class="card table-scroll">
+      <table><thead><tr>
+        <th scope="col">묶음 (신호 확정일)</th><th scope="col">연속</th>
+        <th scope="col">매수일 · 진입가</th>
+      </tr></thead><tbody id="runsBody"></tbody></table>
+    </div>
+    <p class="stamp" id="runsNote" style="line-height:1.6;margin-top:12px"></p>
+  </section>
+
+  <section>
     <h2 style="font-size:17px;font-weight:700;margin:8px 0 4px">이번 주 신호 확률</h2>
     <p style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px">
       판정은 금요일에 확정된다. 주중 진행률로 그 주 신호 확률을 추정한다.
@@ -392,6 +404,7 @@ function render() {
     </div>`;
 
   renderLastSignal();
+  renderRuns();
   renderMode();
   renderProb();
   renderSell();
@@ -403,6 +416,36 @@ function render() {
   document.getElementById("recentNow").innerHTML =
     `<span style="color:var(--hold)">${(S.holdings / 1e6).toFixed(2)}M</span>`;
   bars("weeklyChart", S.weekly);
+}
+
+/* 신호가 몇 주 연속으로 뜨는지. 표에 있는 것은 전부 매수 신호다 —
+   매도 신호는 여기 섞이지 않는다(매도는 RSI 로 판정하므로 아크 신호와 무관). */
+function renderRuns() {
+  const runs = S.runs || [];
+  if (!runs.length) { document.getElementById("runsBody").innerHTML = ""; return; }
+  const cnt = {};
+  for (const r of runs) cnt[r.weeks] = (cnt[r.weeks] || 0) + 1;
+  const total = runs.reduce((a, r) => a + r.weeks, 0);
+  document.getElementById("runsIntro").innerHTML =
+    `매수 신호 <b>${total}주</b>를 7일 이내로 이어진 것끼리 묶으면 <b>${runs.length}개 국면</b>이다.
+     아래 표는 <b>전부 매수 신호</b>다 — 매도는 RSI 로 따로 판정하므로 여기 섞이지 않는다.`;
+  document.getElementById("runsBody").innerHTML = runs.slice().reverse().map(r => {
+    const label = r.start === r.end ? r.start : `${r.start} ~ ${r.end}`;
+    const last = r === runs[runs.length - 1];
+    return `<tr${last ? ' style="background:color-mix(in srgb,var(--buy) 8%,transparent)"' : ""}>
+      <td>${label}${last ? " ← 최근" : ""}</td>
+      <td class="${r.weeks >= 3 ? "pos" : ""}">${r.weeks}주</td>
+      <td>${r.entries.map(e => `${e.date.slice(5)} $${e.price.toFixed(0)}`).join("  →  ")}</td>
+    </tr>`;
+  }).join("");
+  const parts = Object.keys(cnt).sort().map(k => `${k}주 ${cnt[k]}개`);
+  document.getElementById("runsNote").innerHTML =
+    `<b>${parts.join(" · ")}.</b> 가장 길었던 연속은 ${Math.max(...runs.map(r => r.weeks))}주다 —
+     매주 계속 뜬 적은 없다.<br><br>
+     3주 연속이 나온 두 번(2023-01, 2024-01~02)은 테슬라가 바닥권에서 계속 빠지던 구간이었다.
+     다만 <b>연속으로 뜬다고 더 좋은 자리는 아니었다</b>:
+     첫 신호 기준 완료 평균이 단발 +38.3% · 2주 +33.2% · 3주 +32.7% 로 오히려 단발이 근소하게 높다
+     (표본이 작아 차이는 무의미하다).`;
 }
 
 /* 최근 신호는 화면 맨 위에 크게 둔다. 알림을 못 봤거나 알림을 안 쓰더라도
