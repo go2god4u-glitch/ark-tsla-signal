@@ -244,6 +244,18 @@ def build(px: pd.Series) -> pd.DataFrame:
     return w.dropna(subset=["thr_pct"])
 
 
+def _chart_series(px: pd.Series) -> dict:
+    """대시보드 차트용 시계열. 파일 크기를 줄이려 3거래일 간격으로 솎는다."""
+    lo = pd.Timestamp("2021-06-01")
+    p = px[px.index >= lo]
+    dd = (px / px.rolling(252, min_periods=60).max() - 1) * 100
+    d = dd.reindex(p.index)
+    step = 3
+    return {"t": [x.strftime("%Y-%m-%d") for x in p.index[::step]],
+            "p": [round(float(v), 2) for v in p.values[::step]],
+            "dd": [None if pd.isna(v) else round(float(v), 1) for v in d.values[::step]]}
+
+
 def _rsi14(px: pd.Series) -> pd.Series:
     d = px.diff()
     up = d.clip(lower=0).ewm(alpha=1 / 14, adjust=False).mean()
@@ -377,6 +389,8 @@ def main() -> None:
         # 신호 묶음: 7일 이내로 이어진 신호는 한 국면으로 본다.
         # "연속으로 뜨는 일이 흔한가" 를 화면에서 바로 볼 수 있게 싣는다.
         "runs": _signal_runs(w, px),
+        # 차트용 주가·낙폭 시계열 (신호가 시작된 2021-06 이후, 3일 간격으로 솎음)
+        "chart": _chart_series(px),
         "holdings_date": daily.index[-1].strftime("%Y-%m-%d"),
         "holdings": int(daily["shares"].iloc[-1]),
         "holdings_chg": int(daily["shares"].diff().iloc[-1]),

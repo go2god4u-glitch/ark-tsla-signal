@@ -175,6 +175,21 @@
   </section>
 
   <section>
+    <h2 style="font-size:17px;font-weight:700;margin:8px 0 4px">주가 위의 매수 신호</h2>
+    <p id="chartIntro" style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px"></p>
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">TSLA 종가 (로그 축) · 초록 = 매수 신호 · 빨강 = 청산</span>
+        <span class="card-title" id="chartTrend"></span>
+      </div>
+      <div id="sigChart"></div>
+      <div style="border-top:1px solid var(--line-2)"></div>
+      <div id="ddChart"></div>
+    </div>
+    <p class="stamp" id="chartNote" style="line-height:1.6;margin-top:12px"></p>
+  </section>
+
+  <section>
     <h2 style="font-size:17px;font-weight:700;margin:8px 0 4px">매수 신호 이력 — 연속으로 뜨는 일은 흔치 않다</h2>
     <p id="runsIntro" style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px"></p>
     <div class="card table-scroll">
@@ -415,6 +430,7 @@ function render() {
     </div>`;
 
   renderLastSignal();
+  renderSigChart();
   renderRuns();
   renderMode();
   renderProb();
@@ -427,6 +443,116 @@ function render() {
   document.getElementById("recentNow").innerHTML =
     `<span style="color:var(--hold)">${(S.holdings / 1e6).toFixed(2)}M</span>`;
   bars("weeklyChart", S.weekly);
+}
+
+/* 주가 위에 신호를 얹은 차트. 로그 축을 쓰는 이유는 5년간 4배 넘게 움직여
+   선형 축에서는 2023년 바닥 구간이 뭉개지기 때문이다. */
+function renderSigChart() {
+  const C = S.chart;
+  if (!C || !C.t.length) return;
+  const runs = S.runs || [];
+  const sigs = runs.flatMap(r => r.entries);
+  const T = C.t.map(d => new Date(d + "T00:00:00Z").getTime());
+  const t0 = T[0], t1 = T[T.length - 1];
+  const W = Math.max(340, document.getElementById("sigChart").clientWidth || 900);
+  const P = { l: 56, r: 16, t: 16, b: 8 };
+
+  const X = ms => P.l + (ms - t0) / (t1 - t0) * (W - P.l - P.r);
+  const at = iso => X(new Date(iso + "T00:00:00Z").getTime());
+
+  /* ---- 위: 주가(로그) ---- */
+  const H = 300;
+  const lo = Math.min(...C.p), hi = Math.max(...C.p);
+  const a = Math.log10(lo * 0.93), b = Math.log10(hi * 1.07);
+  const Y = v => H - P.b - (Math.log10(v) - a) / (b - a) * (H - P.t - P.b);
+  let s = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img"
+    aria-label="테슬라 주가와 매수 신호 ${sigs.length}회를 표시한 로그 축 차트">`;
+  for (const v of [100, 150, 200, 300, 400, 500]) {
+    if (v < lo * 0.93 || v > hi * 1.07) continue;
+    s += `<line class="grid-line" x1="${P.l}" y1="${Y(v)}" x2="${W - P.r}" y2="${Y(v)}"/>
+          <text class="axis-text" x="${P.l - 8}" y="${Y(v) + 3.5}" text-anchor="end">$${v}</text>`;
+  }
+  // 진입 → 청산 연결선
+  for (const e of sigs) {
+    if (e.open || !e.exit) continue;
+    s += `<line x1="${at(e.date)}" y1="${Y(e.price)}" x2="${at(e.exit)}" y2="${Y(e.exit_price)}"
+           stroke="var(--buy)" stroke-width="1" opacity=".28"/>`;
+  }
+  s += `<polyline points="${C.p.map((v, i) => `${X(T[i]).toFixed(1)},${Y(v).toFixed(1)}`).join(" ")}"
+         fill="none" stroke="var(--price)" stroke-width="1.4" stroke-linejoin="round"/>`;
+  for (const e of sigs) {
+    if (!e.open && e.exit)
+      s += `<path d="M${at(e.exit)},${Y(e.exit_price) - 4} l4.5,-7 l-9,0 z"
+             fill="var(--sell)" stroke="var(--panel)" stroke-width="1"/>`;
+  }
+  for (const e of sigs)
+    s += `<circle cx="${at(e.date)}" cy="${Y(e.price)}" r="5" fill="var(--buy)"
+           stroke="var(--panel)" stroke-width="1.6"/>`;
+  // 신호 진입가 추세선 (로그 공간 회귀)
+  const xs = sigs.map(e => new Date(e.date + "T00:00:00Z").getTime());
+  const ys = sigs.map(e => Math.log(e.price));
+  const n = xs.length, mx = xs.reduce((p, c) => p + c, 0) / n, my = ys.reduce((p, c) => p + c, 0) / n;
+  const slope = xs.reduce((p, x, i) => p + (x - mx) * (ys[i] - my), 0) /
+                xs.reduce((p, x) => p + (x - mx) ** 2, 0);
+  const yr = (Math.exp(slope * 365 * 864e5) - 1) * 100;
+  const f = x => Math.exp(my + slope * (x - mx));
+  s += `<line x1="${X(Math.min(...xs))}" y1="${Y(f(Math.min(...xs)))}"
+         x2="${X(Math.max(...xs))}" y2="${Y(f(Math.max(...xs)))}"
+         stroke="var(--arkk)" stroke-width="2" stroke-dasharray="6 4"/>`;
+  for (let y = 2022; y <= 2026; y++) {
+    const x = X(new Date(`${y}-01-01T00:00:00Z`).getTime());
+    if (x > P.l && x < W - P.r)
+      s += `<line class="grid-line" x1="${x}" y1="${P.t}" x2="${x}" y2="${H - P.b}" opacity=".5"/>`;
+  }
+  document.getElementById("sigChart").innerHTML = s + "</svg>";
+
+  /* ---- 아래: 낙폭 ---- */
+  const H2 = 130, P2 = { ...P, t: 14, b: 26 };
+  const Y2 = v => H2 - P2.b - (v - (-75)) / (0 - (-75)) * (H2 - P2.t - P2.b);
+  let s2 = `<svg viewBox="0 0 ${W} ${H2}" height="${H2}" role="img"
+    aria-label="252일 고점 대비 낙폭과 진입 문턱 -30% 선">`;
+  for (const v of [0, -20, -40, -60]) {
+    s2 += `<line class="grid-line" x1="${P2.l}" y1="${Y2(v)}" x2="${W - P2.r}" y2="${Y2(v)}"/>
+           <text class="axis-text" x="${P2.l - 8}" y="${Y2(v) + 3.5}" text-anchor="end">${v}%</text>`;
+  }
+  s2 += `<line x1="${P2.l}" y1="${Y2(S.dd_filter)}" x2="${W - P2.r}" y2="${Y2(S.dd_filter)}"
+          stroke="var(--buy)" stroke-width="1.2" stroke-dasharray="3 3"/>
+         <text class="axis-text" x="${W - P2.r}" y="${Y2(S.dd_filter) - 5}" text-anchor="end"
+          fill="var(--buy)">진입 문턱 ${S.dd_filter}%</text>`;
+  const dpts = [];
+  C.dd.forEach((v, i) => { if (v != null) dpts.push(`${X(T[i]).toFixed(1)},${Y2(v).toFixed(1)}`); });
+  s2 += `<polyline points="${dpts.join(" ")}" fill="none" stroke="var(--ink-3)" stroke-width="1.2"/>`;
+  for (const e of sigs) {
+    const i = C.t.findIndex(d => d >= e.date);
+    if (i >= 0 && C.dd[i] != null)
+      s2 += `<circle cx="${at(e.date)}" cy="${Y2(C.dd[i])}" r="3.6" fill="var(--buy)"
+              stroke="var(--panel)" stroke-width="1.2"/>`;
+  }
+  for (let y = 2022; y <= 2026; y++) {
+    const x = X(new Date(`${y}-01-01T00:00:00Z`).getTime());
+    if (x > P2.l && x < W - P2.r)
+      s2 += `<text class="axis-text" x="${x}" y="${H2 - 8}" text-anchor="middle">${y}</text>`;
+  }
+  document.getElementById("ddChart").innerHTML = s2 + "</svg>";
+
+  /* ---- 설명 ---- */
+  document.getElementById("chartTrend").innerHTML =
+    `신호 진입가 추세 <b style="color:var(--arkk)">연 ${yr >= 0 ? "+" : ""}${yr.toFixed(0)}%</b>`;
+  const byYear = {};
+  for (const e of sigs) (byYear[e.date.slice(0, 4)] ||= []).push(e.price);
+  const yrTxt = Object.entries(byYear)
+    .map(([y, ps]) => `${y} $${Math.round(ps.reduce((p, c) => p + c, 0) / ps.length)}`).join(" → ");
+  document.getElementById("chartIntro").innerHTML =
+    `매수 신호 <b>${sigs.length}회</b>가 언제·어느 가격에 떴는지. 파란 점선은 진입가 추세선이다.
+     아래 패널은 252일 고점 대비 낙폭과 진입 문턱(${S.dd_filter}%)이다.`;
+  document.getElementById("chartNote").innerHTML =
+    `<b>연도별 진입가 평균: ${yrTxt}.</b> 신호 진입가는 연 ${yr.toFixed(0)}% 로 우상향한다.<br><br>
+     낙폭은 <b>252일 고점 대비 상대값</b>이라 주가 수준이 오르면 같은 "-30%" 의 절대 가격도
+     같이 오른다. 2023년 초 신호는 낙폭 -62~-69% 구간이었고 2025~2026년 신호는 -30~-37% 다 —
+     <b>같은 매수 신호라도 위기의 깊이가 다르다.</b>
+     실제로 2023~2024년 신호는 100% 대 수익이었고 2025년 이후는 20~30% 대다.<br><br>
+     규칙은 절대 가격을 보지 않는다. 그것이 감정을 배제하는 장점이자,
+     <b>전체 수준이 올라가도 똑같이 사들이는 위험</b>이다.`;
 }
 
 /* 신호가 몇 주 연속으로 뜨는지. 표에 있는 것은 전부 매수 신호다 —
