@@ -7,6 +7,7 @@
 | [DECISIONS.md](DECISIONS.md) | 왜 그렇게 정했나 + **뒤집힌 결론들** | "왜 이렇게 했지" / "이거 전에 해봤나" |
 | [OPERATIONS.md](OPERATIONS.md) | 자동화·알림·시간대·점검 방법 | "알림이 왜 안 오지" |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | 데이터 소스의 함정들 | "데이터가 이상한데" |
+| [../CLAUDE.md](../CLAUDE.md) | **작업 규칙** — 이 저장소에서 저지른 실수와 재발 방지 | 분석을 시작하기 전에 |
 
 ## 한 줄 요약
 
