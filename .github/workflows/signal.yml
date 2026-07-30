@@ -48,6 +48,7 @@ jobs:
         run: python holding_returns.py
 
       - name: 신호 확률 갱신
+        id: prob
         run: python signal_probability.py
 
       - name: 보유 상태 추적 (매수/매도 판정)
@@ -211,7 +212,8 @@ jobs:
           AGO: ${{ steps.check.outputs.prev_ago }}
           HDATE: ${{ steps.check.outputs.holdings_date }}
           SCORE: ${{ steps.check.outputs.score }}
-          PROB: ${{ steps.check.outputs.prob }}
+          PROB: ${{ steps.prob.outputs.prob }}
+          PDAY: ${{ steps.prob.outputs.day }}
           POSN: ${{ steps.pos.outputs.open_count }}
           PRSI: ${{ steps.pos.outputs.rsi }}
           PRET: ${{ steps.pos.outputs.live_mean }}
@@ -230,7 +232,7 @@ jobs:
             "" \
             "판정 주: ${WEEK}" \
             "순매수: ${NETP}% / 문턱: ${THRP}%  (진행률 ${PROG}%)" \
-            "이번 주 신호 확률: ${PROB}%" \
+            "이번 주 신호 확률: ${PROB}% (${PDAY}일차 기준)" \
             "" \
             "TSLA: \$${PRICE} (사상최고 대비 ${DD}%)" \
             "종합 점수: ${SCORE}/100" \

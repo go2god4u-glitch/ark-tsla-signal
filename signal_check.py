@@ -312,15 +312,8 @@ def main() -> None:
             f.write(f"holdings_date={state['holdings_date']}\n")
             f.write(f"holdings={state['holdings']}\n")
             f.write(f"score={state.get('score', {}).get('total', '-')}\n")
-            # 신호 확률(주중 예보) — signal_probability.py 가 먼저 돌아야 값이 있다
-            try:
-                with open(os.path.join(BASE, "data", "signal_probability.json")) as pf:
-                    cur = json.load(pf).get("current", [])
-                last = next((c for c in reversed(cur) if c.get("prob") is not None), None)
-                f.write(f"prob={last['prob'] if last else '-'}\n")
-                f.write(f"prog={last['prog'] if last else '-'}\n")
-            except Exception:
-                f.write("prob=-\nprog=-\n")
+            # 신호 확률은 signal_probability.py 스텝이 직접 내보낸다.
+            # 여기서 읽으면 실행 순서상 하루 전 값이 나간다.
 
 
 if __name__ == "__main__":

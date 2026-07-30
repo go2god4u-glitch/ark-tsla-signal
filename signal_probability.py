@@ -187,6 +187,17 @@ def main() -> None:
                   ensure_ascii=True, indent=2, default=float)
     print("\n저장: data/signal_probability.json")
 
+    # 확률은 이 스텝이 직접 내보낸다.
+    # signal_check 가 이 파일을 읽게 하면 실행 순서상 하루 전 값을 쓰게 된다
+    # (signal_check 가 먼저 돌고 이 파일은 그 뒤에 갱신되므로).
+    if o := os.environ.get("GITHUB_OUTPUT"):
+        last = next((c for c in reversed(out_now) if c.get("prob") is not None), None)
+        with open(o, "a") as f:
+            f.write(f"prob={last['prob'] if last else '-'}\n")
+            f.write(f"prog={last['prog'] if last else '-'}\n")
+            f.write(f"cum_pct={last['cum_pct'] if last else '-'}\n")
+            f.write(f"day={last['day'] if last else '-'}\n")
+
 
 if __name__ == "__main__":
     main()
