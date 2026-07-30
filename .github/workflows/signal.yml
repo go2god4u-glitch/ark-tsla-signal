@@ -99,6 +99,47 @@ jobs:
           EOF
           )"
 
+      - name: 텔레그램 알림
+        if: steps.check.outputs.signal == 'true' || inputs.force_issue
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          WEEK: ${{ steps.check.outputs.week }}
+          NET: ${{ steps.check.outputs.net }}
+          THR: ${{ steps.check.outputs.threshold }}
+          PRICE: ${{ steps.check.outputs.price }}
+          DD: ${{ steps.check.outputs.drawdown }}
+          TEST: ${{ inputs.force_issue }}
+        run: |
+          # 시크릿이 없으면 조용히 건너뛴다(미설정 환경에서 실패하지 않게)
+          if [ -z "$TG_TOKEN" ] || [ -z "$TG_CHAT" ]; then
+            echo "텔레그램 시크릿 미설정 - 건너뜀"; exit 0
+          fi
+          # 여러 줄 문자열을 YAML 안에 직접 쓰면 들여쓰기가 블록 스칼라를 깨뜨린다.
+          # printf 로 한 줄씩 조립한다.
+          PREFIX=""
+          if [ "$TEST" = "true" ]; then PREFIX="[점검] "; fi
+          TEXT=$(printf '%s\n' \
+            "${PREFIX}ARK 테슬라 매수신호 ON" \
+            "" \
+            "판정 주: ${WEEK} (금요일 기준)" \
+            "그 주 순매수: ${NET} 주" \
+            "문턱: ${THR} 주" \
+            "TSLA: \$${PRICE} (사상최고 대비 ${DD}%)" \
+            "" \
+            "진입은 다음 거래일 종가. 한국시간 화요일 새벽 5~6시." \
+            "" \
+            "주의: 완료 사건 7건에서 나온 결과다. 확정된 것이 아니다." \
+            "MDD -45% 를 견뎌야 나오는 수익이다." \
+            "" \
+            "https://go2god4u-glitch.github.io/ark-tsla-signal/")
+          curl -sS -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TG_CHAT}" \
+            --data-urlencode "text=${TEXT}" \
+            --data-urlencode "disable_web_page_preview=true" \
+            -o /tmp/tg.json -w "HTTP %{http_code}\n"
+          python3 -c "import json,sys;d=json.load(open('/tmp/tg.json'));print('전송:',d.get('ok'));sys.exit(0 if d.get('ok') else 1)"
+
       - name: 요약
         if: always()
         run: |
