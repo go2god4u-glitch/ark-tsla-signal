@@ -1,10 +1,10 @@
 {
-  "updated": "2026-07-30T12:23:11+00:00",
+  "updated": "2026-07-30T12:30:23+00:00",
   "price_date": "2026-07-29",
   "price": 298.32,
   "rsi": 25.4,
   "rsi_level": 70,
-  "max_hold": 126,
+  "max_hold": 504,
   "action": "NONE",
   "reason": "",
   "open_count": 1,
@@ -13,101 +13,101 @@
     {
       "entry": "2022-02-28",
       "entry_price": 290.14,
-      "exit": "2022-08-29",
-      "exit_price": 284.82,
-      "days": 126,
-      "ret": -0.018347,
-      "reason": "6\uac1c\uc6d4 \uacbd\uacfc"
+      "exit": "2022-04-22",
+      "exit_price": 335.02,
+      "days": 38,
+      "ret": 0.154659,
+      "reason": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5"
     },
     {
       "entry": "2023-01-09",
       "entry_price": 119.77,
-      "exit": "2023-07-12",
-      "exit_price": 271.99,
-      "days": 126,
-      "ret": 1.270936,
-      "reason": "6\uac1c\uc6d4 \uacbd\uacfc"
+      "exit": "2023-10-09",
+      "exit_price": 259.67,
+      "days": 188,
+      "ret": 1.168072,
+      "reason": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5"
     },
     {
       "entry": "2023-01-17",
       "entry_price": 131.49,
-      "exit": "2023-07-19",
-      "exit_price": 291.26,
-      "days": 126,
-      "ret": 1.215073,
-      "reason": "6\uac1c\uc6d4 \uacbd\uacfc"
+      "exit": "2023-09-22",
+      "exit_price": 244.88,
+      "days": 172,
+      "ret": 0.862347,
+      "reason": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5"
     },
     {
       "entry": "2023-01-23",
       "entry_price": 143.75,
-      "exit": "2023-07-25",
-      "exit_price": 265.28,
-      "days": 126,
-      "ret": 0.845426,
-      "reason": "6\uac1c\uc6d4 \uacbd\uacfc"
+      "exit": "2023-09-12",
+      "exit_price": 267.48,
+      "days": 160,
+      "ret": 0.860731,
+      "reason": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5"
     },
     {
       "entry": "2023-03-20",
       "entry_price": 183.25,
-      "exit": "2023-09-19",
-      "exit_price": 266.5,
-      "days": 126,
-      "ret": 0.454297,
-      "reason": "6\uac1c\uc6d4 \uacbd\uacfc"
+      "exit": "2023-09-07",
+      "exit_price": 251.49,
+      "days": 118,
+      "ret": 0.372387,
+      "reason": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5"
     },
     {
       "entry": "2023-04-24",
       "entry_price": 162.55,
-      "exit": "2023-10-23",
-      "exit_price": 212.08,
-      "days": 126,
-      "ret": 0.304706,
-      "reason": "6\uac1c\uc6d4 \uacbd\uacfc"
+      "exit": "2023-09-18",
+      "exit_price": 265.28,
+      "days": 101,
+      "ret": 0.63199,
+      "reason": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5"
     },
     {
       "entry": "2024-01-29",
       "entry_price": 190.93,
-      "exit": "2024-07-30",
-      "exit_price": 222.62,
-      "days": 126,
-      "ret": 0.165977,
-      "reason": "6\uac1c\uc6d4 \uacbd\uacfc"
+      "exit": "2025-01-03",
+      "exit_price": 410.44,
+      "days": 235,
+      "ret": 1.149688,
+      "reason": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5"
     },
     {
       "entry": "2024-02-05",
       "entry_price": 181.06,
-      "exit": "2024-08-06",
-      "exit_price": 200.64,
-      "days": 126,
-      "ret": 0.108141,
-      "reason": "6\uac1c\uc6d4 \uacbd\uacfc"
+      "exit": "2024-12-19",
+      "exit_price": 436.17,
+      "days": 221,
+      "ret": 1.408981,
+      "reason": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5"
     },
     {
       "entry": "2024-02-12",
       "entry_price": 188.13,
-      "exit": "2024-08-13",
-      "exit_price": 207.83,
-      "days": 126,
-      "ret": 0.104715,
-      "reason": "6\uac1c\uc6d4 \uacbd\uacfc"
+      "exit": "2024-12-16",
+      "exit_price": 463.02,
+      "days": 213,
+      "ret": 1.46117,
+      "reason": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5"
     },
     {
       "entry": "2024-04-01",
       "entry_price": 175.22,
-      "exit": "2024-09-30",
-      "exit_price": 261.63,
-      "days": 126,
-      "ret": 0.493151,
-      "reason": "6\uac1c\uc6d4 \uacbd\uacfc"
+      "exit": "2024-11-11",
+      "exit_price": 350.0,
+      "days": 156,
+      "ret": 0.997489,
+      "reason": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5"
     },
     {
       "entry": "2024-04-08",
       "entry_price": 172.98,
-      "exit": "2024-10-07",
-      "exit_price": 240.83,
-      "days": 126,
-      "ret": 0.392242,
-      "reason": "6\uac1c\uc6d4 \uacbd\uacfc"
+      "exit": "2024-10-29",
+      "exit_price": 259.52,
+      "days": 142,
+      "ret": 0.500289,
+      "reason": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5"
     },
     {
       "entry": "2025-03-17",
@@ -116,34 +116,34 @@
       "exit_price": 421.62,
       "days": 126,
       "ret": 0.771438,
-      "reason": "6\uac1c\uc6d4 \uacbd\uacfc"
+      "reason": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5"
     },
     {
       "entry": "2025-07-21",
       "entry_price": 328.49,
-      "exit": "2026-01-20",
-      "exit_price": 419.25,
-      "days": 126,
-      "ret": 0.276295,
-      "reason": "6\uac1c\uc6d4 \uacbd\uacfc"
+      "exit": "2025-09-16",
+      "exit_price": 421.62,
+      "days": 40,
+      "ret": 0.283509,
+      "reason": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5"
     },
     {
       "entry": "2025-07-28",
       "entry_price": 325.59,
-      "exit": "2026-01-27",
-      "exit_price": 430.9,
-      "days": 126,
-      "ret": 0.323444,
-      "reason": "6\uac1c\uc6d4 \uacbd\uacfc"
+      "exit": "2025-09-16",
+      "exit_price": 421.62,
+      "days": 35,
+      "ret": 0.294941,
+      "reason": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5"
     },
     {
       "entry": "2025-08-18",
       "entry_price": 335.16,
-      "exit": "2026-02-18",
-      "exit_price": 411.32,
-      "days": 126,
-      "ret": 0.227235,
-      "reason": "6\uac1c\uc6d4 \uacbd\uacfc"
+      "exit": "2025-09-16",
+      "exit_price": 421.62,
+      "days": 20,
+      "ret": 0.257966,
+      "reason": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5"
     }
   ],
   "live": [
@@ -151,22 +151,25 @@
       "entry": "2026-07-27",
       "entry_price": 309.22,
       "days": 2,
-      "days_left": 124,
+      "days_left": 502,
       "ret": -0.03525,
-      "armed": false,
-      "deadline": "2027-01-18"
+      "ark_drop": 0.0094,
+      "dd": -39.1,
+      "need_ark": 20.0,
+      "need_dd": -20.0,
+      "deadline": "2028-06-30"
     }
   ],
   "stats": {
     "closed_n": 15,
-    "closed_mean": 0.462315,
-    "closed_hit": 0.933,
-    "closed_worst": -0.018347,
+    "closed_mean": 0.745044,
+    "closed_hit": 1.0,
+    "closed_worst": 0.154659,
     "live_mean": -0.03525,
     "all_n": 16,
-    "all_mean": 0.431217,
-    "all_hit": 0.875,
+    "all_mean": 0.696276,
+    "all_hit": 0.938,
     "invested": 1600,
-    "value": 2290.0
+    "value": 2714.0
   }
 }

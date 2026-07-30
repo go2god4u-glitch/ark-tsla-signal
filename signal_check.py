@@ -269,11 +269,16 @@ def _signal_runs(w: pd.DataFrame, px: pd.Series) -> list:
             cur = [t]
     runs.append(cur)
     V = px.values
-    MAX_HOLD = 126          # 6개월 고정 보유 (position_tracker 와 동일)
+    # position_tracker 와 같은 규칙: 아크 -20% AND 낙폭 -20% 회복
+    from position_tracker import ARK_DROP, DD_RECOVER, MAX_HOLD
+    H = build_daily(px)["shares"].reindex(px.index).ffill().values
+    DDv = ((px / px.rolling(252, min_periods=60).max() - 1) * 100).values
 
     def exit_of(e):
-        j = e + MAX_HOLD
-        return (j, "6개월 경과") if j < len(V) else (None, None)
+        for j in range(e + 1, min(e + MAX_HOLD + 1, len(V))):
+            if H[j] <= H[e] * (1 - ARK_DROP) and DDv[j] >= DD_RECOVER:
+                return j, "아크 -20% + 낙폭 회복"
+        return (e + MAX_HOLD, "상한 도달") if e + MAX_HOLD < len(V) else (None, None)
 
     out = []
     for rn in runs:

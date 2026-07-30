@@ -1,42 +1,32 @@
 """보유 상태 — 데이터에서 매번 재구성한다. 상태 파일에 의존하지 않는다.
 
-규칙:
-  진입  아크 주간 순매수가 문턱(과거 기준 상위 10%)을 넘고
-        낙폭이 -30% 이하인 주 -> 다음 거래일 종가
-  청산  진입 후 126거래일(약 6개월) 경과
+규칙 (진입과 청산이 서로의 거울상이다):
 
-청산 규칙을 RSI 70 이탈에서 6개월 고정으로 바꾼 이유:
-  RSI 규칙은 '단일 포지션 복리' 틀에서 골랐다. 그 틀은 겹치는 신호를 하나로
-  병합해 매매가 5건뿐이었다. 이후 자본 모델을 '신호마다 독립 100' 으로 바꿨는데
-  매도 규칙은 다시 고르지 않았다. 틀이 바뀌면 순위가 바뀐다 — 실제로 뒤집혔다.
+  진입  아크 주간 순매수율이 문턱(과거 기준 상위 10%)을 넘고
+        전고점 대비 낙폭이 -30% 이하인 주  ->  다음 거래일 종가
+  청산  아크 합산 보유가 진입 시점 대비 -20% 줄고
+        AND 낙폭이 -20% 까지 회복하면      ->  그날 종가
+        (안 걸리면 504거래일 상한. 백테스트에서는 15건 전부 규칙으로 청산됐다)
 
-  독립 포지션 틀(총 16건) 기준 평가액:
-    6개월 고정        2290   (승률 88%, 최악 -3.5%, 평균보유 118일)
-    RSI 70 이탈       2093   (승률 94%, 최악 -3.5%, 평균보유  49일)
-    9개월 고정        2464   (승률 88%, 최악 -37.0%)
-    10개월 고정       2514   (승률 88%, 최악 -61.2%)
+  신호마다 독립 포지션이다. 이미 보유 중이어도 새 신호가 뜨면 새로 진입하고,
+  각 포지션은 자기 진입일 기준으로 청산 조건을 본다.
 
-  더 오래 들면 평가액은 오르지만 최악 사례가 -3.5% -> -61.2% 로 급격히 나빠진다.
-  5~7개월 구간이 최악 -3.5% 를 유지하면서 평가 2226~2290 으로 안정적이다.
+왜 이 규칙인가:
+  '6개월 고정' 은 성적은 났지만 원칙이 없다. 진입이 '아크가 사고 + 낙폭 깊을 때'
+  이므로 청산은 '아크가 줄이고 + 낙폭 회복' 이 자연스러운 대칭이다.
 
-  아크 매도를 넣어도 개선되지 않는다: 아크 하위10% AND RSI≥70 이 2328 인데
-  아크 없는 126일 고정이 2290 이다(차이 1.7%). 게다가 그 규칙의 청산 15건 중
-  10건이 상한 도달이라, 실제로는 아크가 아니라 '오래 들고 있던' 효과였다.
-  신호마다 독립 포지션이다. 이미 보유 중이어도 새 신호가 뜨면 새로 100 을 넣고,
-  그 포지션은 자기 진입일 기준으로 청산 조건을 본다.
-  'RSI 70 을 넘은 적이 있는가'(armed)도 포지션마다 따로 센다.
+  아크 감소는 '이번 주에 팔았나'(잡음이 많다)가 아니라
+  '진입 이후 누적으로 얼마나 빠져나갔나'를 본다.
 
-  처음에는 '보유 중 신호는 무시' 로 만들었는데 근거 없는 임의 규칙이었다.
-  아크가 물타기 하는 구간(2026-07-13, 07-27)을 통째로 흘려보내고 있었다.
+  검증: 아크 -10~-25% × 낙폭 -30~-10% 격자 35칸이 **전부** 126일 고정(2290)을
+  넘었다(중앙값 2610, 최솟값 2364). 한 점이 아니라 구간 전체다.
+  채택값(-20%/-20%)은 격자 중앙이며 최고값(-25%/-10%, 3066)이 아니다.
+
+  기간 분할도 통과: 전반 8건 +82.6%(승률 100%), 후반 8건 +56.6%(88%).
 
 왜 누적 상태 파일을 쓰지 않는가:
-  처음에는 매 실행마다 상태를 파일에 이어 쓰는 방식으로 만들었다. 그런데
-  파일이 없거나 초기화되면 과거 진입을 통째로 잊는다. 실제로 그 버그가 났다 —
-  2026-06-01 에 진입해 보유 중인데도 상태 파일은 '보유 없음' 이라고 했다.
-
-  보유 여부는 과거 데이터로 완전히 결정되는 값이다. 저장할 것이 아니라
-  계산할 것이다. 매 실행마다 전 구간을 재생해 현재 위치를 확정한다.
-  파일은 결과를 화면에 넘기기 위한 출력일 뿐, 판단의 입력이 아니다.
+  파일이 없거나 초기화되면 과거 진입을 통째로 잊는다. 실제로 그 버그가 났다.
+  보유 여부는 과거 데이터로 완전히 결정되는 값이므로 매 실행마다 재생한다.
 """
 
 import json
@@ -49,7 +39,9 @@ import pandas as pd
 BASE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(BASE, "data", "position.json")
 
-MAX_HOLD = 126          # 6개월 고정 보유 (독립 포지션 틀에서 재선정)
+ARK_DROP = 0.20         # 아크 보유가 진입 대비 이만큼 줄면 (청산 조건 1)
+DD_RECOVER = -20.0      # 낙폭이 이 수준까지 회복하면 (청산 조건 2)
+MAX_HOLD = 504          # 안전장치. 규칙이 안 걸릴 때만 쓰인다
 RSI_LEVEL = 70          # 참고 표시용. 청산 판정에는 쓰지 않는다
 
 
@@ -60,19 +52,30 @@ def rsi14(px: pd.Series) -> pd.Series:
     return 100 - 100 / (1 + up / dn)
 
 
-def replay(V, RSI, sig_locs):
-    """신호마다 독립 포지션을 돌린다. (완료 목록, 보유 중 목록)."""
+def replay(V, RSI, sig_locs, H, DD):
+    """신호마다 독립 포지션. (완료 목록, 보유 중 목록).
+
+    H  = 아크 합산 보유 주식 수 (가격 인덱스에 맞춰 채운 것)
+    DD = 전고점 대비 낙폭 (%)
+    """
     done, live = [], []
     for e in sorted(sig_locs):
-        j = e + MAX_HOLD
-        if j < len(V):
-            done.append({"entry_i": e, "exit_i": j,
-                         "ret": float(V[j] / V[e] - 1),
-                         "reason": "6개월 경과"})
-        else:
+        hit = None
+        for j in range(e + 1, min(e + MAX_HOLD + 1, len(V))):
+            if H[j] <= H[e] * (1 - ARK_DROP) and DD[j] >= DD_RECOVER:
+                hit = (j, "아크 -20% + 낙폭 회복")
+                break
+        if hit is None and e + MAX_HOLD < len(V):
+            hit = (e + MAX_HOLD, "상한 도달")
+        if hit is None:
             live.append({"entry_i": e,
-                         "armed": bool((RSI[e + 1:] >= RSI_LEVEL).any()),
+                         "ark_drop": float(H[-1] / H[e] - 1),
+                         "dd": float(DD[-1]),
                          "ret": float(V[-1] / V[e] - 1)})
+        else:
+            j, why = hit
+            done.append({"entry_i": e, "exit_i": j,
+                         "ret": float(V[j] / V[e] - 1), "reason": why})
     return done, live
 
 
@@ -87,7 +90,10 @@ def main() -> None:
     sig_locs = {px.index.searchsorted(t, side="right") for t in w[w["sig"]].index}
     sig_locs = {i for i in sig_locs if i < len(px)}
 
-    done, live = replay(V, RSI, sig_locs)
+    from signal_check import build_daily
+    H = build_daily(px)["shares"].reindex(px.index).ffill().values
+    DD = ((px / px.rolling(252, min_periods=60).max() - 1) * 100).values
+    done, live = replay(V, RSI, sig_locs, H, DD)
     last_i = len(V) - 1
 
     # 오늘 새로 생긴 것만 알림 대상이다
@@ -123,7 +129,9 @@ def main() -> None:
              "entry_price": round(float(V[p["entry_i"]]), 2),
              "days": int(last_i - p["entry_i"]),
              "days_left": int(MAX_HOLD - (last_i - p["entry_i"])),
-             "ret": round(p["ret"], 6), "armed": bool(p["armed"]),
+             "ret": round(p["ret"], 6),
+             "ark_drop": round(p["ark_drop"], 4), "dd": round(p["dd"], 1),
+             "need_ark": ARK_DROP * 100, "need_dd": DD_RECOVER,
              "deadline": (px.index[p["entry_i"] + MAX_HOLD].strftime("%Y-%m-%d")
                           if p["entry_i"] + MAX_HOLD < len(px)
                           else (px.index[last_i] + pd.Timedelta(
@@ -151,8 +159,9 @@ def main() -> None:
     print(f"전체 {s_['all_n']}건: 투입 {s_['invested']} -> 평가 {s_['value']:.0f} "
           f"({s_['all_mean']*100:+.1f}%, 승률 {s_['all_hit']*100:.0f}%)")
     for p in st["live"]:
-        print(f"  보유: {p['entry']} ${p['entry_price']} {p['ret']*100:+.1f}% "
-              f"({p['days']}일, 상한 {p['deadline']}, RSI70돌파 {'O' if p['armed'] else 'X'})")
+        print(f"  보유: {p['entry']} ${p['entry_price']} {p['ret']*100:+.1f}% ({p['days']}일)")
+        print(f"        청산 조건  아크 {p['ark_drop']*100:+.1f}% (필요 -{p['need_ark']:.0f}%) "
+              f"AND 낙폭 {p['dd']:.1f}% (필요 {p['need_dd']:.0f}% 이상)")
     print(f"오늘 동작: {action} {reason}")
 
     if o := os.environ.get("GITHUB_OUTPUT"):

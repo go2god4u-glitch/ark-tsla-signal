@@ -208,11 +208,12 @@
   </section>
 
   <section>
-    <h2 style="font-size:17px;font-weight:700;margin:8px 0 4px">매도 규칙 — 6개월 고정 보유</h2>
+    <h2 style="font-size:17px;font-weight:700;margin:8px 0 4px">매도 규칙 — 아크 감소 + 낙폭 회복</h2>
     <p style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px">
-      <b>신호마다 100 을 넣는 독립 포지션 틀</b>에서 다시 골랐다. 규칙군 전체의 중앙값 기준으로
-      고정 보유가 가장 안정적이다(중앙값 2236 vs RSI 이탈 1978 vs 트레일링 1795).
-      아크 매도를 넣어도 개선되지 않았다 — 아래 표 참조.</p>
+      <b>진입의 거울상</b>이다. 진입이 "아크가 사고 + 낙폭 깊을 때"이므로
+      청산은 "아크가 줄이고 + 낙폭 회복"이다.
+      아크 -10~-25% × 낙폭 -30~-10% 격자 <b>35칸이 전부</b> 6개월 고정(2290)을 넘었다
+      (중앙값 2610, 최솟값 2364). 채택값 -20%/-20% 는 격자 중앙이지 최고값이 아니다.</p>
     <div class="card table-scroll" style="margin-bottom:14px">
       <div class="card-head"><span class="card-title">RSI 임계값별 (고원인가 확인)</span></div>
       <table><thead><tr>
@@ -535,14 +536,16 @@ function renderMode() {
       <div class="table-scroll" style="margin-top:14px">
         <table><thead><tr>
           <th scope="col">진입일</th><th scope="col">진입가</th><th scope="col">평가</th>
-          <th scope="col">보유</th><th scope="col">현재 RSI</th><th scope="col">청산 예정일</th>
+          <th scope="col">보유</th><th scope="col">아크 변화</th><th scope="col">낙폭</th>
         </tr></thead><tbody>
         ${live.map(x => `<tr>
           <td>${x.entry}</td><td>$${x.entry_price.toFixed(2)}</td>
           <td class="${cls(x.ret)}">${pct(x.ret)}</td>
-          <td>${x.days}일 (${x.days_left}일 남음)</td>
-          <td style="color:var(--ink-3)">${p.rsi}</td>
-          <td>${x.deadline}</td></tr>`).join("")}
+          <td>${x.days}일</td>
+          <td class="${x.ark_drop <= -x.need_ark/100 ? "pos" : ""}">${pct(x.ark_drop)}
+            <span style="color:var(--ink-3)">/ -${x.need_ark}%</span></td>
+          <td class="${x.dd >= x.need_dd ? "pos" : ""}">${x.dd}%
+            <span style="color:var(--ink-3)">/ ${x.need_dd}%</span></td></tr>`).join("")}
         </tbody></table>
       </div>
       <p class="stamp" style="margin:12px 0 0">
@@ -561,7 +564,7 @@ function renderMode() {
         color:${live.length ? "var(--sell)" : "var(--buy)"}">${
           live.length ? `매도 신호 대기 (보유 ${live.length}건)` : "매수 신호 대기"}</span>
       <span class="stamp">${live.length
-        ? `각 포지션이 자기 진입일로부터 ${p.max_hold}거래일(약 6개월) 경과를 기다린다`
+        ? `각 포지션이 <b>아크 보유 -${p.live[0].need_ark}% AND 낙폭 ${p.live[0].need_dd}% 회복</b>을 기다린다`
         : "보유 없음 — 아크 주간 매수 신호를 기다린다"}</span>
     </div>${rows}`;
 }

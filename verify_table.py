@@ -27,6 +27,11 @@ ts = pd.to_datetime(pd.Series(raw['timestamp']), unit='s').dt.normalize()
 close = pd.Series(raw['indicators']['quote'][0]['close'], index=ts).dropna().sort_index()
 
 
+# 아크 보유·낙폭도 원본에서 다시 만든다
+from signal_check import build_daily
+HH = build_daily(close)['shares'].reindex(close.index).ffill().values
+DDv = ((close / close.rolling(252, min_periods=60).max() - 1) * 100).values
+
 state = json.load(open('data/signal_state.json'))
 runs = state['runs']
 
@@ -47,10 +52,14 @@ for ri, r in enumerate(runs, 1):
         # 3) 매수가 = 그날 종가인가
         chk(abs(close.loc[ent] - e['price']) < 0.01,
             f"[{ri}] {e['date']} 종가 {close.loc[ent]:.2f} vs 표 {e['price']}")
-        # 4) 청산 규칙 재현 — 진입 후 126거래일(약 6개월) 고정 보유
+        # 4) 청산 규칙 재현 — 아크 보유 -20% AND 낙폭 -20% 회복
         k = close.index.get_loc(ent)
-        ex = k + 126 if k + 126 < len(close) else None
-        why = '6개월 경과' if ex is not None else None
+        ex = why = None
+        for j in range(k+1, min(k+505, len(close))):
+            if HH[j] <= HH[k]*0.80 and DDv[j] >= -20.0:
+                ex, why = j, '아크 -20% + 낙폭 회복'; break
+        if ex is None and k+504 < len(close):
+            ex, why = k+504, '상한 도달'
         if e['open']:
             chk(ex is None, f"[{ri}] {e['date']} 는 보유중이라는데 청산 조건이 이미 걸렸다")
             cur = float(close.iloc[-1])
