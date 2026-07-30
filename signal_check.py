@@ -203,13 +203,24 @@ def build_daily(px: pd.Series) -> pd.DataFrame:
 
 
 def build(px: pd.Series) -> pd.DataFrame:
-    """주간 판정용. 일간은 검증에 실패했으므로(README 참조) 금요일 기준으로 묶는다."""
+    """주간 판정용. 일간은 검증에 실패했으므로(README 참조) 금요일 기준으로 묶는다.
+
+    문턱은 '절대 주식 수'가 아니라 '보유 대비 %'로 잡는다.
+    아크의 규모가 시대마다 다르다. 2021년 ARKK 는 AUM $16.5B 에 테슬라 12M주였고
+    지금은 $5.6B 에 2.3M주다. 절대 주식 수로 문턱을 잡으면 2021년의 대량 매수가
+    확장창 분위수를 영구히 끌어올려, 이후 몇 년간 신호가 거의 뜨지 않는다
+    (실측: 절대 기준 사건 3개 vs 비율 기준 8개).
+    단위를 바로잡는 것이지 성적에 맞추는 것이 아니다.
+    """
     sh = build_daily(px)["shares"]
     w = sh.resample("W-FRI").last().dropna().to_frame("shares")
     w["net"] = w["shares"].diff()
-    w["thr"] = w["net"].expanding(MIN_HIST).quantile(QUANT).shift(1)   # 과거만 사용
-    w["sig"] = w["net"] >= w["thr"]
-    return w.dropna(subset=["thr"])
+    w["netpct"] = w["net"] / w["shares"].shift(1) * 100
+    w["thr_pct"] = w["netpct"].expanding(MIN_HIST).quantile(QUANT).shift(1)  # 과거만 사용
+    w["sig"] = w["netpct"] >= w["thr_pct"]
+    # 화면 표시는 주식 수가 직관적이므로 문턱을 주식 수로 환산해 함께 싣는다.
+    w["thr"] = w["thr_pct"] / 100 * w["shares"].shift(1)
+    return w.dropna(subset=["thr_pct"])
 
 
 def main() -> None:
@@ -235,6 +246,8 @@ def main() -> None:
         "net": int(cur["net"]),
         "threshold": int(cur["thr"]),
         "gap": int(cur["net"] - cur["thr"]),
+        "net_pct": round(float(cur["netpct"]), 2),
+        "threshold_pct": round(float(cur["thr_pct"]), 2),
         "shares": int(cur["shares"]),
         "price": round(float(px.iloc[-1]), 2),
         "price_date": px.index[-1].strftime("%Y-%m-%d"),

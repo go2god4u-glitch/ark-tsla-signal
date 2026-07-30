@@ -1,18 +1,20 @@
 {
-  "checked_utc": "2026-07-30T09:40:23+00:00",
+  "checked_utc": "2026-07-30T09:54:22+00:00",
   "week": "2026-07-31",
   "signal": false,
   "net": 48647,
-  "threshold": 149662,
-  "gap": -101015,
+  "threshold": 81675,
+  "gap": -33028,
+  "net_pct": 2.14,
+  "threshold_pct": 3.6,
   "shares": 2318872,
   "price": 298.32,
   "price_date": "2026-07-29",
   "drawdown_from_ath": -39.1,
   "ath": 489.88,
   "ath_date": "2025-12-16",
-  "prev_signal_week": "2025-09-12",
-  "signal_weeks_total": 3,
+  "prev_signal_week": "2026-07-10",
+  "signal_weeks_total": 17,
   "holdings_date": "2026-07-29",
   "holdings": 2318872,
   "holdings_chg": -5620,
@@ -441,97 +443,97 @@
     {
       "d": "2026-04-17",
       "net": 65620,
-      "thr": 153723,
+      "thr": 74859,
       "sig": false
     },
     {
       "d": "2026-04-24",
       "net": 334443,
-      "thr": 152813,
+      "thr": 76997,
       "sig": true
     },
     {
       "d": "2026-05-01",
       "net": -412875,
-      "thr": 161007,
+      "thr": 89177,
       "sig": false
     },
     {
       "d": "2026-05-08",
       "net": -3040,
-      "thr": 160096,
+      "thr": 74991,
       "sig": false
     },
     {
       "d": "2026-05-15",
       "net": 14517,
-      "thr": 159186,
+      "thr": 74807,
       "sig": false
     },
     {
       "d": "2026-05-22",
       "net": -19548,
-      "thr": 158275,
+      "thr": 75220,
       "sig": false
     },
     {
       "d": "2026-05-29",
       "net": 82807,
-      "thr": 157365,
-      "sig": false
+      "thr": 74474,
+      "sig": true
     },
     {
       "d": "2026-06-05",
       "net": 14490,
-      "thr": 156455,
+      "thr": 78660,
       "sig": false
     },
     {
       "d": "2026-06-12",
       "net": 58229,
-      "thr": 155544,
+      "thr": 78954,
       "sig": false
     },
     {
       "d": "2026-06-19",
       "net": -153003,
-      "thr": 154634,
+      "thr": 80751,
       "sig": false
     },
     {
       "d": "2026-06-26",
       "net": -48352,
-      "thr": 153723,
+      "thr": 75282,
       "sig": false
     },
     {
       "d": "2026-07-03",
       "net": 19461,
-      "thr": 152813,
+      "thr": 73426,
       "sig": false
     },
     {
       "d": "2026-07-10",
       "net": 124428,
-      "thr": 151903,
-      "sig": false
+      "thr": 73896,
+      "sig": true
     },
     {
       "d": "2026-07-17",
       "net": -123353,
-      "thr": 151156,
+      "thr": 80022,
       "sig": false
     },
     {
       "d": "2026-07-24",
       "net": 106095,
-      "thr": 150409,
-      "sig": false
+      "thr": 75509,
+      "sig": true
     },
     {
       "d": "2026-07-31",
       "net": 48647,
-      "thr": 149662,
+      "thr": 81675,
       "sig": false
     }
   ]
