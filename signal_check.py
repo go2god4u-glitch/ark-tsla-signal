@@ -244,8 +244,19 @@ def build(px: pd.Series) -> pd.DataFrame:
     return w.dropna(subset=["thr_pct"])
 
 
+def _rsi14(px: pd.Series) -> pd.Series:
+    d = px.diff()
+    up = d.clip(lower=0).ewm(alpha=1 / 14, adjust=False).mean()
+    dn = (-d.clip(upper=0)).ewm(alpha=1 / 14, adjust=False).mean()
+    return 100 - 100 / (1 + up / dn)
+
+
 def _signal_runs(w: pd.DataFrame, px: pd.Series) -> list:
-    """연속(7일 이내) 신호를 한 묶음으로 정리한다."""
+    """연속(7일 이내) 신호를 한 묶음으로 정리한다.
+
+    각 신호의 매수일·청산일·수익까지 함께 담는다. 화면에서 국면 단위로
+    보여주려면 신호일(금)과 매수일(다음 거래일)이 둘 다 필요하다 —
+    하나만 보여주면 간격이 7일이 아닌 것처럼 보여 오해가 생긴다."""
     sg = list(w[w["sig"]].index)
     if not sg:
         return []
@@ -257,17 +268,48 @@ def _signal_runs(w: pd.DataFrame, px: pd.Series) -> list:
             runs.append(cur)
             cur = [t]
     runs.append(cur)
+    RSI = _rsi14(px).values
+    V = px.values
+    RSI_LEVEL, MAX_HOLD = 70, 126
+
+    def exit_of(e):
+        armed = False
+        for j in range(e + 1, len(V)):
+            if RSI[j] >= RSI_LEVEL:
+                armed = True
+            if armed and RSI[j] < RSI_LEVEL:
+                return j, "RSI 이탈"
+            if (j - e) >= MAX_HOLD:
+                return j, "6개월 상한"
+        return None, None
+
     out = []
     for rn in runs:
-        entries = []
+        entries, rets = [], []
         for t in rn:
             k = px.index.searchsorted(t, side="right")
-            if k < len(px):
-                entries.append({"date": px.index[k].strftime("%Y-%m-%d"),
-                                "price": round(float(px.iloc[k]), 2)})
+            if k >= len(px):
+                continue
+            x, why = exit_of(k)
+            ret = (V[x] if x is not None else V[-1]) / V[k] - 1
+            rets.append(float(ret))
+            entries.append({
+                "signal": t.strftime("%Y-%m-%d"),
+                "date": px.index[k].strftime("%Y-%m-%d"),
+                "price": round(float(V[k]), 2),
+                "exit": None if x is None else px.index[x].strftime("%Y-%m-%d"),
+                "exit_price": None if x is None else round(float(V[x]), 2),
+                "days": int((x if x is not None else len(V) - 1) - k),
+                "ret": round(float(ret), 4),
+                "why": why, "open": x is None})
+        if not entries:
+            continue
         out.append({"start": rn[0].strftime("%Y-%m-%d"),
                     "end": rn[-1].strftime("%Y-%m-%d"),
-                    "weeks": len(rn), "entries": entries})
+                    "weeks": len(rn), "entries": entries,
+                    "avg_price": round(float(np.mean([e["price"] for e in entries])), 2),
+                    "run_ret": round(float(np.mean(rets)), 4),
+                    "open": any(e["open"] for e in entries)})
     return out
 
 
