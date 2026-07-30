@@ -1,5 +1,5 @@
 {
-  "checked_utc": "2026-07-30T11:26:01+00:00",
+  "checked_utc": "2026-07-30T11:37:07+00:00",
   "week": "2026-07-31",
   "signal": false,
   "net": 54604,
@@ -7,6 +7,10 @@
   "gap": -36692,
   "net_pct": 2.0,
   "threshold_pct": 3.34,
+  "dd_now": -39.1,
+  "dd_filter": -30.0,
+  "thr_ok": false,
+  "dd_ok": true,
   "shares": 2784947,
   "price": 298.32,
   "price_date": "2026-07-29",
@@ -15,7 +19,7 @@
   "ath_date": "2025-12-16",
   "prev_signal_week": "2026-07-24",
   "prev_signal_weeks_ago": 1,
-  "signal_weeks_total": 20,
+  "signal_weeks_total": 16,
   "holdings_date": "2026-07-29",
   "holdings": 2784947,
   "holdings_chg": 1956,
@@ -451,7 +455,7 @@
       "d": "2026-04-24",
       "net": 337484,
       "thr": 88786,
-      "sig": true
+      "sig": false
     },
     {
       "d": "2026-05-01",
@@ -481,7 +485,7 @@
       "d": "2026-05-29",
       "net": 87087,
       "thr": 86173,
-      "sig": true
+      "sig": false
     },
     {
       "d": "2026-06-05",
@@ -517,7 +521,7 @@
       "d": "2026-07-10",
       "net": 159201,
       "thr": 84309,
-      "sig": true
+      "sig": false
     },
     {
       "d": "2026-07-17",

@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-30T11:26:09+00:00",
+  "updated": "2026-07-30T11:37:15+00:00",
   "price_date": "2026-07-29",
   "price": 298.32,
   "rsi": 25.4,
@@ -7,7 +7,7 @@
   "max_hold": 126,
   "action": "NONE",
   "reason": "",
-  "open_count": 3,
+  "open_count": 1,
   "open": true,
   "closed": [
     {
@@ -144,45 +144,9 @@
       "days": 27,
       "ret": 0.2632,
       "reason": "RSI \uc774\ud0c8"
-    },
-    {
-      "entry": "2025-09-15",
-      "entry_price": 410.04,
-      "exit": "2025-09-25",
-      "exit_price": 423.39,
-      "days": 8,
-      "ret": 0.0326,
-      "reason": "RSI \uc774\ud0c8"
-    },
-    {
-      "entry": "2026-04-27",
-      "entry_price": 378.67,
-      "exit": "2026-05-12",
-      "exit_price": 433.45,
-      "days": 11,
-      "ret": 0.1447,
-      "reason": "RSI \uc774\ud0c8"
     }
   ],
   "live": [
-    {
-      "entry": "2026-06-01",
-      "entry_price": 415.88,
-      "days": 40,
-      "days_left": 86,
-      "ret": -0.2827,
-      "armed": false,
-      "deadline": "2026-11-26"
-    },
-    {
-      "entry": "2026-07-13",
-      "entry_price": 394.76,
-      "days": 12,
-      "days_left": 114,
-      "ret": -0.2443,
-      "armed": false,
-      "deadline": "2027-01-04"
-    },
     {
       "entry": "2026-07-27",
       "entry_price": 309.22,
@@ -194,15 +158,15 @@
     }
   ],
   "stats": {
-    "closed_n": 17,
-    "closed_mean": 0.3027,
+    "closed_n": 15,
+    "closed_mean": 0.3313,
     "closed_hit": 1.0,
-    "closed_worst": 0.0326,
-    "live_mean": -0.1874,
-    "all_n": 20,
-    "all_mean": 0.2292,
-    "all_hit": 0.85,
-    "invested": 2000,
-    "value": 2458.0
+    "closed_worst": 0.1594,
+    "live_mean": -0.0352,
+    "all_n": 16,
+    "all_mean": 0.3083,
+    "all_hit": 0.938,
+    "invested": 1600,
+    "value": 2093.0
   }
 }

@@ -38,7 +38,7 @@ def load_prices() -> pd.Series:
 
 def build_panel(px: pd.Series) -> pd.DataFrame:
     """주 × 요일별 '그때까지의 진행률'과 '그 주의 최종 신호 여부'."""
-    from signal_check import build_daily, MIN_HIST, QUANT
+    from signal_check import build_daily, MIN_HIST, QUANT, DD_FILTER
     daily = build_daily(px)
     wide = daily.attrs["wide"]
 
@@ -48,7 +48,11 @@ def build_panel(px: pd.Series) -> pd.DataFrame:
     base_w = wk.shift(1).sum(axis=1, min_count=1)
     netpct_w = (net_w / base_w * 100).dropna()
     thr = netpct_w.expanding(MIN_HIST).quantile(QUANT).shift(1)
-    sig = (netpct_w >= thr)
+    # 낙폭 필터도 신호 조건이다. 낙폭은 주가만으로 정해지므로 주중에도 알 수 있고,
+    # 필터에 걸린 주는 아무리 많이 사도 신호가 아니다 -> 확률 0.
+    dd_w = ((px / px.rolling(252, min_periods=60).max() - 1) * 100
+            ).reindex(netpct_w.index, method="ffill")
+    sig = (netpct_w >= thr) & (dd_w <= DD_FILTER)
 
     # 일별 누적: 그 주 시작(직전 주 금요일) 대비
     lvl = wide.copy()
@@ -72,6 +76,7 @@ def build_panel(px: pd.Series) -> pd.DataFrame:
             rows.append({"week": wend, "day": k, "date": dt,
                          "cum_pct": cum / base * 100,
                          "thr": thr[wend], "final": netpct_w[wend],
+                         "dd": float(dd_w.get(wend, np.nan)),
                          "sig": bool(sig[wend])})
     return pd.DataFrame(rows)
 

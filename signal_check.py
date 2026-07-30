@@ -45,6 +45,11 @@ PX_CALM = 0.06       # 주가는 이만큼도 안 움직였으면 -> 소스 오�
 RE_BAND = 0.18       # 원래 수준의 이 범위로 돌아오면 정상 복귀
 MIN_HIST = 52        # 문턱 계산에 필요한 최소 주 수
 QUANT = 0.90
+# 기술적 필터: 전고점(252일) 대비 이 수준 이하로 빠졌을 때만 매수한다.
+# 지표를 '신호'로 쓰면 무효였지만 아크 신호를 '거르는' 데는 효과가 있었다.
+# -20% ~ -45% 전 구간이 무필터보다 나았다(고원). 최악이 -28.3% -> -3.5% 로 개선된다.
+# 현재 손실 중인 두 포지션(2026-06-01 낙폭 -15%, 2026-07-13 -19%)이 정확히 걸러진다.
+DD_FILTER = -30.0
 
 ARK_API = "https://arkfunds.io/api/v2/stock/fund-ownership"
 # 전체 이력을 받는다. 점수 구성요소(200일선, 확장창 백분위)는 긴 이력이 있어야
@@ -228,7 +233,12 @@ def build(px: pd.Series) -> pd.DataFrame:
     w = pd.DataFrame({"shares": wk.sum(axis=1, min_count=1), "net": net}).dropna(subset=["net"])
     w["netpct"] = (net / base * 100).reindex(w.index)
     w["thr_pct"] = w["netpct"].expanding(MIN_HIST).quantile(QUANT).shift(1)  # 과거만 사용
-    w["sig"] = w["netpct"] >= w["thr_pct"]
+    # 전고점 대비 낙폭 (주가만으로 계산되므로 룩어헤드가 없다)
+    dd = (px / px.rolling(252, min_periods=60).max() - 1) * 100
+    w["dd"] = dd.reindex(w.index, method="ffill")
+    w["thr_ok"] = w["netpct"] >= w["thr_pct"]
+    w["dd_ok"] = w["dd"] <= DD_FILTER
+    w["sig"] = w["thr_ok"] & w["dd_ok"]
     # 화면 표시는 주식 수가 직관적이므로 문턱을 주식 수로 환산해 함께 싣는다.
     w["thr"] = w["thr_pct"] / 100 * w["shares"].shift(1)
     return w.dropna(subset=["thr_pct"])
@@ -260,6 +270,10 @@ def main() -> None:
         "gap": int(cur["net"] - cur["thr"]),
         "net_pct": round(float(cur["netpct"]), 2),
         "threshold_pct": round(float(cur["thr_pct"]), 2),
+        "dd_now": round(float(cur["dd"]), 1),
+        "dd_filter": DD_FILTER,
+        "thr_ok": bool(cur["thr_ok"]),
+        "dd_ok": bool(cur["dd_ok"]),
         "shares": int(cur["shares"]),
         "price": round(float(px.iloc[-1]), 2),
         "price_date": px.index[-1].strftime("%Y-%m-%d"),
@@ -290,7 +304,10 @@ def main() -> None:
 
     print("\n" + "=" * 60)
     print(f"주 {state['week']}  순매수 {state['net']:+,}주 / 문턱 {state['threshold']:+,}주")
-    print(f"차이 {state['gap']:+,}주  ->  {'*** 신호 ON ***' if on else '신호 OFF'}")
+    print(f"차이 {state['gap']:+,}주  ->  문턱 {'통과' if state['thr_ok'] else '미달'}")
+    print(f"낙폭 {state['dd_now']:.1f}% (기준 {DD_FILTER}%) -> "
+          f"{'통과' if state['dd_ok'] else '미달'}")
+    print(f"==> {'*** 매수 신호 ON ***' if on else '신호 OFF'}")
     print(f"TSLA ${state['price']} ({state['price_date']}), 사상최고 대비 {state['drawdown_from_ath']}%")
     print("=" * 60)
 
@@ -303,6 +320,9 @@ def main() -> None:
             f.write(f"threshold={state['threshold']}\n")
             f.write(f"price={state['price']}\n")
             f.write(f"drawdown={state['drawdown_from_ath']}\n")
+            f.write(f"dd_now={state['dd_now']}\ndd_filter={DD_FILTER}\n")
+            f.write(f"thr_ok={'true' if state['thr_ok'] else 'false'}\n")
+            f.write(f"dd_ok={'true' if state['dd_ok'] else 'false'}\n")
             # 주간 상태 알림(하트비트)에 필요한 값들
             f.write(f"net_pct={state['net_pct']}\n")
             f.write(f"thr_pct={state['threshold_pct']}\n")
