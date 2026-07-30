@@ -1,5 +1,5 @@
 {
-  "checked_utc": "2026-07-29T22:48:20+00:00",
+  "checked_utc": "2026-07-30T09:27:59+00:00",
   "week": "2026-07-31",
   "signal": false,
   "net": 48647,
@@ -168,6 +168,21 @@
       "c": 298.32
     }
   ],
+  "tech": {
+    "rsi": 25.42,
+    "macd": -24.68,
+    "macd_signal": -14.94,
+    "ma50": 394.64,
+    "ma200": 412.75,
+    "bb_low": 292.71,
+    "flags": {
+      "rsi_oversold": true,
+      "macd_above_signal": false,
+      "below_ma200": true,
+      "below_ma50": true,
+      "below_bb": false
+    }
+  },
   "weekly": [
     {
       "d": "2026-04-17",

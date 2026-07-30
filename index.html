@@ -161,6 +161,14 @@
   </section>
 
   <section class="card">
+    <div class="card-head">
+      <span class="card-title">기술적 지표 — 참고용, 판정에 쓰지 않음</span>
+      <span class="card-title" id="techNote"></span>
+    </div>
+    <div style="padding:18px 20px" id="techBox"></div>
+  </section>
+
+  <section class="card">
     <div class="card-head"><span class="card-title">최근 30거래일 — 합산 보유 주식 수</span>
       <span class="readout" id="recentNow"></span></div>
     <div id="recentChart"></div>
@@ -259,11 +267,46 @@ function render() {
       <div class="stamp" style="margin-top:6px">문턱 대비 ${(ratio * 100).toFixed(0)}%</div>
     </div>`;
 
+  renderTech();
   line("recentChart", S.recent.map(r => r.s), S.recent.map(r => r.d), "var(--hold)",
        v => (v / 1e6).toFixed(2) + "M");
   document.getElementById("recentNow").innerHTML =
     `<span style="color:var(--hold)">${(S.holdings / 1e6).toFixed(2)}M</span>`;
   bars("weeklyChart", S.weekly);
+}
+
+/* 지표는 '기록'이지 '판정'이 아니다. RSI 등을 합류시키면 신호가 더 확실해진다는
+   가설은 검증에 실패했다(지표 단독 전부 무효, 합류 상관은 판정 창에 따라 요동).
+   그래서 화면에서도 판정과 시각적으로 분리하고, 색으로 강조하지 않는다. */
+function renderTech() {
+  const t = S.tech;
+  if (!t) { document.getElementById("techBox").innerHTML =
+    `<span class="stamp">아직 기록되지 않았습니다.</span>`; return; }
+  const f = t.flags;
+  const items = [
+    ["RSI(14)", t.rsi == null ? "—" : t.rsi.toFixed(1), f.rsi_oversold ? "과매도(<30)" : "중립"],
+    ["MACD", t.macd == null ? "—" : t.macd.toFixed(1),
+     f.macd_above_signal ? "시그널 위" : "시그널 아래"],
+    ["50일선", t.ma50 == null ? "—" : "$" + t.ma50.toFixed(0), f.below_ma50 ? "주가가 아래" : "주가가 위"],
+    ["200일선", t.ma200 == null ? "—" : "$" + t.ma200.toFixed(0), f.below_ma200 ? "주가가 아래" : "주가가 위"],
+    ["볼린저 하단", t.bb_low == null ? "—" : "$" + t.bb_low.toFixed(0), f.below_bb ? "이탈" : "안쪽"],
+  ];
+  document.getElementById("techBox").innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px">
+      ${items.map(([k, v, s]) => `
+        <div>
+          <div class="stamp">${k}</div>
+          <div style="font-family:var(--mono);font-size:19px;font-weight:650;margin-top:4px">${v}</div>
+          <div class="stamp" style="margin-top:2px">${s}</div>
+        </div>`).join("")}
+    </div>
+    <p class="stamp" style="margin:16px 0 0;line-height:1.6">
+      이 지표들은 <b>판정에 쓰이지 않는다.</b> 아크 신호에 합류시켜 검증했으나
+      지표 단독은 전부 무효였고(p=0.19~0.78), 합류 강도와 수익률의 상관은
+      판정 창을 ±5/10/20/40일로 바꾸면 +0.27~+0.55 로 요동쳤다. 사건 7건에서는 노이즈다.
+      근거가 부족한 규칙을 넣는 대신 기록만 남긴다.</p>`;
+  document.getElementById("techNote").textContent =
+    Object.values(f).filter(Boolean).length + "/5 조건 충족";
 }
 
 function line(id, vals, labels, color, fmt) {

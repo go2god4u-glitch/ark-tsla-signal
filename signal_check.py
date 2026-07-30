@@ -122,6 +122,41 @@ def causal_clean(g: pd.DataFrame) -> pd.DataFrame:
     return g[keep]
 
 
+def tech_state(px: pd.Series) -> dict:
+    """신호 시점의 기술적 지표 상태를 '기록만' 한다. 판정에는 쓰지 않는다.
+
+    지표를 합류시키면 신호가 더 확실해진다는 가설은 검증에 실패했다(README 참조).
+    지표 단독은 전부 무효였고, 합류 강도와 수익률의 상관은 판정 창을 바꾸면
+    +0.27~+0.55 로 요동쳤다. n=7 에서는 노이즈다.
+    근거가 n=3~4 인 규칙을 판정에 넣는 것은 과적합을 코드에 새기는 일이므로,
+    지금은 계측만 해두고 사건이 쌓이면 그때 답한다.
+    """
+    delta = px.diff()
+    up = delta.clip(lower=0).ewm(alpha=1 / 14, adjust=False).mean()
+    dn = (-delta.clip(upper=0)).ewm(alpha=1 / 14, adjust=False).mean()
+    rsi = 100 - 100 / (1 + up / dn)
+    ema12, ema26 = px.ewm(span=12, adjust=False).mean(), px.ewm(span=26, adjust=False).mean()
+    macd = ema12 - ema26
+    macd_sig = macd.ewm(span=9, adjust=False).mean()
+    ma50, ma200 = px.rolling(50).mean(), px.rolling(200).mean()
+    m20, s20 = px.rolling(20).mean(), px.rolling(20).std()
+    last = -1
+    f = lambda v: None if pd.isna(v) else round(float(v), 2)
+    return {
+        "rsi": f(rsi.iloc[last]),
+        "macd": f(macd.iloc[last]), "macd_signal": f(macd_sig.iloc[last]),
+        "ma50": f(ma50.iloc[last]), "ma200": f(ma200.iloc[last]),
+        "bb_low": f((m20 - 2 * s20).iloc[last]),
+        "flags": {
+            "rsi_oversold": bool(rsi.iloc[last] < 30),
+            "macd_above_signal": bool(macd.iloc[last] > macd_sig.iloc[last]),
+            "below_ma200": bool(px.iloc[last] < ma200.iloc[last]) if not pd.isna(ma200.iloc[last]) else None,
+            "below_ma50": bool(px.iloc[last] < ma50.iloc[last]) if not pd.isna(ma50.iloc[last]) else None,
+            "below_bb": bool(px.iloc[last] < (m20 - 2 * s20).iloc[last]),
+        },
+    }
+
+
 def build_daily(px: pd.Series) -> pd.DataFrame:
     """정제까지 끝난 일별 합산 보유량. 판정은 주간이지만 표시는 일별로 한다."""
     d = load_raw()
@@ -186,6 +221,8 @@ def main() -> None:
         "recent": [{"d": d.strftime("%Y-%m-%d"), "s": int(r["shares"]),
                     "c": (None if pd.isna(r["close"]) else round(float(r["close"]), 2))}
                    for d, r in recent.iterrows()],
+        # 판정에는 쓰지 않는다. 사건이 쌓였을 때 답하기 위한 기록이다.
+        "tech": tech_state(px),
         "weekly": [{"d": d.strftime("%Y-%m-%d"), "net": int(r["net"]),
                     "thr": int(r["thr"]), "sig": bool(r["sig"])}
                    for d, r in w.tail(16).iterrows()],
