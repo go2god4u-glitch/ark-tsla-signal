@@ -162,6 +162,59 @@
     <div style="padding:24px 20px" id="verdictBox"></div>
   </section>
 
+  <section>
+    <h2 style="font-size:17px;font-weight:700;margin:8px 0 4px">지금 무엇을 기다리는가</h2>
+    <p id="modeIntro" style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px"></p>
+    <div class="card"><div style="padding:20px" id="modeBox"></div></div>
+  </section>
+
+  <section>
+    <h2 style="font-size:17px;font-weight:700;margin:8px 0 4px">이번 주 신호 확률</h2>
+    <p style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px">
+      판정은 금요일에 확정된다. 주중 진행률로 그 주 신호 확률을 추정한다.
+      같은 진행률이라도 <b>주 초반일수록 확률이 높다</b> — 남은 날이 많기 때문이다.</p>
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-head"><span class="card-title">이번 주 진행 상황</span>
+        <span class="card-title" id="probNow"></span></div>
+      <div style="padding:18px 20px" id="probBox"></div>
+    </div>
+    <div class="card table-scroll">
+      <div class="card-head"><span class="card-title">요일 × 진행률별 신호 확률 (과거 표본)</span></div>
+      <table><thead><tr>
+        <th scope="col">진행률</th><th scope="col">1일차</th><th scope="col">2일차</th>
+        <th scope="col">3일차</th><th scope="col">4일차</th><th scope="col">5일차</th>
+      </tr></thead><tbody id="probTable"></tbody></table>
+    </div>
+    <p class="stamp" id="probNote" style="line-height:1.6;margin-top:12px"></p>
+  </section>
+
+  <section>
+    <h2 style="font-size:17px;font-weight:700;margin:8px 0 4px">매도 규칙 — RSI 70 이탈</h2>
+    <p style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px">
+      규칙군 7개 × 파라미터 약 48개를 훑어 <b>최고값이 아니라 파라미터 구간 전체가 좋은 것</b>을
+      골랐다. RSI 66~74 다섯 개 연속이 6.7~7.1배로, 한 점에서만 튀는 MACD 와 다르다.</p>
+    <div class="card table-scroll" style="margin-bottom:14px">
+      <div class="card-head"><span class="card-title">RSI 임계값별 (고원인가 확인)</span></div>
+      <table><thead><tr>
+        <th scope="col">RSI</th><th scope="col">매매</th><th scope="col">평균</th>
+        <th scope="col">승률</th><th scope="col">누적</th><th scope="col">MDD</th>
+        <th scope="col">평균 보유</th>
+      </tr></thead><tbody id="rsiBody"></tbody></table>
+    </div>
+    <div class="card table-scroll">
+      <div class="card-head"><span class="card-title">매도 규칙군 비교 (구간 전체 성적)</span></div>
+      <table><thead><tr>
+        <th scope="col">규칙군</th><th scope="col">파라미터</th><th scope="col">중앙값</th>
+        <th scope="col">최솟값</th><th scope="col">최댓값</th>
+      </tr></thead><tbody id="famBody"></tbody></table>
+    </div>
+    <p class="stamp" style="line-height:1.6;margin-top:12px">
+      <b>대가.</b> 큰 상승을 놓친다. 2023-01 건은 +39.2% 에 팔았는데 6개월 보유였다면 +127.1% 였다.
+      자주·작게 확정하는 대신 대박을 포기하는 규칙이다.<br><br>
+      <b>승률 100% 는 구조적이다.</b> RSI 70 을 넘으려면 이미 크게 오른 상태여야 하므로,
+      손실 중에는 매도 신호가 아예 뜨지 않는다. 표본 7건의 100% 를 미래 승률로 읽으면 안 된다.</p>
+  </section>
+
   <section class="card">
     <div class="card-head">
       <span class="card-title">종합 점수 — 참고용, 판정에 쓰지 않음</span>
@@ -246,7 +299,7 @@ const F = {
   sgn: v => (v >= 0 ? "+" : "") + v.toLocaleString("en-US"),
   usd: v => "$" + v.toFixed(2),
 };
-let S = null, B = null;
+let S = null, B = null, PR = null, P = null, SS = null;
 
 /* 보는 사람이 어디에 있든 한국시간으로 고정해 보여준다.
    서버가 남기는 checked_utc 는 UTC 라 그대로 쓰면 9시간 어긋난 것처럼 읽힌다. */
@@ -274,13 +327,19 @@ async function load() {
   try {
     // Pages 와 CDN 이 캐시하므로 쿼리로 무력화한다. no-store 만으로는 부족하다.
     const q = "?t=" + Date.now();
-    const [r, r2] = await Promise.all([
+    const [r, r2, r3, r4, r5] = await Promise.all([
       fetch("data/signal_state.json" + q, { cache: "no-store" }),
       fetch("data/holding_returns.json" + q, { cache: "no-store" }),
+      fetch("data/signal_probability.json" + q, { cache: "no-store" }),
+      fetch("data/position.json" + q, { cache: "no-store" }),
+      fetch("data/sell_search.json" + q, { cache: "no-store" }),
     ]);
     if (!r.ok) throw new Error("HTTP " + r.status);
     S = await r.json();
     B = r2.ok ? await r2.json() : null;
+    PR = r3.ok ? await r3.json() : null;
+    P = r4.ok ? await r4.json() : null;
+    SS = r5.ok ? await r5.json() : null;
     render();
     stamp.innerHTML = `데이터 기준 <b>${S.holdings_date}</b> · 마지막 업데이트 ` +
       `<b>${kst(S.checked_utc)}</b> <span style="color:var(--ink-3)">(${ago(S.checked_utc)})</span>` +
@@ -323,6 +382,9 @@ function render() {
       <div class="stamp" style="margin-top:6px">문턱 대비 ${(ratio * 100).toFixed(0)}%</div>
     </div>`;
 
+  renderMode();
+  renderProb();
+  renderSell();
   renderBacktest();
   renderScore();
   renderTech();
@@ -331,6 +393,105 @@ function render() {
   document.getElementById("recentNow").innerHTML =
     `<span style="color:var(--hold)">${(S.holdings / 1e6).toFixed(2)}M</span>`;
   bars("weeklyChart", S.weekly);
+}
+
+/* 매수/매도 중 무엇을 기다리는지는 '보유 여부'로 갈린다.
+   둘이 동시에 오지 않는다 — 이걸 화면에서 분명히 해야 오해가 없다. */
+function renderMode() {
+  const p = P || {};
+  const open = !!p.open;
+  document.getElementById("modeIntro").innerHTML =
+    `판정 기준은 <b>보유 여부</b>다. 보유가 없으면 매수 신호만, 보유가 있으면 매도 신호만 판정한다.`;
+  const rows = open ? `
+      <dl class="kv" style="margin-top:14px">
+        <dt>진입일</dt><dd>${p.entry_date}</dd>
+        <dt>진입가</dt><dd>$${(p.entry_price || 0).toFixed(2)}</dd>
+        <dt>평가손익</dt><dd class="${cls(p.unrealized)}">${pct(p.unrealized)}</dd>
+        <dt>보유</dt><dd>${p.held_days}거래일 · 상한까지 ${p.days_left}일 (~${p.deadline})</dd>
+        <dt>현재 RSI</dt><dd>${p.rsi} / 기준 ${p.rsi_level}
+          ${p.armed ? "— 이미 70 돌파, 70 아래로 내려오면 매도"
+                    : "— 아직 70 미돌파. 70 위로 갔다 내려와야 매도 신호"}</dd>
+        <dt>완료 매매</dt><dd>${(p.closed_trades || []).length}건 · 누적 ${p.cumulative}배</dd>
+      </dl>` : `
+      <dl class="kv" style="margin-top:14px">
+        <dt>다음 판정</dt><dd>금요일 미국 종가 기준 (한국 토요일 새벽)</dd>
+        <dt>진입 시점</dt><dd>신호 다음 거래일 종가 (한국 화요일 새벽 5~6시)</dd>
+        <dt>현재 RSI</dt><dd>${p.rsi ?? "—"}</dd>
+      </dl>`;
+  document.getElementById("modeBox").innerHTML = `
+    <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+      <span style="font-family:var(--mono);font-size:26px;font-weight:700;
+        color:${open ? "var(--sell)" : "var(--buy)"}">${open ? "매도 신호 대기" : "매수 신호 대기"}</span>
+      <span class="stamp">${open ? "보유 중 — RSI 70 이탈 또는 6개월 상한을 기다린다"
+                                 : "보유 없음 — 아크 주간 매수 신호를 기다린다"}</span>
+    </div>${rows}`;
+}
+
+function renderProb() {
+  if (!PR) { document.getElementById("probBox").innerHTML =
+    `<span class="stamp">확률 데이터를 불러오지 못했습니다.</span>`; return; }
+  const cur = PR.current || [];
+  const last = cur.length ? cur[cur.length - 1] : null;
+  document.getElementById("probNow").textContent =
+    last && last.prob != null ? `현재 ${last.prob}%` : "표본 부족";
+  document.getElementById("probBox").innerHTML = cur.length ? `
+    <div style="display:grid;gap:9px">
+      ${cur.map(c => `
+        <div style="display:grid;grid-template-columns:96px 1fr 62px;gap:10px;align-items:center">
+          <span class="stamp">${c.date} (${c.day}일차)</span>
+          <span class="bar-wrap" style="height:8px"><span class="bar-fill"
+            style="width:${Math.min(100, c.prob ?? 0)}%;background:var(--buy)"></span></span>
+          <span style="font-family:var(--mono);font-size:12px;text-align:right;font-weight:650">
+            ${c.prob == null ? "—" : c.prob + "%"}</span>
+        </div>`).join("")}
+    </div>
+    <p class="stamp" style="margin:14px 0 0">누적 순매수 ${last ? last.cum_pct : "—"}% /
+      문턱 ${last ? last.thr : "—"}% · 진행률 ${last ? last.prog : "—"}%</p>`
+    : `<span class="stamp">이번 주 데이터가 아직 없습니다.</span>`;
+
+  const byBin = {};
+  for (const t of PR.table || []) (byBin[t.bin] ||= {})[t.day] = t;
+  document.getElementById("probTable").innerHTML = Object.entries(byBin).map(([b, days]) => `
+    <tr><td>${b}</td>${[1, 2, 3, 4, 5].map(d => {
+      const t = days[d];
+      if (!t) return `<td style="color:var(--ink-3)">—</td>`;
+      const strong = t.prob >= 70;
+      return `<td class="${strong ? "pos" : ""}">${t.prob.toFixed(0)}%
+        <span style="color:var(--ink-3);font-weight:400">(n=${t.n})</span></td>`;
+    }).join("")}</tr>`).join("");
+
+  if (PR.brier != null) {
+    const imp = (1 - PR.brier / PR.brier_base) * 100;
+    document.getElementById("probNote").innerHTML =
+      `<b>보정 확인.</b> 워크포워드로 검증했다(그 시점 이전 데이터로만 표를 만들어 예측).
+       Brier 점수 ${PR.brier.toFixed(4)} vs 기저확률만 쓸 때 ${PR.brier_base.toFixed(4)} —
+       <b>${imp.toFixed(1)}% 개선</b>. "90% 이상"이라 한 구간의 실제 발생률은 100%,
+       "70~90%" 구간은 86% 였다. 기저 신호 발생률은 ${(PR.base_rate * 100).toFixed(1)}% 다.`;
+  }
+}
+
+const RSI_ROWS = [
+  [60, 7, .171, .86, 2.59, -.31, 28], [62, 7, .215, .86, 3.31, -.31, 32],
+  [64, 7, .202, .86, 3.36, -.34, 37], [66, 7, .283, 1.0, 6.73, -.32, 46],
+  [68, 7, .311, 1.0, 6.77, -.35, 46], [70, 7, .309, 1.0, 7.02, -.35, 45],
+  [72, 7, .312, 1.0, 7.10, -.35, 45], [74, 6, .375, .83, 6.68, -.45, 75],
+  [76, 5, .179, .60, 1.78, -.72, 122],
+];
+function renderSell() {
+  document.getElementById("rsiBody").innerHTML = RSI_ROWS.map(r => {
+    const on = r[0] >= 66 && r[0] <= 74;
+    return `<tr${on ? ' style="background:color-mix(in srgb,var(--buy) 7%,transparent)"' : ""}>
+      <td>${r[0]}${r[0] === 70 ? " ★" : ""}</td><td>${r[1]}</td>
+      <td class="pos">${pct(r[2])}</td><td>${(r[3] * 100).toFixed(0)}%</td>
+      <td class="${r[4] >= 3.8 ? "pos" : ""}">${r[4].toFixed(2)}x</td>
+      <td class="neg">${(r[5] * 100).toFixed(0)}%</td><td>${r[6]}일</td></tr>`;
+  }).join("");
+  if (!SS) return;
+  document.getElementById("famBody").innerHTML = (SS.families || []).map(f => `
+    <tr><td>${f.family}</td><td>${f.n_params}</td>
+      <td class="${f.median >= 3.0 ? "pos" : ""}">${f.median.toFixed(2)}x</td>
+      <td class="${f.min >= 2.0 ? "pos" : "neg"}">${f.min.toFixed(2)}x</td>
+      <td style="color:var(--ink-3)">${f.max.toFixed(2)}x</td></tr>`).join("");
 }
 
 /* 백테스트 결과. A(사건 단위 기대치)와 B(단일 포지션 복리)를 나눠 보여준다.

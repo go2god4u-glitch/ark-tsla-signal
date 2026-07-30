@@ -1,21 +1,19 @@
-"""보유 상태 추적 — 매수/매도 신호를 실제 행동 단위로 관리한다.
+"""보유 상태 — 데이터에서 매번 재구성한다. 상태 파일에 의존하지 않는다.
 
-백테스트에서 확정한 규칙을 그대로 실행 상태로 옮긴다.
-
+규칙:
   진입  아크 주간 순매수가 문턱(과거 기준 상위 10%)을 넘은 주 -> 다음 거래일 종가
-  청산  RSI(14) 가 70 을 넘었다가 다시 70 아래로 내려오면
-        (6개월 안에 안 걸리면 6개월째에 정리)
+  청산  RSI(14) 가 70 을 넘었다가(armed) 다시 70 아래로 내려오면
+        (6개월 = 126거래일 안에 안 걸리면 그때 정리)
+  보유 중에 뜬 매수 신호는 무시한다(이미 들어가 있으므로).
 
-왜 상태 파일이 필요한가:
-  청산 조건이 '70 을 넘은 적이 있는가'에 의존한다(armed).
-  매일 새로 계산하면 그 이력을 알 수 없으므로 파일에 남긴다.
-  워크플로가 매일 data/ 를 커밋하므로 상태가 이어진다.
+왜 누적 상태 파일을 쓰지 않는가:
+  처음에는 매 실행마다 상태를 파일에 이어 쓰는 방식으로 만들었다. 그런데
+  파일이 없거나 초기화되면 과거 진입을 통째로 잊는다. 실제로 그 버그가 났다 —
+  2026-06-01 에 진입해 보유 중인데도 상태 파일은 '보유 없음' 이라고 했다.
 
-진입 시점 처리:
-  신호는 금요일에 확정되고 진입은 다음 거래일 종가다.
-  판정 시점에는 그 종가를 아직 모르므로 pending 으로 두고,
-  다음 실행에서 실제 종가가 들어오면 그때 진입가를 확정한다.
-  백테스트와 같은 시점에 같은 가격으로 들어가기 위한 장치다.
+  보유 여부는 과거 데이터로 완전히 결정되는 값이다. 저장할 것이 아니라
+  계산할 것이다. 매 실행마다 전 구간을 재생해 현재 위치를 확정한다.
+  파일은 결과를 화면에 넘기기 위한 출력일 뿐, 판단의 입력이 아니다.
 """
 
 import json
@@ -26,10 +24,10 @@ import numpy as np
 import pandas as pd
 
 BASE = os.path.dirname(os.path.abspath(__file__))
-STATE = os.path.join(BASE, "data", "position.json")
+OUT = os.path.join(BASE, "data", "position.json")
 
 RSI_LEVEL = 70          # 백테스트 고원 66~74 의 중앙
-MAX_HOLD_DAYS = 126     # 6개월 상한. 없으면 무한 보유가 된다
+MAX_HOLD = 126          # 6개월 상한. 없으면 무한 보유가 된다
 
 
 def rsi14(px: pd.Series) -> pd.Series:
@@ -39,100 +37,109 @@ def rsi14(px: pd.Series) -> pd.Series:
     return 100 - 100 / (1 + up / dn)
 
 
-def load_state() -> dict:
-    if os.path.exists(STATE):
-        with open(STATE) as f:
-            return json.load(f)
-    return {"open": False, "pending": False, "armed": False,
-            "entry_date": None, "entry_price": None, "history": []}
+def replay(V, RSI, sig_locs):
+    """전 구간을 재생해 완료 매매와 현재 보유를 돌려준다."""
+    done, pos, armed = [], None, False
+    for i in range(len(V)):
+        if pos is None:
+            if i in sig_locs:
+                pos, armed = i, False
+            continue
+        if RSI[i] >= RSI_LEVEL:
+            armed = True
+        by_rsi = armed and RSI[i] < RSI_LEVEL
+        by_cap = (i - pos) >= MAX_HOLD
+        if by_rsi or by_cap:
+            done.append({"entry_i": pos, "exit_i": i,
+                         "ret": float(V[i] / V[pos] - 1),
+                         "reason": "RSI 이탈" if by_rsi else "6개월 상한"})
+            pos, armed = None, False
+    return done, pos, armed
 
 
 def main() -> None:
-    from signal_check import build, load_raw, refresh_prices  # noqa: F401
+    from signal_check import build
     r = json.load(open(f"{BASE}/data/tsla_full.json"))["chart"]["result"][0]
     idx = pd.to_datetime(pd.Series(r["timestamp"]), unit="s").dt.normalize()
     px = pd.Series(r["indicators"]["quote"][0]["close"], index=idx).dropna().sort_index()
-    RSI = rsi14(px)
+    V, RSI = px.values, rsi14(px).values
 
     w = build(px)
-    sig_on = bool(w["sig"].iloc[-1])
-    today = px.index[-1]
-    price = float(px.iloc[-1])
-    rsi_now = float(RSI.iloc[-1])
+    sig_locs = {px.index.searchsorted(t, side="right") for t in w[w["sig"]].index}
+    sig_locs = {i for i in sig_locs if i < len(px)}
 
-    st = load_state()
+    done, pos, armed = replay(V, RSI, sig_locs)
+    last_i = len(V) - 1
+
+    # 오늘 새로 발생한 것인지 판정 (알림은 '오늘 바뀐 것'에만 보낸다)
     action, reason = "NONE", ""
+    if done and done[-1]["exit_i"] == last_i:
+        action, reason = "SELL", done[-1]["reason"]
+    elif pos == last_i:
+        action, reason = "BUY", "매수 신호 다음 거래일 종가로 진입"
 
-    # 1) 대기 중이던 진입을 확정한다 (신호 다음 거래일 종가)
-    if st.get("pending") and not st["open"]:
-        if st.get("pending_after") and today.strftime("%Y-%m-%d") > st["pending_after"]:
-            st.update({"open": True, "pending": False, "armed": False,
-                       "entry_date": today.strftime("%Y-%m-%d"), "entry_price": price})
-            action, reason = "BUY", "신호 다음 거래일 종가로 진입 확정"
+    st = {
+        "updated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "price_date": px.index[last_i].strftime("%Y-%m-%d"),
+        "price": float(V[last_i]),
+        "rsi": round(float(RSI[last_i]), 1),
+        "rsi_level": RSI_LEVEL,
+        "open": pos is not None,
+        "armed": bool(armed),
+        "action": action, "reason": reason,
+        "closed_trades": [
+            {"entry": px.index[d["entry_i"]].strftime("%Y-%m-%d"),
+             "entry_price": round(float(V[d["entry_i"]]), 2),
+             "exit": px.index[d["exit_i"]].strftime("%Y-%m-%d"),
+             "exit_price": round(float(V[d["exit_i"]]), 2),
+             "days": int(d["exit_i"] - d["entry_i"]),
+             "ret": round(d["ret"], 4), "reason": d["reason"]} for d in done],
+        "cumulative": round(float(np.prod([1 + d["ret"] for d in done])), 3) if done else 1.0,
+    }
+    if pos is not None:
+        st.update({
+            "entry_date": px.index[pos].strftime("%Y-%m-%d"),
+            "entry_price": round(float(V[pos]), 2),
+            "held_days": int(last_i - pos),
+            "days_left": int(MAX_HOLD - (last_i - pos)),
+            "unrealized": round(float(V[last_i] / V[pos] - 1), 4),
+            # 상한 도달일은 아직 오지 않은 날일 수 있다. 인덱스를 벗어나면
+            # 남은 거래일을 달력일로 환산해 추정한다(주 5거래일 가정).
+            "deadline": (px.index[pos + MAX_HOLD].strftime("%Y-%m-%d")
+                         if pos + MAX_HOLD < len(px)
+                         else (px.index[last_i] + pd.Timedelta(
+                             days=int((MAX_HOLD - (last_i - pos)) * 7 / 5))
+                         ).strftime("%Y-%m-%d")),
+        })
 
-    # 2) 보유 중이면 청산 조건을 본다
-    if st["open"]:
-        entry = pd.Timestamp(st["entry_date"])
-        held = int(px.index.searchsorted(today) - px.index.searchsorted(entry))
-        if rsi_now >= RSI_LEVEL:
-            st["armed"] = True
-        if st["armed"] and rsi_now < RSI_LEVEL:
-            action, reason = "SELL", f"RSI {rsi_now:.1f} 로 {RSI_LEVEL} 아래 복귀"
-        elif held >= MAX_HOLD_DAYS:
-            action, reason = "SELL", f"6개월 상한 도달 ({held}거래일)"
-        if action == "SELL":
-            ret = price / st["entry_price"] - 1
-            st["history"].append({
-                "entry": st["entry_date"], "entry_price": st["entry_price"],
-                "exit": today.strftime("%Y-%m-%d"), "exit_price": price,
-                "days": held, "ret": round(ret, 4), "reason": reason})
-            st.update({"open": False, "pending": False, "armed": False,
-                       "entry_date": None, "entry_price": None})
-
-    # 3) 보유가 없고 신호가 켜졌으면 다음 거래일 진입을 예약한다
-    if not st["open"] and not st["pending"] and sig_on:
-        st.update({"pending": True, "pending_after": today.strftime("%Y-%m-%d")})
-        action = action if action == "SELL" else "SIGNAL"
-        reason = reason or "이번 주 매수 신호 — 다음 거래일 종가 진입 예정"
-
-    st["updated"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    st["rsi"] = round(rsi_now, 1)
-    st["price"] = price
-    st["price_date"] = today.strftime("%Y-%m-%d")
-    if st["open"]:
-        st["unrealized"] = round(price / st["entry_price"] - 1, 4)
-        st["held_days"] = int(px.index.searchsorted(today)
-                              - px.index.searchsorted(pd.Timestamp(st["entry_date"])))
-        st["days_left"] = MAX_HOLD_DAYS - st["held_days"]
-    else:
-        st.pop("unrealized", None)
-        st.pop("held_days", None)
-        st.pop("days_left", None)
-
-    with open(STATE, "w") as f:
+    with open(OUT, "w") as f:
         json.dump(st, f, ensure_ascii=True, indent=2)
 
-    print(f"보유: {'있음' if st['open'] else '없음'} | RSI {rsi_now:.1f} | "
-          f"armed={st['armed']} | 동작: {action or 'NONE'} {reason}")
+    print(f"완료 매매 {len(done)}건, 누적 {st['cumulative']:.2f}배")
+    for t in st["closed_trades"]:
+        print(f"  {t['entry']} ${t['entry_price']:>7.2f} -> {t['exit']} ${t['exit_price']:>7.2f}"
+              f"  {t['days']:>3d}일 {t['ret']*100:>+7.1f}% ({t['reason']})")
     if st["open"]:
-        print(f"  진입 {st['entry_date']} ${st['entry_price']:.2f} -> 현재 ${price:.2f} "
-              f"({st['unrealized']*100:+.1f}%), {st['held_days']}일 보유, "
-              f"상한까지 {st['days_left']}일")
-    if st["history"]:
-        h = st["history"][-1]
-        print(f"  최근 청산: {h['entry']} -> {h['exit']} {h['ret']*100:+.1f}% ({h['reason']})")
+        print(f"\n★ 보유 중: {st['entry_date']} ${st['entry_price']} 진입 -> "
+              f"${st['price']} ({st['unrealized']*100:+.1f}%)")
+        print(f"  {st['held_days']}거래일 보유, 상한까지 {st['days_left']}일 (~{st['deadline']})")
+        print(f"  RSI {st['rsi']} / 70 돌파 이력 {'있음' if armed else '없음'}")
+        print(f"  -> 기다리는 것: 매도 신호")
+    else:
+        print(f"\n보유 없음 -> 기다리는 것: 매수 신호 (RSI {st['rsi']})")
+    print(f"오늘 동작: {action} {reason}")
 
-    if out := os.environ.get("GITHUB_OUTPUT"):
-        with open(out, "a") as f:
-            f.write(f"action={action}\n")
-            f.write(f"reason={reason}\n")
+    if o := os.environ.get("GITHUB_OUTPUT"):
+        with open(o, "a") as f:
+            f.write(f"action={action}\nreason={reason}\n")
             f.write(f"pos_open={'true' if st['open'] else 'false'}\n")
-            f.write(f"rsi={rsi_now:.1f}\n")
-            f.write(f"entry_date={st.get('entry_date') or '-'}\n")
-            f.write(f"entry_price={st.get('entry_price') or 0}\n")
+            f.write(f"rsi={st['rsi']}\n")
+            f.write(f"entry_date={st.get('entry_date', '-')}\n")
+            f.write(f"entry_price={st.get('entry_price', 0)}\n")
             f.write(f"unrealized={round(st.get('unrealized', 0) * 100, 1)}\n")
             f.write(f"held_days={st.get('held_days', 0)}\n")
             f.write(f"days_left={st.get('days_left', 0)}\n")
+            f.write(f"deadline={st.get('deadline', '-')}\n")
 
 
 if __name__ == "__main__":

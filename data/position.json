@@ -8,5 +8,82 @@
   "updated": "2026-07-30T10:56:56+00:00",
   "rsi": 25.4,
   "price": 298.32000732421875,
-  "price_date": "2026-07-29"
+  "rsi": 25.4,
+  "rsi_level": 70,
+  "open": true,
+  "armed": false,
+  "action": "NONE",
+  "reason": "",
+  "closed_trades": [
+    {
+      "entry": "2022-02-28",
+      "entry_price": 290.14,
+      "exit": "2022-03-31",
+      "exit_price": 359.2,
+      "days": 23,
+      "ret": 0.238,
+      "reason": "RSI \uc774\ud0c8"
+    },
+    {
+      "entry": "2023-01-09",
+      "entry_price": 119.77,
+      "exit": "2023-01-30",
+      "exit_price": 166.66,
+      "days": 14,
+      "ret": 0.3915,
+      "reason": "RSI \uc774\ud0c8"
+    },
+    {
+      "entry": "2023-03-20",
+      "entry_price": 183.25,
+      "exit": "2023-06-23",
+      "exit_price": 256.6,
+      "days": 66,
+      "ret": 0.4003,
+      "reason": "RSI \uc774\ud0c8"
+    },
+    {
+      "entry": "2024-01-29",
+      "entry_price": 190.93,
+      "exit": "2024-07-11",
+      "exit_price": 241.03,
+      "days": 113,
+      "ret": 0.2624,
+      "reason": "RSI \uc774\ud0c8"
+    },
+    {
+      "entry": "2025-03-17",
+      "entry_price": 238.01,
+      "exit": "2025-05-19",
+      "exit_price": 342.09,
+      "days": 44,
+      "ret": 0.4373,
+      "reason": "RSI \uc774\ud0c8"
+    },
+    {
+      "entry": "2025-07-21",
+      "entry_price": 328.49,
+      "exit": "2025-09-25",
+      "exit_price": 423.39,
+      "days": 47,
+      "ret": 0.2889,
+      "reason": "RSI \uc774\ud0c8"
+    },
+    {
+      "entry": "2026-04-27",
+      "entry_price": 378.67,
+      "exit": "2026-05-12",
+      "exit_price": 433.45,
+      "days": 11,
+      "ret": 0.1447,
+      "reason": "RSI \uc774\ud0c8"
+    }
+  ],
+  "cumulative": 6.457,
+  "entry_date": "2026-06-01",
+  "entry_price": 415.88,
+  "held_days": 40,
+  "days_left": 86,
+  "unrealized": -0.2827,
+  "deadline": "2026-11-26"
 }
