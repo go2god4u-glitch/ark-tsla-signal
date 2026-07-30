@@ -310,7 +310,15 @@
 <script>
 /* 퍼센트/부호 헬퍼. 백테스트 표가 이 둘을 쓴다 —
    없으면 소개 문구만 그려지고 표는 조용히 비어 버린다(실제로 그랬다). */
-const pct = (v, n = 1) => v == null ? "—" : (v >= 0 ? "+" : "") + (v * 100).toFixed(n) + "%";
+/* toFixed 는 39.15 같은 경계값을 부동소수점 오차 때문에 내려버린다(-> 39.1).
+   보는 사람이 표의 가격으로 직접 계산하면 39.2 가 나와 어긋난다.
+   half-up 으로 명시해 계산기와 화면이 일치하게 한다. */
+const pct = (v, n = 1) => {
+  if (v == null) return "—";
+  const m = Math.pow(10, n);
+  const r = Math.round(Math.abs(v) * 100 * m + Number.EPSILON) / m;
+  return (v >= 0 ? "+" : "-") + r.toFixed(n) + "%";
+};
 const cls = v => v == null ? "" : v >= 0 ? "pos" : "neg";
 
 const F = {

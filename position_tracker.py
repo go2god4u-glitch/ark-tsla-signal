@@ -104,13 +104,13 @@ def main() -> None:
              "exit": px.index[d["exit_i"]].strftime("%Y-%m-%d"),
              "exit_price": round(float(V[d["exit_i"]]), 2),
              "days": int(d["exit_i"] - d["entry_i"]),
-             "ret": round(d["ret"], 4), "reason": d["reason"]} for d in done],
+             "ret": round(d["ret"], 6), "reason": d["reason"]} for d in done],
         "live": [
             {"entry": px.index[p["entry_i"]].strftime("%Y-%m-%d"),
              "entry_price": round(float(V[p["entry_i"]]), 2),
              "days": int(last_i - p["entry_i"]),
              "days_left": int(MAX_HOLD - (last_i - p["entry_i"])),
-             "ret": round(p["ret"], 4), "armed": bool(p["armed"]),
+             "ret": round(p["ret"], 6), "armed": bool(p["armed"]),
              "deadline": (px.index[p["entry_i"] + MAX_HOLD].strftime("%Y-%m-%d")
                           if p["entry_i"] + MAX_HOLD < len(px)
                           else (px.index[last_i] + pd.Timedelta(
@@ -118,12 +118,12 @@ def main() -> None:
                           ).strftime("%Y-%m-%d"))} for p in live],
         "stats": {
             "closed_n": len(done),
-            "closed_mean": round(float(dr.mean()), 4) if len(dr) else None,
+            "closed_mean": round(float(dr.mean()), 6) if len(dr) else None,
             "closed_hit": round(float((dr > 0).mean()), 3) if len(dr) else None,
-            "closed_worst": round(float(dr.min()), 4) if len(dr) else None,
-            "live_mean": round(float(lr.mean()), 4) if len(lr) else None,
+            "closed_worst": round(float(dr.min()), 6) if len(dr) else None,
+            "live_mean": round(float(lr.mean()), 6) if len(lr) else None,
             "all_n": len(allr),
-            "all_mean": round(float(allr.mean()), 4) if len(allr) else None,
+            "all_mean": round(float(allr.mean()), 6) if len(allr) else None,
             "all_hit": round(float((allr > 0).mean()), 3) if len(allr) else None,
             "invested": len(allr) * 100,
             "value": round(float(sum(100 * (1 + x) for x in allr)), 0) if len(allr) else 0,

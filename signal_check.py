@@ -300,7 +300,7 @@ def _signal_runs(w: pd.DataFrame, px: pd.Series) -> list:
                 "exit": None if x is None else px.index[x].strftime("%Y-%m-%d"),
                 "exit_price": None if x is None else round(float(V[x]), 2),
                 "days": int((x if x is not None else len(V) - 1) - k),
-                "ret": round(float(ret), 4),
+                "ret": round(float(ret), 6),
                 "why": why, "open": x is None})
         if not entries:
             continue
@@ -308,7 +308,7 @@ def _signal_runs(w: pd.DataFrame, px: pd.Series) -> list:
                     "end": rn[-1].strftime("%Y-%m-%d"),
                     "weeks": len(rn), "entries": entries,
                     "avg_price": round(float(np.mean([e["price"] for e in entries])), 2),
-                    "run_ret": round(float(np.mean(rets)), 4),
+                    "run_ret": round(float(np.mean(rets)), 6),
                     "open": any(e["open"] for e in entries)})
     return out
 

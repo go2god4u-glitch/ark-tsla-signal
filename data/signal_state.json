@@ -1,5 +1,5 @@
 {
-  "checked_utc": "2026-07-30T12:08:17+00:00",
+  "checked_utc": "2026-07-30T12:15:35+00:00",
   "week": "2026-07-31",
   "signal": false,
   "net": 54604,
@@ -35,13 +35,13 @@
           "exit": "2022-03-31",
           "exit_price": 359.2,
           "days": 23,
-          "ret": 0.238,
+          "ret": 0.238009,
           "why": "RSI \uc774\ud0c8",
           "open": false
         }
       ],
       "avg_price": 290.14,
-      "run_ret": 0.238,
+      "run_ret": 0.238009,
       "open": false
     },
     {
@@ -67,7 +67,7 @@
           "exit": "2023-01-30",
           "exit_price": 166.66,
           "days": 9,
-          "ret": 0.2675,
+          "ret": 0.267473,
           "why": "RSI \uc774\ud0c8",
           "open": false
         },
@@ -78,13 +78,13 @@
           "exit": "2023-01-30",
           "exit_price": 166.66,
           "days": 5,
-          "ret": 0.1594,
+          "ret": 0.159374,
           "why": "RSI \uc774\ud0c8",
           "open": false
         }
       ],
       "avg_price": 131.67,
-      "run_ret": 0.2728,
+      "run_ret": 0.272782,
       "open": false
     },
     {
@@ -99,13 +99,13 @@
           "exit": "2023-06-23",
           "exit_price": 256.6,
           "days": 66,
-          "ret": 0.4003,
+          "ret": 0.400273,
           "why": "RSI \uc774\ud0c8",
           "open": false
         }
       ],
       "avg_price": 183.25,
-      "run_ret": 0.4003,
+      "run_ret": 0.400273,
       "open": false
     },
     {
@@ -120,13 +120,13 @@
           "exit": "2023-06-23",
           "exit_price": 256.6,
           "days": 42,
-          "ret": 0.5786,
+          "ret": 0.578591,
           "why": "RSI \uc774\ud0c8",
           "open": false
         }
       ],
       "avg_price": 162.55,
-      "run_ret": 0.5786,
+      "run_ret": 0.578591,
       "open": false
     },
     {
@@ -152,7 +152,7 @@
           "exit": "2024-07-11",
           "exit_price": 241.03,
           "days": 108,
-          "ret": 0.3312,
+          "ret": 0.331216,
           "why": "RSI \uc774\ud0c8",
           "open": false
         },
@@ -163,13 +163,13 @@
           "exit": "2024-07-11",
           "exit_price": 241.03,
           "days": 103,
-          "ret": 0.2812,
+          "ret": 0.281189,
           "why": "RSI \uc774\ud0c8",
           "open": false
         }
       ],
       "avg_price": 186.71,
-      "run_ret": 0.2916,
+      "run_ret": 0.291602,
       "open": false
     },
     {
@@ -184,7 +184,7 @@
           "exit": "2024-07-11",
           "exit_price": 241.03,
           "days": 70,
-          "ret": 0.3756,
+          "ret": 0.375585,
           "why": "RSI \uc774\ud0c8",
           "open": false
         },
@@ -195,13 +195,13 @@
           "exit": "2024-07-11",
           "exit_price": 241.03,
           "days": 65,
-          "ret": 0.3934,
+          "ret": 0.393398,
           "why": "RSI \uc774\ud0c8",
           "open": false
         }
       ],
       "avg_price": 174.1,
-      "run_ret": 0.3845,
+      "run_ret": 0.384492,
       "open": false
     },
     {
@@ -216,13 +216,13 @@
           "exit": "2025-05-19",
           "exit_price": 342.09,
           "days": 44,
-          "ret": 0.4373,
+          "ret": 0.437293,
           "why": "RSI \uc774\ud0c8",
           "open": false
         }
       ],
       "avg_price": 238.01,
-      "run_ret": 0.4373,
+      "run_ret": 0.437293,
       "open": false
     },
     {
@@ -237,7 +237,7 @@
           "exit": "2025-09-25",
           "exit_price": 423.39,
           "days": 47,
-          "ret": 0.2889,
+          "ret": 0.288898,
           "why": "RSI \uc774\ud0c8",
           "open": false
         },
@@ -248,13 +248,13 @@
           "exit": "2025-09-25",
           "exit_price": 423.39,
           "days": 42,
-          "ret": 0.3004,
+          "ret": 0.300378,
           "why": "RSI \uc774\ud0c8",
           "open": false
         }
       ],
       "avg_price": 327.04,
-      "run_ret": 0.2946,
+      "run_ret": 0.294638,
       "open": false
     },
     {
@@ -269,13 +269,13 @@
           "exit": "2025-09-25",
           "exit_price": 423.39,
           "days": 27,
-          "ret": 0.2632,
+          "ret": 0.263247,
           "why": "RSI \uc774\ud0c8",
           "open": false
         }
       ],
       "avg_price": 335.16,
-      "run_ret": 0.2632,
+      "run_ret": 0.263247,
       "open": false
     },
     {
@@ -290,13 +290,13 @@
           "exit": null,
           "exit_price": null,
           "days": 2,
-          "ret": -0.0352,
+          "ret": -0.03525,
           "why": null,
           "open": true
         }
       ],
       "avg_price": 309.22,
-      "run_ret": -0.0352,
+      "run_ret": -0.03525,
       "open": true
     }
   ],
