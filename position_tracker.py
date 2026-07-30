@@ -1,9 +1,27 @@
 """보유 상태 — 데이터에서 매번 재구성한다. 상태 파일에 의존하지 않는다.
 
 규칙:
-  진입  아크 주간 순매수가 문턱(과거 기준 상위 10%)을 넘은 주 -> 다음 거래일 종가
-  청산  RSI(14) 가 70 을 넘었다가(armed) 다시 70 아래로 내려오면
-        (6개월 = 126거래일 안에 안 걸리면 그때 정리)
+  진입  아크 주간 순매수가 문턱(과거 기준 상위 10%)을 넘고
+        낙폭이 -30% 이하인 주 -> 다음 거래일 종가
+  청산  진입 후 126거래일(약 6개월) 경과
+
+청산 규칙을 RSI 70 이탈에서 6개월 고정으로 바꾼 이유:
+  RSI 규칙은 '단일 포지션 복리' 틀에서 골랐다. 그 틀은 겹치는 신호를 하나로
+  병합해 매매가 5건뿐이었다. 이후 자본 모델을 '신호마다 독립 100' 으로 바꿨는데
+  매도 규칙은 다시 고르지 않았다. 틀이 바뀌면 순위가 바뀐다 — 실제로 뒤집혔다.
+
+  독립 포지션 틀(총 16건) 기준 평가액:
+    6개월 고정        2290   (승률 88%, 최악 -3.5%, 평균보유 118일)
+    RSI 70 이탈       2093   (승률 94%, 최악 -3.5%, 평균보유  49일)
+    9개월 고정        2464   (승률 88%, 최악 -37.0%)
+    10개월 고정       2514   (승률 88%, 최악 -61.2%)
+
+  더 오래 들면 평가액은 오르지만 최악 사례가 -3.5% -> -61.2% 로 급격히 나빠진다.
+  5~7개월 구간이 최악 -3.5% 를 유지하면서 평가 2226~2290 으로 안정적이다.
+
+  아크 매도를 넣어도 개선되지 않는다: 아크 하위10% AND RSI≥70 이 2328 인데
+  아크 없는 126일 고정이 2290 이다(차이 1.7%). 게다가 그 규칙의 청산 15건 중
+  10건이 상한 도달이라, 실제로는 아크가 아니라 '오래 들고 있던' 효과였다.
   신호마다 독립 포지션이다. 이미 보유 중이어도 새 신호가 뜨면 새로 100 을 넣고,
   그 포지션은 자기 진입일 기준으로 청산 조건을 본다.
   'RSI 70 을 넘은 적이 있는가'(armed)도 포지션마다 따로 센다.
@@ -31,8 +49,8 @@ import pandas as pd
 BASE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(BASE, "data", "position.json")
 
-RSI_LEVEL = 70          # 백테스트 고원 66~74 의 중앙
-MAX_HOLD = 126          # 6개월 상한. 없으면 무한 보유가 된다
+MAX_HOLD = 126          # 6개월 고정 보유 (독립 포지션 틀에서 재선정)
+RSI_LEVEL = 70          # 참고 표시용. 청산 판정에는 쓰지 않는다
 
 
 def rsi14(px: pd.Series) -> pd.Series:
@@ -46,19 +64,14 @@ def replay(V, RSI, sig_locs):
     """신호마다 독립 포지션을 돌린다. (완료 목록, 보유 중 목록)."""
     done, live = [], []
     for e in sorted(sig_locs):
-        armed = False
-        for j in range(e + 1, len(V)):
-            if RSI[j] >= RSI_LEVEL:
-                armed = True
-            by_rsi = armed and RSI[j] < RSI_LEVEL
-            by_cap = (j - e) >= MAX_HOLD
-            if by_rsi or by_cap:
-                done.append({"entry_i": e, "exit_i": j,
-                             "ret": float(V[j] / V[e] - 1),
-                             "reason": "RSI 이탈" if by_rsi else "6개월 상한"})
-                break
+        j = e + MAX_HOLD
+        if j < len(V):
+            done.append({"entry_i": e, "exit_i": j,
+                         "ret": float(V[j] / V[e] - 1),
+                         "reason": "6개월 경과"})
         else:
-            live.append({"entry_i": e, "armed": armed,
+            live.append({"entry_i": e,
+                         "armed": bool((RSI[e + 1:] >= RSI_LEVEL).any()),
                          "ret": float(V[-1] / V[e] - 1)})
     return done, live
 

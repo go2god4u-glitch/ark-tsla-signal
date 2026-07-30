@@ -13,8 +13,8 @@ ARK Invest(ARKK·ARKQ)의 테슬라 보유 변화를 매수신호로 삼았을 �
 | [docs/OPERATIONS.md](docs/OPERATIONS.md) | 자동화·알림·시간대 |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | 데이터 소스의 함정 |
 
-> **매수는 아크, 매도는 RSI.** 낙폭 -30% 이하일 때만 산다.
-> 신호마다 독립 포지션, RSI 70 이탈 또는 6개월에 청산.
+> **매수는 아크, 매도는 시간.** 낙폭 -30% 이하일 때만 산다.
+> 신호마다 독립 포지션(각 100), 6개월 뒤 청산.
 
 ## 결과
 

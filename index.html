@@ -208,10 +208,11 @@
   </section>
 
   <section>
-    <h2 style="font-size:17px;font-weight:700;margin:8px 0 4px">매도 규칙 — RSI 70 이탈</h2>
+    <h2 style="font-size:17px;font-weight:700;margin:8px 0 4px">매도 규칙 — 6개월 고정 보유</h2>
     <p style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px">
-      규칙군 7개 × 파라미터 약 48개를 훑어 <b>최고값이 아니라 파라미터 구간 전체가 좋은 것</b>을
-      골랐다. RSI 66~74 다섯 개 연속이 6.7~7.1배로, 한 점에서만 튀는 MACD 와 다르다.</p>
+      <b>신호마다 100 을 넣는 독립 포지션 틀</b>에서 다시 골랐다. 규칙군 전체의 중앙값 기준으로
+      고정 보유가 가장 안정적이다(중앙값 2236 vs RSI 이탈 1978 vs 트레일링 1795).
+      아크 매도를 넣어도 개선되지 않았다 — 아래 표 참조.</p>
     <div class="card table-scroll" style="margin-bottom:14px">
       <div class="card-head"><span class="card-title">RSI 임계값별 (고원인가 확인)</span></div>
       <table><thead><tr>
@@ -534,13 +535,13 @@ function renderMode() {
       <div class="table-scroll" style="margin-top:14px">
         <table><thead><tr>
           <th scope="col">진입일</th><th scope="col">진입가</th><th scope="col">평가</th>
-          <th scope="col">보유</th><th scope="col">RSI 70 돌파</th><th scope="col">상한</th>
+          <th scope="col">보유</th><th scope="col">현재 RSI</th><th scope="col">청산 예정일</th>
         </tr></thead><tbody>
         ${live.map(x => `<tr>
           <td>${x.entry}</td><td>$${x.entry_price.toFixed(2)}</td>
           <td class="${cls(x.ret)}">${pct(x.ret)}</td>
           <td>${x.days}일 (${x.days_left}일 남음)</td>
-          <td>${x.armed ? "예 — 70 아래로 내려오면 매도" : "아니오"}</td>
+          <td style="color:var(--ink-3)">${p.rsi}</td>
           <td>${x.deadline}</td></tr>`).join("")}
         </tbody></table>
       </div>
@@ -560,7 +561,7 @@ function renderMode() {
         color:${live.length ? "var(--sell)" : "var(--buy)"}">${
           live.length ? `매도 신호 대기 (보유 ${live.length}건)` : "매수 신호 대기"}</span>
       <span class="stamp">${live.length
-        ? `각 포지션이 자기 진입일 기준으로 RSI ${p.rsi_level} 이탈 또는 ${p.max_hold}거래일 상한을 기다린다`
+        ? `각 포지션이 자기 진입일로부터 ${p.max_hold}거래일(약 6개월) 경과를 기다린다`
         : "보유 없음 — 아크 주간 매수 신호를 기다린다"}</span>
     </div>${rows}`;
 }

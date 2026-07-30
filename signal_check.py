@@ -268,20 +268,12 @@ def _signal_runs(w: pd.DataFrame, px: pd.Series) -> list:
             runs.append(cur)
             cur = [t]
     runs.append(cur)
-    RSI = _rsi14(px).values
     V = px.values
-    RSI_LEVEL, MAX_HOLD = 70, 126
+    MAX_HOLD = 126          # 6개월 고정 보유 (position_tracker 와 동일)
 
     def exit_of(e):
-        armed = False
-        for j in range(e + 1, len(V)):
-            if RSI[j] >= RSI_LEVEL:
-                armed = True
-            if armed and RSI[j] < RSI_LEVEL:
-                return j, "RSI 이탈"
-            if (j - e) >= MAX_HOLD:
-                return j, "6개월 상한"
-        return None, None
+        j = e + MAX_HOLD
+        return (j, "6개월 경과") if j < len(V) else (None, None)
 
     out = []
     for rn in runs:

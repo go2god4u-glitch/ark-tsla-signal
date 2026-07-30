@@ -26,11 +26,6 @@ raw = json.load(open('data/tsla_full.json'))['chart']['result'][0]
 ts = pd.to_datetime(pd.Series(raw['timestamp']), unit='s').dt.normalize()
 close = pd.Series(raw['indicators']['quote'][0]['close'], index=ts).dropna().sort_index()
 
-# --- RSI(14) Wilder 를 여기서 다시 구현 ---
-d = close.diff()
-gain = d.clip(lower=0).ewm(alpha=1/14, adjust=False).mean()
-loss = (-d.clip(upper=0)).ewm(alpha=1/14, adjust=False).mean()
-rsi = 100 - 100/(1 + gain/loss)
 
 state = json.load(open('data/signal_state.json'))
 runs = state['runs']
@@ -52,13 +47,10 @@ for ri, r in enumerate(runs, 1):
         # 3) 매수가 = 그날 종가인가
         chk(abs(close.loc[ent] - e['price']) < 0.01,
             f"[{ri}] {e['date']} 종가 {close.loc[ent]:.2f} vs 표 {e['price']}")
-        # 4) 청산 규칙 재현
+        # 4) 청산 규칙 재현 — 진입 후 126거래일(약 6개월) 고정 보유
         k = close.index.get_loc(ent)
-        armed = False; ex = None; why = None
-        for j in range(k+1, len(close)):
-            if rsi.iloc[j] >= 70: armed = True
-            if armed and rsi.iloc[j] < 70: ex, why = j, 'RSI 이탈'; break
-            if j - k >= 126: ex, why = j, '6개월 상한'; break
+        ex = k + 126 if k + 126 < len(close) else None
+        why = '6개월 경과' if ex is not None else None
         if e['open']:
             chk(ex is None, f"[{ri}] {e['date']} 는 보유중이라는데 청산 조건이 이미 걸렸다")
             cur = float(close.iloc[-1])
