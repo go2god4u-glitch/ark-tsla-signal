@@ -241,10 +241,14 @@
   </section>
 
   <section>
-    <h2 style="font-size:17px;font-weight:700;margin:8px 0 4px">매도 규칙 — 아크 감소 + 낙폭 회복</h2>
+    <h2 style="font-size:17px;font-weight:700;margin:8px 0 4px">매도 규칙 — 두 규칙 병렬</h2>
     <p style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px">
-      <b>진입의 거울상</b>이다. 진입이 "아크가 사고 + 낙폭 깊을 때"이므로
-      청산은 "아크가 줄이고 + 낙폭 회복"이다.
+      <b>성격이 다른 두 신호를 하나로 합치지 않는다.</b> 먼저 걸리는 쪽으로 청산한다.<br>
+      <b>규칙 A</b> — 아크 누적 -20% AND 낙폭 -20% 회복. 진입의 거울상이고 "목표 달성, 이익 실현"이다.<br>
+      <b>규칙 B</b> — 아크가 단일 주에 -7% 이상 매도. "전제가 깨졌다, 손실이든 이익이든 나온다".<br>
+      A 는 이익 상태에서만 걸리고(낙폭 회복이 조건) B 는 상태와 무관하다.
+      AND 로 묶으면 B 가 죽어 개선이 없었고, 병렬로 두니 평가 2689 → 2819,
+      최악이 -9.2% → -3.5% 로 나아졌다(-6~-12% 전 구간이 고원).
       아크 -10~-25% × 낙폭 -30~-10% 격자 <b>35칸이 전부</b> 6개월 고정(2290)을 넘었다
       (중앙값 2610, 최솟값 2364). 채택값 -20%/-20% 는 격자 중앙이지 최고값이 아니다.</p>
     <div class="card table-scroll" style="margin-bottom:14px">
@@ -727,7 +731,8 @@ function renderMode() {
         color:${live.length ? "var(--sell)" : "var(--buy)"}">${
           live.length ? `매도 신호 대기 (보유 ${live.length}건)` : "매수 신호 대기"}</span>
       <span class="stamp">${live.length
-        ? `각 포지션이 <b>아크 보유 -${p.live[0].need_ark}% AND 낙폭 ${p.live[0].need_dd}% 회복</b>을 기다린다`
+        ? `<b>규칙 A</b>(아크 -${p.live[0].need_ark}% AND 낙폭 ${p.live[0].need_dd}% 회복) 또는
+           <b>규칙 B</b>(아크 단일 주 ${p.live[0].big_sell}% 매도) 중 <b>먼저 걸리는 쪽</b>`
         : "보유 없음 — 아크 주간 매수 신호를 기다린다"}</span>
     </div>${rows}`;
 }

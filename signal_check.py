@@ -300,14 +300,25 @@ def _signal_runs(w: pd.DataFrame, px: pd.Series) -> list:
     runs.append(cur)
     V = px.values
     # position_tracker 와 같은 규칙: 아크 -20% AND 낙폭 -20% 회복
-    from position_tracker import ARK_DROP, DD_RECOVER, MAX_HOLD
+    from position_tracker import ARK_DROP, DD_RECOVER, MAX_HOLD, BIG_SELL
     H = build_daily(px)["shares"].reindex(px.index).ffill().values
     DDv = ((px / px.rolling(252, min_periods=60).max() - 1) * 100).values
+    _big = sorted({px.index.searchsorted(t, side="right")
+                   for t in w.index[(w["netpct"] <= BIG_SELL).fillna(False)]
+                   if px.index.searchsorted(t, side="right") < len(V)})
 
     def exit_of(e):
+        exA = None
         for j in range(e + 1, min(e + MAX_HOLD + 1, len(V))):
             if H[j] <= H[e] * (1 - ARK_DROP) and DDv[j] >= DD_RECOVER:
-                return j, "아크 -20% + 낙폭 회복"
+                exA = j
+                break
+        nxt = [b for b in _big if b > e and b <= e + MAX_HOLD]
+        exB = nxt[0] if nxt else None
+        c = [(x, t) for x, t in ((exA, "A: 아크 -20% + 낙폭 회복"),
+                                 (exB, "B: 아크 대량매도")) if x is not None]
+        if c:
+            return min(c)
         return (e + MAX_HOLD, "상한 도달") if e + MAX_HOLD < len(V) else (None, None)
 
     # 신호 시점의 종합 점수도 함께 싣는다 (수익률과 r=+0.54 로 상관이 있다)

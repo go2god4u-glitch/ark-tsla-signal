@@ -31,6 +31,11 @@ close = pd.Series(raw['indicators']['quote'][0]['close'], index=ts).dropna().sor
 from signal_check import build_daily
 HH = build_daily(close)['shares'].reindex(close.index).ffill().values
 DDv = ((close / close.rolling(252, min_periods=60).max() - 1) * 100).values
+from signal_check import build as _b
+_w = _b(close)
+BIG = sorted({close.index.searchsorted(t, side="right")
+              for t in _w.index[(_w["netpct"] <= -7.0).fillna(False)]
+              if close.index.searchsorted(t, side="right") < len(close)})
 
 state = json.load(open('data/signal_state.json'))
 runs = state['runs']
@@ -54,10 +59,15 @@ for ri, r in enumerate(runs, 1):
             f"[{ri}] {e['date']} 종가 {close.loc[ent]:.2f} vs 표 {e['price']}")
         # 4) 청산 규칙 재현 — 아크 보유 -20% AND 낙폭 -20% 회복
         k = close.index.get_loc(ent)
-        ex = why = None
+        exA = None
         for j in range(k+1, min(k+505, len(close))):
             if HH[j] <= HH[k]*0.80 and DDv[j] >= -20.0:
-                ex, why = j, '아크 -20% + 낙폭 회복'; break
+                exA = j; break
+        nxt = [b for b in BIG if b > k and b <= k+504]
+        exB = nxt[0] if nxt else None
+        cand = [(x, t) for x, t in ((exA, 'A: 아크 -20% + 낙폭 회복'),
+                                    (exB, 'B: 아크 대량매도')) if x is not None]
+        ex, why = min(cand) if cand else (None, None)
         if ex is None and k+504 < len(close):
             ex, why = k+504, '상한 도달'
         if e['open']:

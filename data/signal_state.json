@@ -1,13 +1,13 @@
 {
-  "checked_utc": "2026-07-30T13:27:21+00:00",
+  "checked_utc": "2026-07-30T13:34:08+00:00",
   "week": "2026-07-31",
   "signal": false,
-  "net": 54604,
+  "net": 74932,
   "threshold": 91296,
-  "gap": -36692,
-  "net_pct": 2.0,
+  "gap": -16364,
+  "net_pct": 2.74,
   "threshold_pct": 3.34,
-  "dd_now": -39.1,
+  "dd_now": -38.1,
   "big_sell": -7.0,
   "big_sell_on": false,
   "big_sells": [
@@ -63,10 +63,10 @@
   "dd_filter": -30.0,
   "thr_ok": false,
   "dd_ok": true,
-  "shares": 2784947,
-  "price": 298.32,
-  "price_date": "2026-07-29",
-  "drawdown_from_ath": -39.1,
+  "shares": 2805275,
+  "price": 303.33,
+  "price_date": "2026-07-30",
+  "drawdown_from_ath": -38.1,
   "ath": 489.88,
   "ath_date": "2025-12-16",
   "prev_signal_week": "2026-07-24",
@@ -84,17 +84,17 @@
           "signal": "2022-02-25",
           "date": "2022-02-28",
           "price": 290.14,
-          "exit": "2022-04-22",
-          "exit_price": 335.02,
-          "days": 38,
-          "ret": 0.154659,
+          "exit": "2022-04-04",
+          "exit_price": 381.82,
+          "days": 25,
+          "ret": 0.315959,
           "score": 71.0,
-          "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
+          "why": "B: \uc544\ud06c \ub300\ub7c9\ub9e4\ub3c4",
           "open": false
         }
       ],
       "avg_price": 290.14,
-      "run_ret": 0.154659,
+      "run_ret": 0.315959,
       "open": false
     },
     {
@@ -106,41 +106,41 @@
           "signal": "2023-01-06",
           "date": "2023-01-09",
           "price": 119.77,
-          "exit": "2023-10-09",
-          "exit_price": 259.67,
-          "days": 188,
-          "ret": 1.168072,
+          "exit": "2023-06-20",
+          "exit_price": 274.45,
+          "days": 111,
+          "ret": 1.291475,
           "score": 79.0,
-          "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
+          "why": "B: \uc544\ud06c \ub300\ub7c9\ub9e4\ub3c4",
           "open": false
         },
         {
           "signal": "2023-01-13",
           "date": "2023-01-17",
           "price": 131.49,
-          "exit": "2023-09-22",
-          "exit_price": 244.88,
-          "days": 172,
-          "ret": 0.862347,
+          "exit": "2023-06-20",
+          "exit_price": 274.45,
+          "days": 106,
+          "ret": 1.087231,
           "score": 88.0,
-          "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
+          "why": "B: \uc544\ud06c \ub300\ub7c9\ub9e4\ub3c4",
           "open": false
         },
         {
           "signal": "2023-01-20",
           "date": "2023-01-23",
           "price": 143.75,
-          "exit": "2023-09-12",
-          "exit_price": 267.48,
-          "days": 160,
-          "ret": 0.860731,
+          "exit": "2023-06-20",
+          "exit_price": 274.45,
+          "days": 102,
+          "ret": 0.909217,
           "score": 77.0,
-          "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
+          "why": "B: \uc544\ud06c \ub300\ub7c9\ub9e4\ub3c4",
           "open": false
         }
       ],
       "avg_price": 131.67,
-      "run_ret": 0.963717,
+      "run_ret": 1.095975,
       "open": false
     },
     {
@@ -152,17 +152,17 @@
           "signal": "2023-03-17",
           "date": "2023-03-20",
           "price": 183.25,
-          "exit": "2023-09-07",
-          "exit_price": 251.49,
-          "days": 118,
-          "ret": 0.372387,
+          "exit": "2023-06-20",
+          "exit_price": 274.45,
+          "days": 63,
+          "ret": 0.497681,
           "score": 71.0,
-          "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
+          "why": "B: \uc544\ud06c \ub300\ub7c9\ub9e4\ub3c4",
           "open": false
         }
       ],
       "avg_price": 183.25,
-      "run_ret": 0.372387,
+      "run_ret": 0.497681,
       "open": false
     },
     {
@@ -174,17 +174,17 @@
           "signal": "2023-04-21",
           "date": "2023-04-24",
           "price": 162.55,
-          "exit": "2023-09-18",
-          "exit_price": 265.28,
-          "days": 101,
-          "ret": 0.63199,
+          "exit": "2023-06-20",
+          "exit_price": 274.45,
+          "days": 39,
+          "ret": 0.688404,
           "score": 79.0,
-          "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
+          "why": "B: \uc544\ud06c \ub300\ub7c9\ub9e4\ub3c4",
           "open": false
         }
       ],
       "avg_price": 162.55,
-      "run_ret": 0.63199,
+      "run_ret": 0.688404,
       "open": false
     },
     {
@@ -201,7 +201,7 @@
           "days": 235,
           "ret": 1.149688,
           "score": 78.0,
-          "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
+          "why": "A: \uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         },
         {
@@ -213,7 +213,7 @@
           "days": 221,
           "ret": 1.408981,
           "score": 76.0,
-          "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
+          "why": "A: \uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         },
         {
@@ -225,7 +225,7 @@
           "days": 213,
           "ret": 1.46117,
           "score": 83.0,
-          "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
+          "why": "A: \uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         }
       ],
@@ -247,7 +247,7 @@
           "days": 156,
           "ret": 0.997489,
           "score": 82.0,
-          "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
+          "why": "A: \uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         },
         {
@@ -259,7 +259,7 @@
           "days": 142,
           "ret": 0.500289,
           "score": 90.0,
-          "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
+          "why": "A: \uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
           "open": false
         }
       ],
@@ -276,17 +276,17 @@
           "signal": "2025-03-14",
           "date": "2025-03-17",
           "price": 238.01,
-          "exit": "2026-02-11",
-          "exit_price": 428.27,
-          "days": 228,
-          "ret": 0.799378,
+          "exit": "2025-11-10",
+          "exit_price": 445.23,
+          "days": 165,
+          "ret": 0.870636,
           "score": 73.0,
-          "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
+          "why": "B: \uc544\ud06c \ub300\ub7c9\ub9e4\ub3c4",
           "open": false
         }
       ],
       "avg_price": 238.01,
-      "run_ret": 0.799378,
+      "run_ret": 0.870636,
       "open": false
     },
     {
@@ -298,30 +298,30 @@
           "signal": "2025-07-18",
           "date": "2025-07-21",
           "price": 328.49,
-          "exit": null,
-          "exit_price": null,
-          "days": 257,
-          "ret": -0.091844,
+          "exit": "2025-11-10",
+          "exit_price": 445.23,
+          "days": 79,
+          "ret": 0.355384,
           "score": 65.0,
-          "why": null,
-          "open": true
+          "why": "B: \uc544\ud06c \ub300\ub7c9\ub9e4\ub3c4",
+          "open": false
         },
         {
           "signal": "2025-07-25",
           "date": "2025-07-28",
           "price": 325.59,
-          "exit": "2026-02-09",
-          "exit_price": 417.32,
-          "days": 135,
-          "ret": 0.281735,
+          "exit": "2025-11-10",
+          "exit_price": 445.23,
+          "days": 74,
+          "ret": 0.367456,
           "score": 71.0,
-          "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
+          "why": "B: \uc544\ud06c \ub300\ub7c9\ub9e4\ub3c4",
           "open": false
         }
       ],
       "avg_price": 327.04,
-      "run_ret": 0.094945,
-      "open": true
+      "run_ret": 0.36142,
+      "open": false
     },
     {
       "start": "2025-08-15",
@@ -332,17 +332,17 @@
           "signal": "2025-08-15",
           "date": "2025-08-18",
           "price": 335.16,
-          "exit": "2025-12-29",
-          "exit_price": 459.64,
-          "days": 92,
-          "ret": 0.371405,
+          "exit": "2025-11-10",
+          "exit_price": 445.23,
+          "days": 59,
+          "ret": 0.32841,
           "score": 68.0,
-          "why": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5",
+          "why": "B: \uc544\ud06c \ub300\ub7c9\ub9e4\ub3c4",
           "open": false
         }
       ],
       "avg_price": 335.16,
-      "run_ret": 0.371405,
+      "run_ret": 0.32841,
       "open": false
     },
     {
@@ -356,15 +356,15 @@
           "price": 309.22,
           "exit": null,
           "exit_price": null,
-          "days": 2,
-          "ret": -0.03525,
+          "days": 3,
+          "ret": -0.019032,
           "score": 78.0,
           "why": null,
           "open": true
         }
       ],
       "avg_price": 309.22,
-      "run_ret": -0.03525,
+      "run_ret": -0.019032,
       "open": true
     }
   ],
@@ -801,7 +801,8 @@
       "2026-07-14",
       "2026-07-17",
       "2026-07-22",
-      "2026-07-27"
+      "2026-07-27",
+      "2026-07-30"
     ],
     "p": [
       207.97,
@@ -1235,7 +1236,8 @@
       396.18,
       380.84,
       374.01,
-      309.22
+      309.22,
+      303.33
     ],
     "dd": [
       -29.4,
@@ -1669,18 +1671,14 @@
       -19.1,
       -22.3,
       -23.7,
-      -36.9
+      -36.9,
+      -38.1
     ]
   },
-  "holdings_date": "2026-07-29",
-  "holdings": 2784947,
-  "holdings_chg": 1956,
+  "holdings_date": "2026-07-30",
+  "holdings": 2805275,
+  "holdings_chg": 20328,
   "recent": [
-    {
-      "d": "2026-06-15",
-      "s": 2758668,
-      "c": 411.15
-    },
     {
       "d": "2026-06-16",
       "s": 2740598,
@@ -1825,15 +1823,20 @@
       "d": "2026-07-29",
       "s": 2784947,
       "c": 298.32
+    },
+    {
+      "d": "2026-07-30",
+      "s": 2805275,
+      "c": 303.33
     }
   ],
   "tech": {
-    "rsi": 25.42,
-    "macd": -24.68,
-    "macd_signal": -14.94,
-    "ma50": 394.64,
-    "ma200": 412.75,
-    "bb_low": 292.71,
+    "rsi": 27.96,
+    "macd": -25.97,
+    "macd_signal": -17.15,
+    "ma50": 392.51,
+    "ma200": 412.2,
+    "bb_low": 284.58,
     "flags": {
       "rsi_oversold": true,
       "macd_above_signal": false,
@@ -1844,14 +1847,14 @@
   },
   "score": {
     "week": "2026-07-31",
-    "total": 75.4,
+    "total": 75.3,
     "components": {
-      "ark": 72.9,
-      "rsi": 98.7,
-      "dd": 90.1,
-      "macd": 0.1,
-      "ma": 97.1,
-      "bb": 93.3
+      "ark": 79.3,
+      "rsi": 97.5,
+      "dd": 89.0,
+      "macd": 0.4,
+      "ma": 96.9,
+      "bb": 88.9
     },
     "history": [
       {
@@ -2092,7 +2095,7 @@
       },
       {
         "d": "2026-07-31",
-        "s": 75.4
+        "s": 75.3
       }
     ]
   },
@@ -2189,7 +2192,7 @@
     },
     {
       "d": "2026-07-31",
-      "net": 54604,
+      "net": 74932,
       "thr": 91296,
       "sig": false
     }

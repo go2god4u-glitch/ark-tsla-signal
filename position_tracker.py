@@ -4,9 +4,25 @@
 
   진입  아크 주간 순매수율이 문턱(과거 기준 상위 10%)을 넘고
         전고점 대비 낙폭이 -30% 이하인 주  ->  다음 거래일 종가
-  청산  아크 합산 보유가 진입 시점 대비 -20% 줄고
-        AND 낙폭이 -20% 까지 회복하면      ->  그날 종가
-        (안 걸리면 504거래일 상한. 백테스트에서는 15건 전부 규칙으로 청산됐다)
+  청산  두 규칙을 **병렬로** 두고 먼저 걸리는 쪽으로 청산한다.
+
+    규칙 A (정상 청산)  아크 누적 -20% AND 낙폭 -20% 회복
+                        "목표 달성. 이익 실현"
+    규칙 B (긴급 탈출)  아크가 단일 주에 -7% 이상 매도
+                        "전제가 깨졌다. 손실이든 이익이든 나온다"
+
+    (둘 다 안 걸리면 504거래일 상한)
+
+  왜 병렬인가:
+    A 는 이익 상태에서만 걸린다(낙폭 회복이 조건). B 는 상태와 무관하다.
+    AND 로 묶으면 B 가 죽고, 단일 규칙에 욱여넣으면 성격이 섞여 둘 다 약해진다.
+    실제로 대량매도를 A 의 조건에 AND 로 넣었을 때는 개선이 없었다.
+
+  규칙 B 의 근거:
+    주간 순매수율 ≤ -7% 인 5건은 3개월 뒤 전부 하락(초과 -27.3%, p=0.011).
+    12개월로 가면 -52.1%(p=0.004) 로 더 강해진다 — 장기 하락 예고다.
+    -6% ~ -12% 전 구간이 A 단독(2689)을 넘는 고원이다(최고 2819).
+    적용 효과: 평가 2689 -> 2819, 최악 -9.2% -> -3.5%.
 
   신호마다 독립 포지션이다. 이미 보유 중이어도 새 신호가 뜨면 새로 진입하고,
   각 포지션은 자기 진입일 기준으로 청산 조건을 본다.
@@ -39,8 +55,9 @@ import pandas as pd
 BASE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(BASE, "data", "position.json")
 
-ARK_DROP = 0.20         # 아크 보유가 진입 대비 이만큼 줄면 (청산 조건 1)
-DD_RECOVER = -20.0      # 낙폭이 이 수준까지 회복하면 (청산 조건 2)
+ARK_DROP = 0.20         # [규칙 A] 아크 보유가 진입 대비 이만큼 줄면
+DD_RECOVER = -20.0      # [규칙 A] AND 낙폭이 이 수준까지 회복하면
+BIG_SELL = -7.0         # [규칙 B] 아크가 단일 주에 이만큼 팔면 (긴급 탈출)
 MAX_HOLD = 504          # 안전장치. 규칙이 안 걸릴 때만 쓰인다
 RSI_LEVEL = 70          # 참고 표시용. 청산 판정에는 쓰지 않는다
 
@@ -52,19 +69,27 @@ def rsi14(px: pd.Series) -> pd.Series:
     return 100 - 100 / (1 + up / dn)
 
 
-def replay(V, RSI, sig_locs, H, DD):
+def replay(V, RSI, sig_locs, H, DD, big_locs):
     """신호마다 독립 포지션. (완료 목록, 보유 중 목록).
 
     H  = 아크 합산 보유 주식 수 (가격 인덱스에 맞춰 채운 것)
     DD = 전고점 대비 낙폭 (%)
     """
     done, live = [], []
+    big = np.array(sorted(big_locs)) if len(big_locs) else np.array([], dtype=int)
     for e in sorted(sig_locs):
-        hit = None
+        # 규칙 A: 아크 누적 감소 + 낙폭 회복
+        exA = None
         for j in range(e + 1, min(e + MAX_HOLD + 1, len(V))):
             if H[j] <= H[e] * (1 - ARK_DROP) and DD[j] >= DD_RECOVER:
-                hit = (j, "아크 -20% + 낙폭 회복")
+                exA = j
                 break
+        # 규칙 B: 아크 단일 주 대량매도 (긴급 탈출)
+        later = big[big > e] if len(big) else np.array([], dtype=int)
+        exB = int(later[0]) if len(later) and later[0] <= e + MAX_HOLD else None
+        cand = [(x, t) for x, t in ((exA, "A: 아크 -20% + 낙폭 회복"),
+                                    (exB, "B: 아크 대량매도")) if x is not None]
+        hit = min(cand) if cand else None
         if hit is None and e + MAX_HOLD < len(V):
             hit = (e + MAX_HOLD, "상한 도달")
         if hit is None:
@@ -93,7 +118,11 @@ def main() -> None:
     from signal_check import build_daily
     H = build_daily(px)["shares"].reindex(px.index).ffill().values
     DD = ((px / px.rolling(252, min_periods=60).max() - 1) * 100).values
-    done, live = replay(V, RSI, sig_locs, H, DD)
+    # 규칙 B 발동 시점 (주간 순매수율 <= BIG_SELL)
+    big_locs = {px.index.searchsorted(t, side="right")
+                for t in w.index[(w["netpct"] <= BIG_SELL).fillna(False)]}
+    big_locs = {i for i in big_locs if i < len(px)}
+    done, live = replay(V, RSI, sig_locs, H, DD, big_locs)
     last_i = len(V) - 1
 
     # 오늘 새로 생긴 것만 알림 대상이다
@@ -132,6 +161,7 @@ def main() -> None:
              "ret": round(p["ret"], 6),
              "ark_drop": round(p["ark_drop"], 4), "dd": round(p["dd"], 1),
              "need_ark": ARK_DROP * 100, "need_dd": DD_RECOVER,
+             "big_sell": BIG_SELL,
              "deadline": (px.index[p["entry_i"] + MAX_HOLD].strftime("%Y-%m-%d")
                           if p["entry_i"] + MAX_HOLD < len(px)
                           else (px.index[last_i] + pd.Timedelta(
