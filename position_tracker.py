@@ -4,7 +4,12 @@
   진입  아크 주간 순매수가 문턱(과거 기준 상위 10%)을 넘은 주 -> 다음 거래일 종가
   청산  RSI(14) 가 70 을 넘었다가(armed) 다시 70 아래로 내려오면
         (6개월 = 126거래일 안에 안 걸리면 그때 정리)
-  보유 중에 뜬 매수 신호는 무시한다(이미 들어가 있으므로).
+  신호마다 독립 포지션이다. 이미 보유 중이어도 새 신호가 뜨면 새로 100 을 넣고,
+  그 포지션은 자기 진입일 기준으로 청산 조건을 본다.
+  'RSI 70 을 넘은 적이 있는가'(armed)도 포지션마다 따로 센다.
+
+  처음에는 '보유 중 신호는 무시' 로 만들었는데 근거 없는 임의 규칙이었다.
+  아크가 물타기 하는 구간(2026-07-13, 07-27)을 통째로 흘려보내고 있었다.
 
 왜 누적 상태 파일을 쓰지 않는가:
   처음에는 매 실행마다 상태를 파일에 이어 쓰는 방식으로 만들었다. 그런데
@@ -38,23 +43,24 @@ def rsi14(px: pd.Series) -> pd.Series:
 
 
 def replay(V, RSI, sig_locs):
-    """전 구간을 재생해 완료 매매와 현재 보유를 돌려준다."""
-    done, pos, armed = [], None, False
-    for i in range(len(V)):
-        if pos is None:
-            if i in sig_locs:
-                pos, armed = i, False
-            continue
-        if RSI[i] >= RSI_LEVEL:
-            armed = True
-        by_rsi = armed and RSI[i] < RSI_LEVEL
-        by_cap = (i - pos) >= MAX_HOLD
-        if by_rsi or by_cap:
-            done.append({"entry_i": pos, "exit_i": i,
-                         "ret": float(V[i] / V[pos] - 1),
-                         "reason": "RSI 이탈" if by_rsi else "6개월 상한"})
-            pos, armed = None, False
-    return done, pos, armed
+    """신호마다 독립 포지션을 돌린다. (완료 목록, 보유 중 목록)."""
+    done, live = [], []
+    for e in sorted(sig_locs):
+        armed = False
+        for j in range(e + 1, len(V)):
+            if RSI[j] >= RSI_LEVEL:
+                armed = True
+            by_rsi = armed and RSI[j] < RSI_LEVEL
+            by_cap = (j - e) >= MAX_HOLD
+            if by_rsi or by_cap:
+                done.append({"entry_i": e, "exit_i": j,
+                             "ret": float(V[j] / V[e] - 1),
+                             "reason": "RSI 이탈" if by_rsi else "6개월 상한"})
+                break
+        else:
+            live.append({"entry_i": e, "armed": armed,
+                         "ret": float(V[-1] / V[e] - 1)})
+    return done, live
 
 
 def main() -> None:
@@ -68,78 +74,84 @@ def main() -> None:
     sig_locs = {px.index.searchsorted(t, side="right") for t in w[w["sig"]].index}
     sig_locs = {i for i in sig_locs if i < len(px)}
 
-    done, pos, armed = replay(V, RSI, sig_locs)
+    done, live = replay(V, RSI, sig_locs)
     last_i = len(V) - 1
 
-    # 오늘 새로 발생한 것인지 판정 (알림은 '오늘 바뀐 것'에만 보낸다)
-    action, reason = "NONE", ""
-    if done and done[-1]["exit_i"] == last_i:
-        action, reason = "SELL", done[-1]["reason"]
-    elif pos == last_i:
-        action, reason = "BUY", "매수 신호 다음 거래일 종가로 진입"
+    # 오늘 새로 생긴 것만 알림 대상이다
+    sold = [d for d in done if d["exit_i"] == last_i]
+    bought = [p for p in live if p["entry_i"] == last_i]
+    action = "SELL" if sold else ("BUY" if bought else "NONE")
+    reason = (sold[0]["reason"] if sold else
+              ("매수 신호 다음 거래일 종가로 진입" if bought else ""))
+
+    dr = np.array([d["ret"] for d in done]) if done else np.array([])
+    lr = np.array([p["ret"] for p in live]) if live else np.array([])
+    allr = np.concatenate([dr, lr]) if len(dr) or len(lr) else np.array([])
 
     st = {
         "updated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "price_date": px.index[last_i].strftime("%Y-%m-%d"),
-        "price": float(V[last_i]),
+        "price": round(float(V[last_i]), 2),
         "rsi": round(float(RSI[last_i]), 1),
         "rsi_level": RSI_LEVEL,
-        "open": pos is not None,
-        "armed": bool(armed),
+        "max_hold": MAX_HOLD,
         "action": action, "reason": reason,
-        "closed_trades": [
+        "open_count": len(live),
+        "open": len(live) > 0,
+        "closed": [
             {"entry": px.index[d["entry_i"]].strftime("%Y-%m-%d"),
              "entry_price": round(float(V[d["entry_i"]]), 2),
              "exit": px.index[d["exit_i"]].strftime("%Y-%m-%d"),
              "exit_price": round(float(V[d["exit_i"]]), 2),
              "days": int(d["exit_i"] - d["entry_i"]),
              "ret": round(d["ret"], 4), "reason": d["reason"]} for d in done],
-        "cumulative": round(float(np.prod([1 + d["ret"] for d in done])), 3) if done else 1.0,
+        "live": [
+            {"entry": px.index[p["entry_i"]].strftime("%Y-%m-%d"),
+             "entry_price": round(float(V[p["entry_i"]]), 2),
+             "days": int(last_i - p["entry_i"]),
+             "days_left": int(MAX_HOLD - (last_i - p["entry_i"])),
+             "ret": round(p["ret"], 4), "armed": bool(p["armed"]),
+             "deadline": (px.index[p["entry_i"] + MAX_HOLD].strftime("%Y-%m-%d")
+                          if p["entry_i"] + MAX_HOLD < len(px)
+                          else (px.index[last_i] + pd.Timedelta(
+                              days=int((MAX_HOLD - (last_i - p["entry_i"])) * 7 / 5))
+                          ).strftime("%Y-%m-%d"))} for p in live],
+        "stats": {
+            "closed_n": len(done),
+            "closed_mean": round(float(dr.mean()), 4) if len(dr) else None,
+            "closed_hit": round(float((dr > 0).mean()), 3) if len(dr) else None,
+            "closed_worst": round(float(dr.min()), 4) if len(dr) else None,
+            "live_mean": round(float(lr.mean()), 4) if len(lr) else None,
+            "all_n": len(allr),
+            "all_mean": round(float(allr.mean()), 4) if len(allr) else None,
+            "all_hit": round(float((allr > 0).mean()), 3) if len(allr) else None,
+            "invested": len(allr) * 100,
+            "value": round(float(sum(100 * (1 + x) for x in allr)), 0) if len(allr) else 0,
+        },
     }
-    if pos is not None:
-        st.update({
-            "entry_date": px.index[pos].strftime("%Y-%m-%d"),
-            "entry_price": round(float(V[pos]), 2),
-            "held_days": int(last_i - pos),
-            "days_left": int(MAX_HOLD - (last_i - pos)),
-            "unrealized": round(float(V[last_i] / V[pos] - 1), 4),
-            # 상한 도달일은 아직 오지 않은 날일 수 있다. 인덱스를 벗어나면
-            # 남은 거래일을 달력일로 환산해 추정한다(주 5거래일 가정).
-            "deadline": (px.index[pos + MAX_HOLD].strftime("%Y-%m-%d")
-                         if pos + MAX_HOLD < len(px)
-                         else (px.index[last_i] + pd.Timedelta(
-                             days=int((MAX_HOLD - (last_i - pos)) * 7 / 5))
-                         ).strftime("%Y-%m-%d")),
-        })
-
     with open(OUT, "w") as f:
         json.dump(st, f, ensure_ascii=True, indent=2)
 
-    print(f"완료 매매 {len(done)}건, 누적 {st['cumulative']:.2f}배")
-    for t in st["closed_trades"]:
-        print(f"  {t['entry']} ${t['entry_price']:>7.2f} -> {t['exit']} ${t['exit_price']:>7.2f}"
-              f"  {t['days']:>3d}일 {t['ret']*100:>+7.1f}% ({t['reason']})")
-    if st["open"]:
-        print(f"\n★ 보유 중: {st['entry_date']} ${st['entry_price']} 진입 -> "
-              f"${st['price']} ({st['unrealized']*100:+.1f}%)")
-        print(f"  {st['held_days']}거래일 보유, 상한까지 {st['days_left']}일 (~{st['deadline']})")
-        print(f"  RSI {st['rsi']} / 70 돌파 이력 {'있음' if armed else '없음'}")
-        print(f"  -> 기다리는 것: 매도 신호")
-    else:
-        print(f"\n보유 없음 -> 기다리는 것: 매수 신호 (RSI {st['rsi']})")
+    s_ = st["stats"]
+    print(f"완료 {s_['closed_n']}건 평균 {s_['closed_mean']*100:+.1f}% 승률 {s_['closed_hit']*100:.0f}%")
+    print(f"보유 {len(live)}건 평균 {s_['live_mean']*100:+.1f}%" if live else "보유 없음")
+    print(f"전체 {s_['all_n']}건: 투입 {s_['invested']} -> 평가 {s_['value']:.0f} "
+          f"({s_['all_mean']*100:+.1f}%, 승률 {s_['all_hit']*100:.0f}%)")
+    for p in st["live"]:
+        print(f"  보유: {p['entry']} ${p['entry_price']} {p['ret']*100:+.1f}% "
+              f"({p['days']}일, 상한 {p['deadline']}, RSI70돌파 {'O' if p['armed'] else 'X'})")
     print(f"오늘 동작: {action} {reason}")
 
     if o := os.environ.get("GITHUB_OUTPUT"):
         with open(o, "a") as f:
             f.write(f"action={action}\nreason={reason}\n")
-            f.write(f"pos_open={'true' if st['open'] else 'false'}\n")
-            f.write(f"rsi={st['rsi']}\n")
-            f.write(f"entry_date={st.get('entry_date', '-')}\n")
-            f.write(f"entry_price={st.get('entry_price', 0)}\n")
-            f.write(f"unrealized={round(st.get('unrealized', 0) * 100, 1)}\n")
-            f.write(f"held_days={st.get('held_days', 0)}\n")
-            f.write(f"days_left={st.get('days_left', 0)}\n")
-            f.write(f"deadline={st.get('deadline', '-')}\n")
+            f.write(f"open_count={len(live)}\nrsi={st['rsi']}\n")
+            f.write(f"all_mean={round((s_['all_mean'] or 0)*100,1)}\n")
+            f.write(f"live_mean={round((s_['live_mean'] or 0)*100,1)}\n")
+            if sold:
+                d = st["closed"][-1]
+                f.write(f"sold_entry={d['entry']}\nsold_ret={round(d['ret']*100,1)}\n"
+                        f"sold_days={d['days']}\n")
 
 
 if __name__ == "__main__":

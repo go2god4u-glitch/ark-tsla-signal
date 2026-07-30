@@ -1,14 +1,15 @@
 {
-  "updated": "2026-07-30T11:03:58+00:00",
+  "updated": "2026-07-30T11:15:37+00:00",
   "price_date": "2026-07-29",
-  "price": 298.32000732421875,
+  "price": 298.32,
   "rsi": 25.4,
   "rsi_level": 70,
-  "open": true,
-  "armed": false,
+  "max_hold": 126,
   "action": "NONE",
   "reason": "",
-  "closed_trades": [
+  "open_count": 3,
+  "open": true,
+  "closed": [
     {
       "entry": "2022-02-28",
       "entry_price": 290.14,
@@ -28,6 +29,24 @@
       "reason": "RSI \uc774\ud0c8"
     },
     {
+      "entry": "2023-01-17",
+      "entry_price": 131.49,
+      "exit": "2023-01-30",
+      "exit_price": 166.66,
+      "days": 9,
+      "ret": 0.2675,
+      "reason": "RSI \uc774\ud0c8"
+    },
+    {
+      "entry": "2023-01-23",
+      "entry_price": 143.75,
+      "exit": "2023-01-30",
+      "exit_price": 166.66,
+      "days": 5,
+      "ret": 0.1594,
+      "reason": "RSI \uc774\ud0c8"
+    },
+    {
       "entry": "2023-03-20",
       "entry_price": 183.25,
       "exit": "2023-06-23",
@@ -37,12 +56,57 @@
       "reason": "RSI \uc774\ud0c8"
     },
     {
+      "entry": "2023-04-24",
+      "entry_price": 162.55,
+      "exit": "2023-06-23",
+      "exit_price": 256.6,
+      "days": 42,
+      "ret": 0.5786,
+      "reason": "RSI \uc774\ud0c8"
+    },
+    {
       "entry": "2024-01-29",
       "entry_price": 190.93,
       "exit": "2024-07-11",
       "exit_price": 241.03,
       "days": 113,
       "ret": 0.2624,
+      "reason": "RSI \uc774\ud0c8"
+    },
+    {
+      "entry": "2024-02-05",
+      "entry_price": 181.06,
+      "exit": "2024-07-11",
+      "exit_price": 241.03,
+      "days": 108,
+      "ret": 0.3312,
+      "reason": "RSI \uc774\ud0c8"
+    },
+    {
+      "entry": "2024-02-12",
+      "entry_price": 188.13,
+      "exit": "2024-07-11",
+      "exit_price": 241.03,
+      "days": 103,
+      "ret": 0.2812,
+      "reason": "RSI \uc774\ud0c8"
+    },
+    {
+      "entry": "2024-04-01",
+      "entry_price": 175.22,
+      "exit": "2024-07-11",
+      "exit_price": 241.03,
+      "days": 70,
+      "ret": 0.3756,
+      "reason": "RSI \uc774\ud0c8"
+    },
+    {
+      "entry": "2024-04-08",
+      "entry_price": 172.98,
+      "exit": "2024-07-11",
+      "exit_price": 241.03,
+      "days": 65,
+      "ret": 0.3934,
       "reason": "RSI \uc774\ud0c8"
     },
     {
@@ -64,6 +128,33 @@
       "reason": "RSI \uc774\ud0c8"
     },
     {
+      "entry": "2025-07-28",
+      "entry_price": 325.59,
+      "exit": "2025-09-25",
+      "exit_price": 423.39,
+      "days": 42,
+      "ret": 0.3004,
+      "reason": "RSI \uc774\ud0c8"
+    },
+    {
+      "entry": "2025-08-18",
+      "entry_price": 335.16,
+      "exit": "2025-09-25",
+      "exit_price": 423.39,
+      "days": 27,
+      "ret": 0.2632,
+      "reason": "RSI \uc774\ud0c8"
+    },
+    {
+      "entry": "2025-09-15",
+      "entry_price": 410.04,
+      "exit": "2025-09-25",
+      "exit_price": 423.39,
+      "days": 8,
+      "ret": 0.0326,
+      "reason": "RSI \uc774\ud0c8"
+    },
+    {
       "entry": "2026-04-27",
       "entry_price": 378.67,
       "exit": "2026-05-12",
@@ -73,11 +164,45 @@
       "reason": "RSI \uc774\ud0c8"
     }
   ],
-  "cumulative": 6.457,
-  "entry_date": "2026-06-01",
-  "entry_price": 415.88,
-  "held_days": 40,
-  "days_left": 86,
-  "unrealized": -0.2827,
-  "deadline": "2026-11-26"
+  "live": [
+    {
+      "entry": "2026-06-01",
+      "entry_price": 415.88,
+      "days": 40,
+      "days_left": 86,
+      "ret": -0.2827,
+      "armed": false,
+      "deadline": "2026-11-26"
+    },
+    {
+      "entry": "2026-07-13",
+      "entry_price": 394.76,
+      "days": 12,
+      "days_left": 114,
+      "ret": -0.2443,
+      "armed": false,
+      "deadline": "2027-01-04"
+    },
+    {
+      "entry": "2026-07-27",
+      "entry_price": 309.22,
+      "days": 2,
+      "days_left": 124,
+      "ret": -0.0352,
+      "armed": false,
+      "deadline": "2027-01-18"
+    }
+  ],
+  "stats": {
+    "closed_n": 17,
+    "closed_mean": 0.3027,
+    "closed_hit": 1.0,
+    "closed_worst": 0.0326,
+    "live_mean": -0.1874,
+    "all_n": 20,
+    "all_mean": 0.2292,
+    "all_hit": 0.85,
+    "invested": 2000,
+    "value": 2458.0
+  }
 }
