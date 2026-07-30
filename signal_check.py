@@ -42,8 +42,10 @@ MIN_HIST = 52        # 문턱 계산에 필요한 최소 주 수
 QUANT = 0.90
 
 ARK_API = "https://arkfunds.io/api/v2/stock/fund-ownership"
+# 전체 이력을 받는다. 점수 구성요소(200일선, 확장창 백분위)는 긴 이력이 있어야
+# 값이 안정된다. 2021년부터만 받으면 초기 구간의 백분위가 표본 부족으로 요동친다.
 YF = ("https://query1.finance.yahoo.com/v8/finance/chart/TSLA"
-      "?period1=1625097600&period2=9999999999&interval=1d&events=split")
+      "?period1=0&period2=9999999999&interval=1d&events=split")
 UA = {"User-Agent": "Mozilla/5.0"}
 
 
@@ -85,13 +87,39 @@ def refresh_ark() -> None:
 
 def refresh_prices() -> pd.Series:
     raw = _get(YF)
-    with open(os.path.join(BASE, "data", "tsla_yahoo.json"), "wb") as f:
+    with open(os.path.join(BASE, "data", "tsla_full.json"), "wb") as f:
         f.write(raw)
     r = json.loads(raw)["chart"]["result"][0]
     idx = pd.to_datetime(pd.Series(r["timestamp"]), unit="s").dt.normalize()
     px = pd.Series(r["indicators"]["quote"][0]["close"], index=idx).dropna().sort_index()
-    print(f"  주가: {len(px)}일, 최종 {px.index[-1]:%Y-%m-%d} ${px.iloc[-1]:.2f}")
+    print(f"  주가: {len(px)}일 ({px.index[0]:%Y-%m}~), 최종 {px.index[-1]:%Y-%m-%d} ${px.iloc[-1]:.2f}")
     return px
+
+
+def score_state(px: pd.Series, sh: pd.Series) -> dict:
+    """종합 점수를 계산한다 — 표시용이며 판정에는 쓰지 않는다.
+
+    검증 결과 점수와 이후 수익률은 단조 관계가 아니었고(README 참조),
+    아크를 빼면 정보가 사라졌다(70점 이상 6개월 초과: 포함 +8.1% / 제외 -2.8%).
+    기술적 지표는 신호를 강화하는 것이 아니라 희석한다.
+    그래서 화면에는 '지금 무엇이 켜져 있는가'를 보여주는 용도로만 싣는다.
+    """
+    from score_model import components          # 순환 임포트 방지: 함수 안에서 부른다
+    ark_w = sh.resample("W-FRI").last().dropna().diff()
+    c = components(px, ark_w)
+    cols = ["ark", "rsi", "dd", "macd", "ma", "bb"]
+    c = c.dropna(subset=cols)
+    if c.empty:
+        return {}
+    cur = c.iloc[-1]
+    return {
+        "week": c.index[-1].strftime("%Y-%m-%d"),
+        "total": round(float(cur[cols].mean()) * 100, 1),
+        "components": {k: round(float(cur[k]) * 100, 1) for k in cols},
+        "history": [{"d": d.strftime("%Y-%m-%d"),
+                     "s": round(float(r[cols].mean()) * 100, 1)}
+                    for d, r in c.tail(60).iterrows()],
+    }
 
 
 def load_raw() -> pd.DataFrame:
@@ -223,6 +251,7 @@ def main() -> None:
                    for d, r in recent.iterrows()],
         # 판정에는 쓰지 않는다. 사건이 쌓였을 때 답하기 위한 기록이다.
         "tech": tech_state(px),
+        "score": score_state(px, daily["shares"]),
         "weekly": [{"d": d.strftime("%Y-%m-%d"), "net": int(r["net"]),
                     "thr": int(r["thr"]), "sig": bool(r["sig"])}
                    for d, r in w.tail(16).iterrows()],
