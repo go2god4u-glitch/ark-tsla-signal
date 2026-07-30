@@ -33,7 +33,12 @@ import pandas as pd
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 RAW = os.path.join(BASE, "data", "raw")
-FUNDS = ("ARKK", "ARKQ")
+# 아크가 테슬라를 담은 ETF 전부. ARKK+ARKQ 만 보면 전체 보유의 83% 만 보게 된다.
+#   ARKK/ARKQ/ARKW 는 전 기간 상시, ARKX 는 2026-03 부터, CTRU 는 2021-12~2022-03.
+# 중간에 나타나거나 사라지는 펀드가 있으므로 '레벨을 합쳐서 차분'하면 안 된다.
+# 신규 편입일에 그 펀드의 보유량 전체가 대량 매수로 잡힌다.
+# -> 펀드별로 먼저 차분한 뒤 합산한다. 신규 편입/청산은 자동으로 0 이 된다.
+FUNDS = ("ARKK", "ARKQ", "ARKW", "ARKX", "CTRU")
 
 AUM_JUMP = 0.10      # AUM 이 이만큼 튀고
 PX_CALM = 0.06       # 주가는 이만큼도 안 움직였으면 -> 소스 오류
@@ -196,9 +201,11 @@ def build_daily(px: pd.Series) -> pd.DataFrame:
     d["aum"] = d["market_value"] / (d["weight"] / 100)
     cleaned = pd.concat([causal_clean(g) for _, g in d.groupby("fund")])
     wide = cleaned.pivot(index="date", columns="fund", values="shares_adj")
-    idx = wide[list(FUNDS)].dropna().index
-    out = pd.DataFrame({"shares": wide.loc[idx, list(FUNDS)].sum(axis=1)})
+    cols = [f for f in FUNDS if f in wide.columns]
+    # min_count=1 : 그날 존재하는 펀드만 더한다(없는 펀드를 0 으로 치지 않는다)
+    out = pd.DataFrame({"shares": wide[cols].sum(axis=1, min_count=1)}).dropna()
     out["close"] = px.reindex(out.index).ffill()
+    out.attrs["wide"] = wide[cols]
     return out
 
 
@@ -212,10 +219,14 @@ def build(px: pd.Series) -> pd.DataFrame:
     (실측: 절대 기준 사건 3개 vs 비율 기준 8개).
     단위를 바로잡는 것이지 성적에 맞추는 것이 아니다.
     """
-    sh = build_daily(px)["shares"]
-    w = sh.resample("W-FRI").last().dropna().to_frame("shares")
-    w["net"] = w["shares"].diff()
-    w["netpct"] = w["net"] / w["shares"].shift(1) * 100
+    daily = build_daily(px)
+    wide = daily.attrs["wide"]
+    wk = wide.resample("W-FRI").last()
+    # 펀드별로 차분한 뒤 합산 — 신규 편입/청산이 매매로 잡히지 않는다
+    net = wk.diff().sum(axis=1, min_count=1)
+    base = wk.shift(1).sum(axis=1, min_count=1)
+    w = pd.DataFrame({"shares": wk.sum(axis=1, min_count=1), "net": net}).dropna(subset=["net"])
+    w["netpct"] = (net / base * 100).reindex(w.index)
     w["thr_pct"] = w["netpct"].expanding(MIN_HIST).quantile(QUANT).shift(1)  # 과거만 사용
     w["sig"] = w["netpct"] >= w["thr_pct"]
     # 화면 표시는 주식 수가 직관적이므로 문턱을 주식 수로 환산해 함께 싣는다.
