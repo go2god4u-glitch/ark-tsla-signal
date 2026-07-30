@@ -3,6 +3,19 @@
 ARK Invest(ARKK·ARKQ)의 테슬라 보유 변화를 매수신호로 삼았을 때 실제로 통하는지 검증한다.
 결론부터: **사건 단위로 보면 통한다. 다만 완료된 사건이 7개뿐이라 확정할 수 없다.**
 
+## 문서
+
+| 문서 | 내용 |
+|---|---|
+| [docs/ALGORITHM.md](docs/ALGORITHM.md) | **확정된 규칙** — 매수/매도/필터/포지션 |
+| [docs/FINDINGS.md](docs/FINDINGS.md) | 백테스트 결과 전부 |
+| [docs/DECISIONS.md](docs/DECISIONS.md) | 왜 그렇게 정했나 + 뒤집힌 결론들 |
+| [docs/OPERATIONS.md](docs/OPERATIONS.md) | 자동화·알림·시간대 |
+| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | 데이터 소스의 함정 |
+
+> **매수는 아크, 매도는 RSI.** 낙폭 -30% 이하일 때만 산다.
+> 신호마다 독립 포지션, RSI 70 이탈 또는 6개월에 청산.
+
 ## 결과
 
 사건 단위 비교 (6개월 보유, 무작위 진입 대비 초과수익)
@@ -602,7 +615,7 @@ RSI 과매도, MACD 크로스, 이동평균, 볼린저, 낙폭을 아크 신호�
 점수는 대시보드에 **참고 지표로만** 표시한다. 신호는 여전히 아크 주간 순매수가
 과거 기준 상위 10% 문턱을 넘을 때만 켜진다.
 
-## 데이터 함정 — [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+## 데이터 함정 — [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 이 저장소의 가치 절반은 아래 함정들에 있다. 자세한 내용은 별도 문서 참조.
 
