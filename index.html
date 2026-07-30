@@ -262,6 +262,14 @@
         <th scope="col">최솟값</th><th scope="col">최댓값</th>
       </tr></thead><tbody id="famBody"></tbody></table>
     </div>
+    <div class="card" id="bigSellCard" style="margin-top:14px">
+      <div class="card-head">
+        <span class="card-title">아크 대량매도 경보 — 청산 규칙과 별개</span>
+        <span class="card-title" id="bsState"></span>
+      </div>
+      <div style="padding:18px 20px" id="bigSellBox"></div>
+    </div>
+
     <p class="stamp" style="line-height:1.6;margin-top:12px">
       <b>대가.</b> 큰 상승을 놓친다. 2023-01 건은 +39.2% 에 팔았는데 6개월 보유였다면 +127.1% 였다.
       자주·작게 확정하는 대신 대박을 포기하는 규칙이다.<br><br>
@@ -455,6 +463,7 @@ function render() {
   renderMode();
   renderProb();
   renderSell();
+  renderBigSell();
   renderBacktest();
   renderScore();
   renderTech();
@@ -788,6 +797,48 @@ function renderSell() {
       <td class="${f.median >= 3.0 ? "pos" : ""}">${f.median.toFixed(2)}x</td>
       <td class="${f.min >= 2.0 ? "pos" : "neg"}">${f.min.toFixed(2)}x</td>
       <td style="color:var(--ink-3)">${f.max.toFixed(2)}x</td></tr>`).join("");
+}
+
+/* 대량매도 경보. 청산 규칙(누적 -20%)과 별개로 관리한다 —
+   단일 주에 -7% 이상 판 것은 '이 포지션에서 발을 뺐다'와 다른 사건이다.
+   청산 신호가 아니라 하락 예측이므로 판정에 넣지 않고 경보로만 띄운다. */
+function renderBigSell() {
+  const box = document.getElementById("bigSellBox");
+  const hist = S.big_sells || [];
+  const on = S.big_sell_on;
+  document.getElementById("bsState").innerHTML = on
+    ? `<span class="neg">경보 발생</span>`
+    : `<span style="color:var(--ink-3)">평시</span>`;
+  box.innerHTML = `
+    <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start">
+      <div style="min-width:120px">
+        <div class="stamp">이번 주 순매수율</div>
+        <div style="font-family:var(--mono);font-size:30px;font-weight:700;line-height:1.1;
+          color:${on ? "var(--sell)" : "var(--ink)"}">${S.net_pct >= 0 ? "+" : ""}${S.net_pct}%</div>
+        <div class="stamp" style="margin-top:4px">경보 기준 ${S.big_sell}% 이하</div>
+      </div>
+      <div style="flex:1;min-width:300px">
+        <div class="stamp" style="margin-bottom:8px">최근 대량매도 이력</div>
+        <div class="table-scroll"><table><thead><tr>
+          <th scope="col">주</th><th scope="col">순매수율</th>
+          <th scope="col">주식수</th><th scope="col">그때 주가</th>
+        </tr></thead><tbody>
+        ${hist.slice().reverse().map(b => `<tr>
+          <td>${b.week}</td><td class="neg">${b.pct}%</td>
+          <td>${b.shares.toLocaleString("en-US")}</td>
+          <td>${b.price == null ? "—" : "$" + b.price.toFixed(2)}</td></tr>`).join("")}
+        </tbody></table></div>
+      </div>
+    </div>
+    <p class="stamp" style="margin:16px 0 0;line-height:1.6">
+      <b>이것은 청산 신호가 아니라 하락 예측이다.</b> 청산 규칙(아크 누적 -20% + 낙폭 회복)에
+      이 조건을 넣어 시험했을 때는 개선되지 않았다 — 대량매도가 났을 때 이미 손실 중인
+      경우가 많아 그때 팔면 손실을 확정하게 된다. 그래서 판정에 넣지 않고 경보로만 띄운다.<br><br>
+      <b>검증.</b> 주간 순매수율 -7% 이하인 5건은 <b>3개월 뒤 전부 하락</b>했다
+      (무작위 대비 -27.3%, p=0.013). 1% 단위로 훑어 -4% ~ -9% 전 구간이 음수인 고원이다.
+      앞서 "아크 매도는 무효" 라고 했던 것은 <b>하위 10% 분위수</b>로만 시험했기 때문이다 —
+      상대 기준이라 평범한 매도까지 신호로 잡았다.<br><br>
+      완료 사건 5건이다. 2026-05-01(-13.6%)과 2026-06-19(-7.2%)는 아직 결과가 안 나왔다.</p>`;
 }
 
 /* 백테스트 결과. A(사건 단위 기대치)와 B(단일 포지션 복리)를 나눠 보여준다.
