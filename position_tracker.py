@@ -136,8 +136,12 @@ def main() -> None:
     lr = np.array([p["ret"] for p in live]) if live else np.array([])
     allr = np.concatenate([dr, lr]) if len(dr) or len(lr) else np.array([])
 
+    cur_netpct = float(w["netpct"].iloc[-1]) if len(w) else 0.0
     st = {
         "updated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        # 규칙 B 진행 상황. 화면·알림이 '지금 얼마나 팔았나' 를 보여주려면 필요하다.
+        "cur_netpct": round(cur_netpct, 2),
+        "big_sell": BIG_SELL,
         "price_date": px.index[last_i].strftime("%Y-%m-%d"),
         "price": round(float(V[last_i]), 2),
         "rsi": round(float(RSI[last_i]), 1),
@@ -200,10 +204,17 @@ def main() -> None:
             f.write(f"open_count={len(live)}\nrsi={st['rsi']}\n")
             f.write(f"all_mean={round((s_['all_mean'] or 0)*100,1)}\n")
             f.write(f"live_mean={round((s_['live_mean'] or 0)*100,1)}\n")
+            # 같은 날 여러 포지션이 동시 청산될 수 있다(실제로 2023-06-20 에 6건).
+            # 한 건만 보내면 나머지를 놓친다.
             if sold:
-                d = st["closed"][-1]
-                f.write(f"sold_entry={d['entry']}\nsold_ret={round(d['ret']*100,1)}\n"
-                        f"sold_days={d['days']}\n")
+                ds = [d for d in st["closed"] if d["exit"] == st["price_date"]]
+                f.write(f"sold_n={len(ds)}\n")
+                f.write(f"sold_ret={round(float(np.mean([d['ret'] for d in ds]))*100,1)}\n")
+                f.write("sold_list=" + " / ".join(
+                    f"{d['entry']} ${d['entry_price']:.0f} {d['ret']*100:+.1f}%" for d in ds) + "\n")
+            # 규칙 B 진행 상황 (보유 중일 때 참고)
+            f.write(f"cur_netpct={st.get('cur_netpct', 0)}\n")
+            f.write(f"big_sell={BIG_SELL}\n")
 
 
 if __name__ == "__main__":

@@ -117,11 +117,10 @@ jobs:
           TG_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
           REASON: ${{ steps.pos.outputs.reason }}
-          RSI: ${{ steps.pos.outputs.rsi }}
-          ENTRY: ${{ steps.pos.outputs.sold_entry }}
+          NSOLD: ${{ steps.pos.outputs.sold_n }}
+          SLIST: ${{ steps.pos.outputs.sold_list }}
           PRICE: ${{ steps.check.outputs.price }}
           RET: ${{ steps.pos.outputs.sold_ret }}
-          DAYS: ${{ steps.pos.outputs.sold_days }}
           LEFT: ${{ steps.pos.outputs.open_count }}
         run: |
           if [ -z "$TG_TOKEN" ]; then echo "시크릿 미설정 - 건너뜀"; exit 0; fi
@@ -129,11 +128,10 @@ jobs:
             "ARK 테슬라 매도 신호" \
             "" \
             "사유: ${REASON}" \
-            "현재 RSI: ${RSI}" \
             "" \
-            "진입: ${ENTRY}" \
-            "청산가: \$${PRICE}  (${RET}%, ${DAYS}거래일 보유)" \
-            "남은 보유 포지션: ${LEFT}건" \
+            "청산 ${NSOLD}건 · 평균 ${RET}%" \
+            "${SLIST}" \
+            "청산가 \$${PRICE} · 남은 포지션 ${LEFT}건" \
             "" \
             "청산은 다음 거래일 종가 기준입니다." \
             "한국시간 화요일 새벽 5~6시." \
@@ -182,8 +180,10 @@ jobs:
             "" \
             "진입은 다음 거래일 종가. 한국시간 화요일 새벽 5~6시." \
             "" \
-            "청산 규칙: 아크 보유가 진입 대비 -20% 줄고" \
-            "동시에 낙폭이 -20%까지 회복하면 매도. 그때 다시 알림 갑니다." \
+            "청산 규칙 (먼저 걸리는 쪽):" \
+            "  A 아크 누적 -20% + 낙폭 -20% 회복 (이익 실현)" \
+            "  B 아크가 단일 주에 -7% 이상 매도 (긴급 탈출)" \
+            "그때 다시 알림 갑니다." \
             "" \
             "주의: 완료 사건 7건에서 나온 결과다. 확정된 것이 아니다." \
             "MDD -45% 를 견뎌야 나오는 수익이다." \
@@ -225,6 +225,8 @@ jobs:
           POSN: ${{ steps.pos.outputs.open_count }}
           PRSI: ${{ steps.pos.outputs.rsi }}
           PRET: ${{ steps.pos.outputs.live_mean }}
+          CNET: ${{ steps.pos.outputs.cur_netpct }}
+          BSELL: ${{ steps.pos.outputs.big_sell }}
           ALLRET: ${{ steps.pos.outputs.all_mean }}
           FORCE_HB: ${{ inputs.force_heartbeat }}
         run: |
@@ -249,7 +251,8 @@ jobs:
             "  나머지 RSI·MACD·이평선·볼린저는 참고용" \
             "직전 신호: ${PREV} (${AGO}주 전) · 그때 점수 ${PSCORE}/100" \
             "" \
-            "보유 포지션: ${POSN}건 (평균 ${PRET}%) · RSI ${PRSI}" \
+            "보유 포지션: ${POSN}건 (평균 ${PRET}%)" \
+            "  매도 규칙 B: 이번 주 ${CNET}% / 발동 ${BSELL}% 이하" \
             "과거 신호 16건 평균 수익: ${ALLRET}%" \
             "" \
             "데이터 기준일: ${HDATE}" \

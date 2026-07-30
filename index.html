@@ -703,7 +703,8 @@ function renderMode() {
       <div class="table-scroll" style="margin-top:14px">
         <table><thead><tr>
           <th scope="col">진입일</th><th scope="col">진입가</th><th scope="col">평가</th>
-          <th scope="col">보유</th><th scope="col">아크 변화</th><th scope="col">낙폭</th>
+          <th scope="col">보유</th><th scope="col">A: 아크 누적</th>
+          <th scope="col">A: 낙폭</th><th scope="col">B: 이번 주</th>
         </tr></thead><tbody>
         ${live.map(x => `<tr>
           <td>${x.entry}</td><td>$${x.entry_price.toFixed(2)}</td>
@@ -712,10 +713,14 @@ function renderMode() {
           <td class="${x.ark_drop <= -x.need_ark/100 ? "pos" : ""}">${pct(x.ark_drop)}
             <span style="color:var(--ink-3)">/ -${x.need_ark}%</span></td>
           <td class="${x.dd >= x.need_dd ? "pos" : ""}">${x.dd}%
-            <span style="color:var(--ink-3)">/ ${x.need_dd}%</span></td></tr>`).join("")}
+            <span style="color:var(--ink-3)">/ ${x.need_dd}%</span></td>
+          <td class="${p.cur_netpct <= x.big_sell ? "neg" : ""}">${p.cur_netpct >= 0 ? "+" : ""}${p.cur_netpct}%
+            <span style="color:var(--ink-3)">/ ${x.big_sell}%</span></td></tr>`).join("")}
         </tbody></table>
       </div>
-      <p class="stamp" style="margin:12px 0 0">
+      <p class="stamp" style="margin:12px 0 0;line-height:1.6">
+        <b>A</b> = 아크 누적 감소 AND 낙폭 회복 (둘 다 만족해야 청산) ·
+        <b>B</b> = 아크가 단일 주에 ${live[0].big_sell}% 이상 매도 (하나만으로 청산)<br>
         완료 ${st.closed_n}건 평균 ${pct(st.closed_mean)} (승률 ${(st.closed_hit*100).toFixed(0)}%) ·
         보유 ${live.length}건 평균 ${pct(st.live_mean)} ·
         <b>전체 ${st.all_n}건 ${pct(st.all_mean)} (승률 ${(st.all_hit*100).toFixed(0)}%)</b> ·
