@@ -207,10 +207,21 @@ def build_daily(px: pd.Series) -> pd.DataFrame:
     cleaned = pd.concat([causal_clean(g) for _, g in d.groupby("fund")])
     wide = cleaned.pivot(index="date", columns="fund", values="shares_adj")
     cols = [f for f in FUNDS if f in wide.columns]
-    # min_count=1 : 그날 존재하는 펀드만 더한다(없는 펀드를 0 으로 치지 않는다)
-    out = pd.DataFrame({"shares": wide[cols].sum(axis=1, min_count=1)}).dropna()
+
+    # 제거된 칸을 직전 유효값으로 채운다.
+    #
+    # 소스 오류로 특정 펀드가 제거된 날, 남은 펀드만 더하면 합계가 폭락한다.
+    # 실측: 2026-07-13 에 ARKK/ARKQ/ARKW 가 동시에 제거돼 ARKX 만 남았고
+    #       합계가 2,717,222 -> 66,109 (-97.6%) 로 찍혔다. 다음날 원위치.
+    # 이 구멍은 주간 순매수율을 -97% -> +4000% 로 왜곡시킨다.
+    #
+    # ffill 은 '그날 보고가 없으면 어제와 같다'는 가정이다. 보유량은 연속적이므로
+    # 하루짜리 결측에는 타당하다. 다만 펀드가 아직 등장하기 전(ARKX 이전 구간)에는
+    # 채우지 않는다 — limit_area="inside" 가 그 역할을 한다.
+    filled = wide[cols].ffill(limit_area="inside")
+    out = pd.DataFrame({"shares": filled.sum(axis=1, min_count=1)}).dropna()
     out["close"] = px.reindex(out.index).ffill()
-    out.attrs["wide"] = wide[cols]
+    out.attrs["wide"] = filled
     return out
 
 

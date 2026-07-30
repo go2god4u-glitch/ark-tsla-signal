@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-30T13:08:56+00:00",
+  "updated": "2026-07-30T13:21:28+00:00",
   "price_date": "2026-07-29",
   "price": 298.32,
   "rsi": 25.4,
@@ -7,7 +7,7 @@
   "max_hold": 504,
   "action": "NONE",
   "reason": "",
-  "open_count": 1,
+  "open_count": 2,
   "open": true,
   "closed": [
     {
@@ -112,41 +112,44 @@
     {
       "entry": "2025-03-17",
       "entry_price": 238.01,
-      "exit": "2025-09-16",
-      "exit_price": 421.62,
-      "days": 126,
-      "ret": 0.771438,
-      "reason": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5"
-    },
-    {
-      "entry": "2025-07-21",
-      "entry_price": 328.49,
-      "exit": "2025-09-16",
-      "exit_price": 421.62,
-      "days": 40,
-      "ret": 0.283509,
+      "exit": "2026-02-11",
+      "exit_price": 428.27,
+      "days": 228,
+      "ret": 0.799378,
       "reason": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5"
     },
     {
       "entry": "2025-07-28",
       "entry_price": 325.59,
-      "exit": "2025-09-16",
-      "exit_price": 421.62,
-      "days": 35,
-      "ret": 0.294941,
+      "exit": "2026-02-09",
+      "exit_price": 417.32,
+      "days": 135,
+      "ret": 0.281735,
       "reason": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5"
     },
     {
       "entry": "2025-08-18",
       "entry_price": 335.16,
-      "exit": "2025-09-16",
-      "exit_price": 421.62,
-      "days": 20,
-      "ret": 0.257966,
+      "exit": "2025-12-29",
+      "exit_price": 459.64,
+      "days": 92,
+      "ret": 0.371405,
       "reason": "\uc544\ud06c -20% + \ub099\ud3ed \ud68c\ubcf5"
     }
   ],
   "live": [
+    {
+      "entry": "2025-07-21",
+      "entry_price": 328.49,
+      "days": 257,
+      "days_left": 247,
+      "ret": -0.091844,
+      "ark_drop": -0.1051,
+      "dd": -39.1,
+      "need_ark": 20.0,
+      "need_dd": -20.0,
+      "deadline": "2027-07-09"
+    },
     {
       "entry": "2026-07-27",
       "entry_price": 309.22,
@@ -161,15 +164,15 @@
     }
   ],
   "stats": {
-    "closed_n": 15,
-    "closed_mean": 0.745044,
+    "closed_n": 14,
+    "closed_mean": 0.787166,
     "closed_hit": 1.0,
     "closed_worst": 0.154659,
-    "live_mean": -0.03525,
+    "live_mean": -0.063547,
     "all_n": 16,
-    "all_mean": 0.696276,
-    "all_hit": 0.938,
+    "all_mean": 0.680827,
+    "all_hit": 0.875,
     "invested": 1600,
-    "value": 2714.0
+    "value": 2689.0
   }
 }

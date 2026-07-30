@@ -127,6 +127,22 @@
   button.refresh:disabled { opacity:.5; cursor:default; }
   button.refresh:focus-visible { outline:2px solid var(--buy); outline-offset:2px; }
   .stamp { font-family:var(--mono); font-size:11.5px; color:var(--ink-3); }
+  .tip { position:fixed; z-index:50; pointer-events:none; opacity:0; transition:opacity .1s;
+         background:var(--panel); border:1px solid var(--line); border-radius:8px;
+         box-shadow:var(--shadow); padding:9px 12px; font-family:var(--mono);
+         font-size:11.5px; line-height:1.6; white-space:nowrap; }
+  .tip.on { opacity:1; }
+  .tip b { color:var(--ink); }
+  details.fold { border:1px solid var(--line); border-radius:10px; background:var(--panel);
+                 box-shadow:var(--shadow); }
+  details.fold > summary { cursor:pointer; padding:13px 18px; font-size:13.5px;
+                 color:var(--ink-2); list-style:none; display:flex; gap:10px; align-items:center; }
+  details.fold > summary::-webkit-details-marker { display:none; }
+  details.fold > summary::before { content:"▸"; color:var(--ink-3); font-size:11px; }
+  details.fold[open] > summary::before { content:"▾"; }
+  details.fold > summary:hover { color:var(--ink); }
+  details.fold > summary b { color:var(--ink); }
+  .fold-body { padding:0 18px 18px; }
   .big { font-family:var(--mono); font-size:52px; font-weight:650; letter-spacing:-.03em; line-height:1; }
   .big.on { color:var(--buy); } .big.off { color:var(--ink-3); }
   .kv { display:grid; grid-template-columns:auto 1fr; gap:8px 18px;
@@ -140,6 +156,8 @@
 </style>
 </head>
 <body>
+<div class="tip" id="tip"></div>
+
 <div class="wrap">
   <header>
     <p class="eyebrow">ARK × TSLA · 주간 매수신호</p>
@@ -268,8 +286,20 @@
   </section>
 
   <section>
-    <h2 style="font-size:17px;font-weight:700;margin:8px 0 4px">신호 후 보유 기간별 수익률</h2>
-    <p id="btIntro" style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px"></p>
+    <h2 style="font-size:17px;font-weight:700;margin:8px 0 14px">신호별 개별 성과</h2>
+    <div class="card table-scroll">
+      <table><thead><tr>
+        <th scope="col">진입일</th><th scope="col">진입가</th><th scope="col">1개월</th>
+        <th scope="col">3개월</th><th scope="col">6개월</th><th scope="col">9개월</th>
+        <th scope="col">12개월</th>
+      </tr></thead><tbody id="sigBody"></tbody></table>
+    </div>
+  </section>
+
+  <details class="fold">
+    <summary><b>보유 기간별 수익률</b> — 청산 규칙을 정하기 전에 쓰던 참고 자료 (현재 규칙은 아크 감소 + 낙폭 회복)</summary>
+    <div class="fold-body">
+<p id="btIntro" style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px"></p>
     <div class="card table-scroll" style="margin-bottom:14px">
       <div class="card-head"><span class="card-title">A. 신호 하나당 기대치 (사건 단위)</span></div>
       <table><thead><tr>
@@ -287,18 +317,8 @@
       </tr></thead><tbody id="compBody"></tbody></table>
     </div>
     <p class="stamp" id="btNote" style="line-height:1.6"></p>
-  </section>
-
-  <section>
-    <h2 style="font-size:17px;font-weight:700;margin:8px 0 14px">신호별 개별 성과</h2>
-    <div class="card table-scroll">
-      <table><thead><tr>
-        <th scope="col">진입일</th><th scope="col">진입가</th><th scope="col">1개월</th>
-        <th scope="col">3개월</th><th scope="col">6개월</th><th scope="col">9개월</th>
-        <th scope="col">12개월</th>
-      </tr></thead><tbody id="sigBody"></tbody></table>
-    </div>
-  </section>
+      </div>
+  </details>
 
   <section class="card">
     <div class="card-head"><span class="card-title">최근 30거래일 — 합산 보유 주식 수</span>
@@ -932,39 +952,82 @@ function renderTech() {
 
 function line(id, vals, labels, color, fmt) {
   const el = document.getElementById(id);
-  const W = Math.max(320, el.clientWidth || 800), H = 180;
-  const P = { l: 58, r: 16, t: 16, b: 26 };
+  const W = Math.max(320, el.clientWidth || 800), H = 200;
+  const P = { l: 58, r: 16, t: 16, b: 40 };
   const lo = Math.min(...vals), hi = Math.max(...vals);
   const pad = (hi - lo) * 0.15 || 1, min = lo - pad, max = hi + pad;
   const X = i => P.l + i / (vals.length - 1) * (W - P.l - P.r);
   const Y = v => H - P.b - (v - min) / (max - min) * (H - P.t - P.b);
   let s = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img"
-    aria-label="최근 30거래일 합산 보유 주식 수 추이. 현재 ${fmt(vals[vals.length-1])}">`;
+    aria-label="최근 ${vals.length}거래일 합산 보유 주식 수 추이. 현재 ${fmt(vals[vals.length-1])}">`;
   for (let k = 0; k <= 3; k++) {
     const v = min + (max - min) * k / 3, y = Y(v);
     s += `<line class="grid-line" x1="${P.l}" y1="${y}" x2="${W - P.r}" y2="${y}"/>
           <text class="axis-text" x="${P.l - 8}" y="${y + 3.5}" text-anchor="end">${fmt(v)}</text>`;
   }
+  // 월이 바뀌는 지점에 세로 눈금 — 어느 구간을 보고 있는지 알기 쉽다
+  labels.forEach((d, i) => {
+    if (i === 0 || d.slice(0, 7) === labels[i - 1].slice(0, 7)) return;
+    s += `<line class="grid-line" x1="${X(i)}" y1="${P.t}" x2="${X(i)}" y2="${H - P.b}" opacity=".6"/>`;
+  });
   s += `<polyline points="${vals.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ")}"
         fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>`;
   s += `<circle cx="${X(vals.length - 1)}" cy="${Y(vals[vals.length - 1])}" r="4"
         fill="${color}" stroke="var(--panel)" stroke-width="2"/>`;
-  [0, Math.floor(labels.length / 2), labels.length - 1].forEach(i =>
-    s += `<text class="axis-text" x="${X(i)}" y="${H - 8}" text-anchor="middle">${labels[i].slice(5)}</text>`);
+  // 날짜: 양 끝과 중앙만 찍으면 읽히지 않는다. 6개 정도로 나눠 찍고 기울인다.
+  const step = Math.max(1, Math.round(labels.length / 6));
+  labels.forEach((d, i) => {
+    if (i % step !== 0 && i !== labels.length - 1) return;
+    const lx = X(i), ly = H - 22;
+    s += `<text class="axis-text" x="${lx}" y="${ly}" text-anchor="end"
+          transform="rotate(-45 ${lx} ${ly})">${d.slice(5)}</text>`;
+  });
+  // hover 영역 — 점이 없으므로 구간을 나눠 가장 가까운 점을 잡는다
+  const slot = (W - P.l - P.r) / (vals.length - 1);
+  vals.forEach((v, i) => {
+    s += `<rect class="hit" data-i="${i}" x="${(X(i) - slot / 2).toFixed(1)}" y="${P.t}"
+      width="${slot.toFixed(1)}" height="${(H - P.t - P.b).toFixed(1)}"
+      fill="transparent" style="cursor:crosshair"/>`;
+  });
   el.innerHTML = s + "</svg>";
+
+  const tip = document.getElementById("tip");
+  el.querySelectorAll(".hit").forEach(r => {
+    r.addEventListener("pointerenter", () => {
+      const i = +r.dataset.i;
+      const prev = i > 0 ? vals[i - 1] : null;
+      const chg = prev == null ? null : vals[i] - prev;
+      tip.innerHTML = `<b>${labels[i]}</b><br>합산 보유 <b>${fmt(vals[i])}</b>` +
+        (chg == null ? "" : `<br>전일 대비 <b class="${cls(chg)}">${chg >= 0 ? "+" : ""}${
+          Math.round(chg).toLocaleString("en-US")}</b> 주`) +
+        (S.recent && S.recent[i] && S.recent[i].c != null
+          ? `<br>TSLA <b>$${S.recent[i].c.toFixed(2)}</b>` : "");
+      tip.classList.add("on");
+    });
+    r.addEventListener("pointermove", ev => {
+      const pad = 14;
+      let left = ev.clientX + pad, top = ev.clientY + pad;
+      const b = tip.getBoundingClientRect();
+      if (left + b.width > innerWidth - 8) left = ev.clientX - b.width - pad;
+      if (top + b.height > innerHeight - 8) top = ev.clientY - b.height - pad;
+      tip.style.left = left + "px"; tip.style.top = top + "px";
+    });
+    r.addEventListener("pointerleave", () => tip.classList.remove("on"));
+  });
 }
 
 function bars(id, wk) {
   const el = document.getElementById(id);
-  const W = Math.max(320, el.clientWidth || 800), H = 190;
-  const P = { l: 58, r: 16, t: 16, b: 26 };
+  const W = Math.max(320, el.clientWidth || 800), H = 210;
+  const P = { l: 58, r: 16, t: 16, b: 40 };
   const vals = wk.map(x => x.net), thr = wk.map(x => x.thr);
   const m = Math.max(...vals.map(Math.abs), ...thr.map(Math.abs)) * 1.15;
   const X = i => P.l + (i + 0.5) / wk.length * (W - P.l - P.r);
   const Y = v => H - P.b - (v + m) / (2 * m) * (H - P.t - P.b);
   const bw = (W - P.l - P.r) / wk.length * 0.6;
+  const slot = (W - P.l - P.r) / wk.length;
   let s = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img"
-    aria-label="최근 16주 주간 순매수와 신호 문턱 비교">`;
+    aria-label="최근 ${wk.length}주 주간 순매수와 신호 문턱 비교">`;
   for (const v of [-m / 2, 0, m / 2]) {
     s += `<line class="grid-line" x1="${P.l}" y1="${Y(v)}" x2="${W - P.r}" y2="${Y(v)}"/>
           <text class="axis-text" x="${P.l - 8}" y="${Y(v) + 3.5}" text-anchor="end">${(v / 1e6).toFixed(1)}M</text>`;
@@ -976,11 +1039,51 @@ function bars(id, wk) {
       width="${bw.toFixed(1)}" height="${Math.max(1.5, Math.abs(y1 - y0)).toFixed(1)}"
       fill="${x.sig ? "var(--buy)" : x.net >= 0 ? "var(--arkk)" : "var(--sell)"}" opacity=".9"/>`;
   });
+  // 문턱선. 값의 변동폭이 축 범위 대비 작아 거의 수평으로 보인다.
   s += `<polyline points="${thr.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ")}"
-        fill="none" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
-  [0, wk.length - 1].forEach(i =>
-    s += `<text class="axis-text" x="${X(i)}" y="${H - 8}" text-anchor="middle">${wk[i].d.slice(5)}</text>`);
+        fill="none" stroke="var(--buy)" stroke-width="1.6" stroke-dasharray="5 3"/>`;
+  const lastThr = thr[thr.length - 1];
+  s += `<text class="axis-text" x="${W - P.r}" y="${Y(lastThr) - 6}" text-anchor="end"
+        fill="var(--buy)">신호 문턱 ${(lastThr / 1000).toFixed(0)}k</text>`;
+  // 날짜: 3주 간격으로 찍고 기울여 겹침을 피한다. 나머지는 hover 로 본다.
+  wk.forEach((x, i) => {
+    if (i % 3 !== 0 && i !== wk.length - 1) return;
+    const lx = X(i), ly = H - 22;
+    s += `<text class="axis-text" x="${lx}" y="${ly}" text-anchor="end"
+          transform="rotate(-45 ${lx} ${ly})">${x.d.slice(5)}</text>`;
+  });
+  // 막대마다 투명 hover 영역. 막대가 얇아 막대 자체에 걸면 잡기 어렵다.
+  wk.forEach((x, i) => {
+    s += `<rect class="hit" data-i="${i}" x="${(X(i) - slot / 2).toFixed(1)}" y="${P.t}"
+      width="${slot.toFixed(1)}" height="${(H - P.t - P.b).toFixed(1)}"
+      fill="transparent" style="cursor:crosshair"/>`;
+  });
   el.innerHTML = s + "</svg>";
+
+  const tip = document.getElementById("tip");
+  el.querySelectorAll(".hit").forEach(r => {
+    r.addEventListener("pointerenter", ev => {
+      const x = wk[+r.dataset.i];
+      const gap = x.net - x.thr;
+      tip.innerHTML =
+        `<b>${x.d}</b> (금요일 마감)<br>` +
+        `순매수 <b class="${cls(x.net)}">${F.sgn(x.net)}</b> 주<br>` +
+        `문턱 &nbsp;&nbsp;<b>${F.sgn(x.thr)}</b> 주<br>` +
+        `차이 &nbsp;&nbsp;<b class="${cls(gap)}">${F.sgn(gap)}</b> 주 (${(x.net / x.thr * 100).toFixed(0)}%)<br>` +
+        `<span style="color:${x.sig ? "var(--buy)" : "var(--ink-3)"}">` +
+        `${x.sig ? "★ 매수 신호 발생" : "신호 없음"}</span>`;
+      tip.classList.add("on");
+    });
+    r.addEventListener("pointermove", ev => {
+      const pad = 14;
+      let left = ev.clientX + pad, top = ev.clientY + pad;
+      const b = tip.getBoundingClientRect();
+      if (left + b.width > innerWidth - 8) left = ev.clientX - b.width - pad;
+      if (top + b.height > innerHeight - 8) top = ev.clientY - b.height - pad;
+      tip.style.left = left + "px"; tip.style.top = top + "px";
+    });
+    r.addEventListener("pointerleave", () => tip.classList.remove("on"));
+  });
 }
 
 document.getElementById("btn").addEventListener("click", load);
