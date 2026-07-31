@@ -67,6 +67,11 @@
                padding:14px 20px; border-bottom:1px solid var(--line); }
   .card-title { font-family:var(--mono); font-size:11px; letter-spacing:.12em;
                 text-transform:uppercase; color:var(--ink-3); }
+  /* 청산 규칙이 둘이므로 범례도 둘이다. 모양으로 구분하니 색맹 여부와 무관하게 읽힌다. */
+  .chart-legend { display:flex; flex-wrap:wrap; gap:6px 20px;
+                  padding:10px 20px 0; font-size:12.5px; color:var(--ink-2); }
+  .chart-legend span { display:inline-flex; align-items:center; gap:6px; }
+  .chart-legend svg { flex:none; overflow:visible; }
   #cursorDate { font-family:var(--mono); font-variant-numeric:tabular-nums;
                 font-size:13px; font-weight:600; color:var(--ink); }
 
@@ -197,8 +202,17 @@
     <p id="chartIntro" style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px"></p>
     <div class="card">
       <div class="card-head">
-        <span class="card-title">TSLA 종가 (로그 축) · 초록 = 매수 신호 · 빨강 = 청산</span>
+        <span class="card-title">TSLA 종가 (로그 축)</span>
         <span class="card-title" id="chartTrend"></span>
+      </div>
+      <div class="chart-legend" id="chartLegend">
+        <span><svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5"
+          fill="var(--buy)" stroke="var(--panel)" stroke-width="1.6"/></svg>매수 신호</span>
+        <span><svg width="14" height="14" aria-hidden="true"><path d="M7,11 l4.5,-7 l-9,0 z"
+          fill="var(--sell)" stroke="var(--panel)" stroke-width="1"/></svg>청산 A — 이익 실현</span>
+        <span><svg width="14" height="14" aria-hidden="true"><g stroke="var(--sell)"
+          stroke-width="2.4" stroke-linecap="round"><line x1="3.2" y1="3.2" x2="10.8" y2="10.8"/>
+          <line x1="10.8" y1="3.2" x2="3.2" y2="10.8"/></g></svg>청산 B — 긴급 탈출</span>
       </div>
       <div id="sigChart"></div>
       <div style="border-top:1px solid var(--line-2)"></div>
@@ -214,6 +228,7 @@
       <table><thead><tr>
         <th scope="col">국면</th><th scope="col">신호일(금)</th><th scope="col">점수</th>
         <th scope="col">매수일</th><th scope="col">매수가</th><th scope="col">청산일</th>
+        <th scope="col">청산 규칙</th>
         <th scope="col">청산가</th><th scope="col">보유</th><th scope="col">수익</th>
       </tr></thead><tbody id="runsBody"></tbody></table>
     </div>
@@ -499,7 +514,7 @@ function renderSigChart() {
   const a = Math.log10(lo * 0.93), b = Math.log10(hi * 1.07);
   const Y = v => H - P.b - (Math.log10(v) - a) / (b - a) * (H - P.t - P.b);
   let s = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img"
-    aria-label="테슬라 주가와 매수 신호 ${sigs.length}회를 표시한 로그 축 차트">`;
+    aria-label="테슬라 주가와 매수 신호 ${sigs.length}회, 청산 지점을 규칙 A(삼각형)와 규칙 B(X)로 구분해 표시한 로그 축 차트">`;
   for (const v of [100, 150, 200, 300, 400, 500]) {
     if (v < lo * 0.93 || v > hi * 1.07) continue;
     s += `<line class="grid-line" x1="${P.l}" y1="${Y(v)}" x2="${W - P.r}" y2="${Y(v)}"/>
@@ -513,9 +528,19 @@ function renderSigChart() {
   }
   s += `<polyline points="${C.p.map((v, i) => `${X(T[i]).toFixed(1)},${Y(v).toFixed(1)}`).join(" ")}"
          fill="none" stroke="var(--price)" stroke-width="1.4" stroke-linejoin="round"/>`;
+  /* 청산 표시는 규칙별로 모양이 다르다. 규칙이 둘인데 한 모양으로 그리면
+     화면이 규칙을 하나로 보이게 만든다.
+       A(이익 실현)  = 위를 향한 삼각형 — "목표 달성하고 나온다"
+       B(긴급 탈출)  = X 자          — "전제가 깨져서 나온다"           */
   for (const e of sigs) {
-    if (!e.open && e.exit)
-      s += `<path d="M${at(e.exit)},${Y(e.exit_price) - 4} l4.5,-7 l-9,0 z"
+    if (e.open || !e.exit) continue;
+    const x = at(e.exit), y = Y(e.exit_price);
+    s += (e.why || "").startsWith("B")
+      ? `<g stroke="var(--sell)" stroke-width="2.4" stroke-linecap="round">
+           <line x1="${x - 4.4}" y1="${y - 9.4}" x2="${x + 4.4}" y2="${y - 0.6}"/>
+           <line x1="${x + 4.4}" y1="${y - 9.4}" x2="${x - 4.4}" y2="${y - 0.6}"/>
+         </g>`
+      : `<path d="M${x},${y - 4} l4.5,-7 l-9,0 z"
              fill="var(--sell)" stroke="var(--panel)" stroke-width="1"/>`;
   }
   for (const e of sigs)
@@ -575,9 +600,14 @@ function renderSigChart() {
   for (const e of sigs) (byYear[e.date.slice(0, 4)] ||= []).push(e.price);
   const yrTxt = Object.entries(byYear)
     .map(([y, ps]) => `${y} $${Math.round(ps.reduce((p, c) => p + c, 0) / ps.length)}`).join(" → ");
+  const nA = sigs.filter(e => (e.why || "").startsWith("A")).length;
+  const nB = sigs.filter(e => (e.why || "").startsWith("B")).length;
   document.getElementById("chartIntro").innerHTML =
     `매수 신호 <b>${sigs.length}회</b>가 언제·어느 가격에 떴는지. 파란 점선은 진입가 추세선이다.
-     아래 패널은 252일 고점 대비 낙폭과 진입 문턱(${S.dd_filter}%)이다.`;
+     아래 패널은 252일 고점 대비 낙폭과 진입 문턱(${S.dd_filter}%)이다.<br>
+     청산은 규칙이 <b>둘</b>이고 먼저 걸리는 쪽으로 나온다 —
+     지금까지 <b>A ${nA}건</b>(아크 누적 -20% + 낙폭 회복, 이익 실현),
+     <b>B ${nB}건</b>(아크 단일 주 ${S.big_sell}% 매도, 긴급 탈출).`;
   document.getElementById("chartNote").innerHTML =
     `<b>연도별 진입가 평균: ${yrTxt}.</b> 신호 진입가는 연 ${yr.toFixed(0)}% 로 우상향한다.<br><br>
      낙폭은 <b>252일 고점 대비 상대값</b>이라 주가 수준이 오르면 같은 "-30%" 의 절대 가격도
@@ -590,6 +620,15 @@ function renderSigChart() {
 
 /* 신호가 몇 주 연속으로 뜨는지. 표에 있는 것은 전부 매수 신호다 —
    매도 신호는 여기 섞이지 않는다(매도는 RSI 로 판정하므로 아크 신호와 무관). */
+/* 청산 규칙 표시. 규칙이 둘이므로 어느 쪽으로 나왔는지 밝힌다.
+   글자와 기호를 같이 쓴다 — 기호만 쓰면 표에서 무슨 뜻인지 알 수 없다. */
+function whyTag(e) {
+  if (e.open) return `<span style="color:var(--ink-3)">—</span>`;
+  const b = (e.why || "").startsWith("B");
+  return `<span title="${e.why || ""}" style="white-space:nowrap;color:var(--ink-2)">`
+       + (b ? `✕ B 긴급` : `▲ A 이익`) + `</span>`;
+}
+
 function renderRuns() {
   const runs = S.runs || [];
   if (!runs.length) { document.getElementById("runsBody").innerHTML = ""; return; }
@@ -603,7 +642,8 @@ function renderRuns() {
     `아크가 테슬라를 매수한 이래 신호는 <b>총 ${total}회</b>, 이를 7일 이내 연속끼리 묶으면
      <b>${runs.length}개 국면</b>이다. 평균 <b>6개월에 한 번</b>꼴이며
      <b>그중 하나가 지난주(${runs[runs.length - 1].start})</b>에 떴다.
-     아래는 전부 <b>매수 신호</b>다 — 매도는 RSI 로 따로 판정하므로 섞이지 않는다.`;
+     아래 '신호일' 은 전부 <b>매수 신호</b>다. 청산은 별도 규칙 둘로 판정하며,
+     어느 쪽으로 나왔는지 <b>청산 규칙</b> 열에 적었다.`;
 
   let html = "";
   runs.slice().reverse().forEach((r, ri) => {
@@ -617,6 +657,7 @@ function renderRuns() {
         <td class="${e.score >= 76 ? "pos" : ""}">${e.score == null ? "—" : e.score.toFixed(0)}</td>
         <td>${e.date}</td><td>$${e.price.toFixed(2)}</td>
         <td>${e.open ? "보유중" : e.exit}</td>
+        <td>${whyTag(e)}</td>
         <td>${e.open ? "$" + S.price.toFixed(2) : "$" + e.exit_price.toFixed(2)}</td>
         <td>${e.days}일</td>
         <td class="${cls(e.ret)}">${pct(e.ret)}</td></tr>`;
@@ -625,7 +666,7 @@ function renderRuns() {
       html += `<tr${bg} style="border-top:1px solid var(--line)">
         <td></td><td colspan="3" style="color:var(--ink-3)">└ ${r.weeks}회 합산</td>
         <td>평균 $${r.avg_price.toFixed(2)}</td>
-        <td colspan="2" style="color:var(--ink-3)">투입 ${r.weeks * 100} →
+        <td colspan="3" style="color:var(--ink-3)">투입 ${r.weeks * 100} →
           ${Math.round(r.weeks * 100 * (1 + r.run_ret))}</td>
         <td></td><td class="${cls(r.run_ret)}">${pct(r.run_ret)}</td></tr>`;
     }
