@@ -1,7 +1,7 @@
 """매도 규칙 병렬화(A+B) 이후 전면 재백테스트.
 
 규칙이 바뀌면 그 위에서 고른 모든 결론을 다시 검증해야 한다(CLAUDE.md 규칙 4).
-매수 필터·진입 방식·자본 배분·조건부 수익률을 새 청산 규칙 위에서 다시 돌린다.
+매수 필터·진입 방식·자본 배분·조건부 수익률을 새 매도 규칙 위에서 다시 돌린다.
 """
 import json
 import numpy as np
@@ -69,7 +69,7 @@ def main():
 
     # --- 1. 매수 낙폭 필터를 다시 고른다 ---
     print("=" * 78)
-    print("1. 매수 낙폭 필터 재검증 (청산 규칙이 바뀌었으므로)")
+    print("1. 매수 낙폭 필터 재검증 (매도 규칙이 바뀌었으므로)")
     print("=" * 78)
     netpct, thr = w['netpct'], w['thr_pct']
     ddw = pd.Series(DD, index=px.index).reindex(w.index, method='ffill')

@@ -57,7 +57,7 @@ for ri, r in enumerate(runs, 1):
         # 3) 매수가 = 그날 종가인가
         chk(abs(close.loc[ent] - e['price']) < 0.01,
             f"[{ri}] {e['date']} 종가 {close.loc[ent]:.2f} vs 표 {e['price']}")
-        # 4) 청산 규칙 재현 — 아크 보유 -20% AND 낙폭 -20% 회복
+        # 4) 매도 규칙 재현 — 아크 보유 -20% AND 낙폭 -20% 회복
         k = close.index.get_loc(ent)
         exA = None
         for j in range(k+1, min(k+505, len(close))):
@@ -71,17 +71,17 @@ for ri, r in enumerate(runs, 1):
         if ex is None and k+504 < len(close):
             ex, why = k+504, '상한 도달'
         if e['open']:
-            chk(ex is None, f"[{ri}] {e['date']} 는 보유중이라는데 청산 조건이 이미 걸렸다")
+            chk(ex is None, f"[{ri}] {e['date']} 는 보유중이라는데 매도 조건이 이미 걸렸다")
             cur = float(close.iloc[-1])
             chk(abs(cur/e['price'] - 1 - e['ret']) < 0.0001,
                 f"[{ri}] {e['date']} 평가수익 재계산 {cur/e['price']-1:.4f} vs 표 {e['ret']}")
             chk(e['days'] == len(close)-1-k, f"[{ri}] {e['date']} 보유일 불일치")
         else:
-            chk(ex is not None, f"[{ri}] {e['date']} 청산됐다는데 조건이 안 걸린다")
+            chk(ex is not None, f"[{ri}] {e['date']} 매도됐다는데 조건이 안 걸린다")
             chk(close.index[ex].strftime('%Y-%m-%d') == e['exit'],
-                f"[{ri}] 청산일 재계산 {close.index[ex]:%Y-%m-%d} vs 표 {e['exit']}")
+                f"[{ri}] 매도일 재계산 {close.index[ex]:%Y-%m-%d} vs 표 {e['exit']}")
             chk(abs(close.iloc[ex] - e['exit_price']) < 0.01,
-                f"[{ri}] 청산가 재계산 {close.iloc[ex]:.2f} vs 표 {e['exit_price']}")
+                f"[{ri}] 매도가 재계산 {close.iloc[ex]:.2f} vs 표 {e['exit_price']}")
             chk(why == e['why'], f"[{ri}] 사유 {why} vs 표 {e['why']}")
             chk(e['days'] == ex-k, f"[{ri}] 보유일 재계산 {ex-k} vs 표 {e['days']}")
             chk(abs(close.iloc[ex]/e['price'] - 1 - e['ret']) < 0.0001,
@@ -130,5 +130,5 @@ if FAIL:
     print(f"❌ 불일치 {len(FAIL)}건")
     for f in FAIL: print("   -", f)
 else:
-    print("✅ 전 항목 일치 — 신호일 요일, 매수일=다음거래일, 매수가/청산가=원본종가,")
-    print("   청산 규칙 재현, 보유일, 수익률, 국면 평균·합산, 연속 정의, 신호 집합")
+    print("✅ 전 항목 일치 — 신호일 요일, 매수일=다음거래일, 매수가/매도가=원본종가,")
+    print("   매도 규칙 재현, 보유일, 수익률, 국면 평균·합산, 연속 정의, 신호 집합")

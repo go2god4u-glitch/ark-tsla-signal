@@ -13,7 +13,7 @@
 
 측정:
   - 평균 매입단가(가중) 대비 '첫 진입일로부터 6개월 뒤' 종가 수익률
-  - 즉 분할해도 청산 시점은 동일하다. 늦게 넣은 분은 보유기간이 짧다.
+  - 즉 분할해도 매도 시점은 동일하다. 늦게 넣은 분은 보유기간이 짧다.
   - 최악 사례와 승률을 함께 본다. 분할의 값어치는 평균이 아니라 최악에서 나온다.
 
 한계: 신호 사건이 8개뿐이다. 방식 6개를 비교하면 '가장 좋은 것'은 반드시 나온다.
@@ -69,7 +69,7 @@ def run(V: np.ndarray, entries, plan):
         cost, filled = 0.0, 0.0
         for wgt, off in plan:
             j = i + off
-            if j >= exit_i:          # 청산일 이후에 넣을 돈은 넣지 않는다
+            if j >= exit_i:          # 매도일 이후에 넣을 돈은 넣지 않는다
                 continue
             cost += wgt * V[j]
             filled += wgt
@@ -88,7 +88,7 @@ def main() -> None:
     locs = [px.index.searchsorted(t, side="right") for t in w[w["sig"]].index]
     E = episodes([i for i in locs if i < len(px)])
 
-    print(f"신호 사건 {len(E)}개 · 청산은 모두 '첫 진입 + 6개월' 동일\n")
+    print(f"신호 사건 {len(E)}개 · 매도는 모두 '첫 진입 + 6개월' 동일\n")
     print(f"{'진입 방식':<20s}{'n':>4s}{'평균':>9s}{'중앙':>9s}{'승률':>7s}"
           f"{'최악':>9s}{'최고':>9s}{'표준편차':>10s}")
     print("-" * 78)

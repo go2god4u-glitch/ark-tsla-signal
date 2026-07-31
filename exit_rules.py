@@ -47,7 +47,7 @@ def entry_locs(px: pd.Series, w: pd.DataFrame):
     return out
 
 
-# ---- 매도 규칙: 진입 인덱스를 받아 청산 인덱스를 돌려준다 ----
+# ---- 매도 규칙: 진입 인덱스를 받아 매도 인덱스를 돌려준다 ----
 
 def hold(n):
     def f(V, i, sellmask):

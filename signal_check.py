@@ -37,7 +37,7 @@ RAW = os.path.join(BASE, "data", "raw")
 #   ARKK/ARKQ/ARKW 는 전 기간 상시, ARKX 는 2026-03 부터, CTRU 는 2021-12~2022-03.
 # 중간에 나타나거나 사라지는 펀드가 있으므로 '레벨을 합쳐서 차분'하면 안 된다.
 # 신규 편입일에 그 펀드의 보유량 전체가 대량 매수로 잡힌다.
-# -> 펀드별로 먼저 차분한 뒤 합산한다. 신규 편입/청산은 자동으로 0 이 된다.
+# -> 펀드별로 먼저 차분한 뒤 합산한다. 신규 편입/매도는 자동으로 0 이 된다.
 FUNDS = ("ARKK", "ARKQ", "ARKW", "ARKX", "CTRU")
 
 AUM_JUMP = 0.10      # AUM 이 이만큼 튀고
@@ -71,8 +71,8 @@ DD_FILTER = -30.0
 #   2022-10~12 에만 7주 연속으로 떴다.
 #   매도 규칙 B(단일 주 -7% 매도)는 '사건'이라 병렬이 통했지만,
 #   이건 '상태'다. 상태를 병렬로 붙이면 그 국면 내내 켜져 있다.
-# 아크 대량매도 경보: 주간 순매수율이 이 수준 이하면 하락 신호로 본다.
-# 매수 판정과는 별개다 — 보유 중일 때 참고하라고 표시만 한다.
+# 아크 대량매도: 주간 순매수율이 이 수준 이하면 하락 신호로 본다.
+# 이것이 **매도 규칙 B** 다 (position_tracker.py 참조). 매수 판정에는 쓰지 않는다.
 # 검증: -6% ~ -8% 구간에서 3개월 초과 -27.3%, 하락률 100%, p=0.012~0.013.
 #       1% 단위로 훑어 -4% ~ -9% 전 구간이 음수인 고원이다.
 #       앞서 '하위 10% 분위수' 로 시험했을 때 무효였던 것은 상대 기준이라
@@ -266,7 +266,7 @@ def build(px: pd.Series) -> pd.DataFrame:
     daily = build_daily(px)
     wide = daily.attrs["wide"]
     wk = wide.resample("W-FRI").last()
-    # 펀드별로 차분한 뒤 합산 — 신규 편입/청산이 매매로 잡히지 않는다
+    # 펀드별로 차분한 뒤 합산 — 신규 편입/매도가 매매로 잡히지 않는다
     net = wk.diff().sum(axis=1, min_count=1)
     base = wk.shift(1).sum(axis=1, min_count=1)
     w = pd.DataFrame({"shares": wk.sum(axis=1, min_count=1), "net": net}).dropna(subset=["net"])
@@ -307,7 +307,7 @@ def _rsi14(px: pd.Series) -> pd.Series:
 def _signal_runs(w: pd.DataFrame, px: pd.Series) -> list:
     """연속(7일 이내) 신호를 한 묶음으로 정리한다.
 
-    각 신호의 매수일·청산일·수익까지 함께 담는다. 화면에서 국면 단위로
+    각 신호의 매수일·매도일·수익까지 함께 담는다. 화면에서 국면 단위로
     보여주려면 신호일(금)과 매수일(다음 거래일)이 둘 다 필요하다 —
     하나만 보여주면 간격이 7일이 아닌 것처럼 보여 오해가 생긴다."""
     sg = list(w[w["sig"]].index)
@@ -415,8 +415,8 @@ def main() -> None:
         "dd_now": round(float(cur["dd"]), 1),
         "big_sell": BIG_SELL,
         "big_sell_on": bool(cur["netpct"] <= BIG_SELL),
-        # 대량매도 이력. 청산 규칙(누적 -20%)과 별개로 관리한다 —
-        # 단일 주에 -7% 이상 판 것은 누적 감소와 다른 사건이다.
+        # 대량매도 이력 = 매도 규칙 B 의 발동 이력이다.
+        # 규칙 A(여러 주 누적 -20%)와 성격이 달라 따로 싣는다 — 이건 단일 주 사건이다.
         "big_sells": [
             {"week": t.strftime("%Y-%m-%d"),
              "pct": round(float(r["netpct"]), 2),

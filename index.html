@@ -67,7 +67,7 @@
                padding:14px 20px; border-bottom:1px solid var(--line); }
   .card-title { font-family:var(--mono); font-size:11px; letter-spacing:.12em;
                 text-transform:uppercase; color:var(--ink-3); }
-  /* 청산 규칙이 둘이므로 범례도 둘이다. 모양으로 구분하니 색맹 여부와 무관하게 읽힌다. */
+  /* 매도 규칙이 둘이므로 범례도 둘이다. 모양으로 구분하니 색맹 여부와 무관하게 읽힌다. */
   .chart-legend { display:flex; flex-wrap:wrap; gap:6px 20px;
                   padding:10px 20px 0; font-size:12.5px; color:var(--ink-2); }
   .chart-legend span { display:inline-flex; align-items:center; gap:6px; }
@@ -212,10 +212,10 @@
         <span><svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5"
           fill="var(--buy)" stroke="var(--panel)" stroke-width="1.6"/></svg>매수 신호</span>
         <span><svg width="14" height="14" aria-hidden="true"><path d="M7,11 l4.5,-7 l-9,0 z"
-          fill="var(--sell)" stroke="var(--panel)" stroke-width="1"/></svg>청산 A — 이익 실현</span>
+          fill="var(--sell)" stroke="var(--panel)" stroke-width="1"/></svg>매도 A — 이익 실현</span>
         <span><svg width="14" height="14" aria-hidden="true"><g stroke="var(--sell)"
           stroke-width="2.4" stroke-linecap="round"><line x1="3.2" y1="3.2" x2="10.8" y2="10.8"/>
-          <line x1="10.8" y1="3.2" x2="3.2" y2="10.8"/></g></svg>청산 B — 긴급 탈출</span>
+          <line x1="10.8" y1="3.2" x2="3.2" y2="10.8"/></g></svg>매도 B — 긴급 탈출</span>
       </div>
       <div id="sigChart"></div>
       <div style="border-top:1px solid var(--line-2)"></div>
@@ -230,9 +230,9 @@
     <div class="card table-scroll">
       <table><thead><tr>
         <th scope="col">국면</th><th scope="col">신호일(금)</th><th scope="col">점수</th>
-        <th scope="col">매수일</th><th scope="col">매수가</th><th scope="col">청산일</th>
-        <th scope="col">청산 규칙</th>
-        <th scope="col">청산가</th><th scope="col">보유</th><th scope="col">수익</th>
+        <th scope="col">매수일</th><th scope="col">매수가</th><th scope="col">매도일</th>
+        <th scope="col">매도 규칙</th>
+        <th scope="col">매도가</th><th scope="col">보유</th><th scope="col">수익</th>
       </tr></thead><tbody id="runsBody"></tbody></table>
     </div>
     <p class="stamp" id="runsNote" style="line-height:1.6;margin-top:12px"></p>
@@ -261,7 +261,7 @@
   <section>
     <h2 style="font-size:17px;font-weight:700;margin:8px 0 4px">매도 규칙 — 두 규칙 병렬</h2>
     <p style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px">
-      <b>성격이 다른 두 신호를 하나로 합치지 않는다.</b> 먼저 걸리는 쪽으로 청산한다.<br>
+      <b>성격이 다른 두 신호를 하나로 합치지 않는다.</b> 먼저 걸리는 쪽으로 매도한다.<br>
       <b>규칙 A</b> — 아크 누적 -20% AND 낙폭 -20% 회복. 진입의 거울상이고 "목표 달성, 이익 실현"이다.<br>
       <b>규칙 B</b> — 아크가 단일 주에 -7% 이상 매도. "전제가 깨졌다, 손실이든 이익이든 나온다".<br>
       A 는 이익 상태에서만 걸리고(낙폭 회복이 조건) B 는 상태와 무관하다.
@@ -286,7 +286,7 @@
     </div>
     <div class="card" id="bigSellCard" style="margin-top:14px">
       <div class="card-head">
-        <span class="card-title">아크 대량매도 경보 — 청산 규칙과 별개</span>
+        <span class="card-title">아크 대량매도 — 매도 규칙 B 그 자체</span>
         <span class="card-title" id="bsState"></span>
       </div>
       <div style="padding:18px 20px" id="bigSellBox"></div>
@@ -327,7 +327,7 @@
   </section>
 
   <details class="fold">
-    <summary><b>보유 기간별 수익률</b> — 청산 규칙을 정하기 전에 쓰던 참고 자료 (현재 규칙은 아크 감소 + 낙폭 회복)</summary>
+    <summary><b>보유 기간별 수익률</b> — 매도 규칙을 정하기 전에 쓰던 참고 자료 (현재 규칙은 아크 감소 + 낙폭 회복)</summary>
     <div class="fold-body">
 <p id="btIntro" style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px"></p>
     <div class="card table-scroll" style="margin-bottom:14px">
@@ -517,13 +517,13 @@ function renderSigChart() {
   const a = Math.log10(lo * 0.93), b = Math.log10(hi * 1.07);
   const Y = v => H - P.b - (Math.log10(v) - a) / (b - a) * (H - P.t - P.b);
   let s = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img"
-    aria-label="테슬라 주가와 매수 신호 ${sigs.length}회, 청산 지점을 규칙 A(삼각형)와 규칙 B(X)로 구분해 표시한 로그 축 차트">`;
+    aria-label="테슬라 주가와 매수 신호 ${sigs.length}회, 매도 지점을 규칙 A(삼각형)와 규칙 B(X)로 구분해 표시한 로그 축 차트">`;
   for (const v of [100, 150, 200, 300, 400, 500]) {
     if (v < lo * 0.93 || v > hi * 1.07) continue;
     s += `<line class="grid-line" x1="${P.l}" y1="${Y(v)}" x2="${W - P.r}" y2="${Y(v)}"/>
           <text class="axis-text" x="${P.l - 8}" y="${Y(v) + 3.5}" text-anchor="end">$${v}</text>`;
   }
-  // 진입 → 청산 연결선
+  // 진입 → 매도 연결선
   for (const e of sigs) {
     if (e.open || !e.exit) continue;
     s += `<line x1="${at(e.date)}" y1="${Y(e.price)}" x2="${at(e.exit)}" y2="${Y(e.exit_price)}"
@@ -531,11 +531,11 @@ function renderSigChart() {
   }
   s += `<polyline points="${C.p.map((v, i) => `${X(T[i]).toFixed(1)},${Y(v).toFixed(1)}`).join(" ")}"
          fill="none" stroke="var(--price)" stroke-width="1.4" stroke-linejoin="round"/>`;
-  /* 청산 표시는 규칙별로 모양이 다르다. 규칙이 둘인데 한 모양으로 그리면
+  /* 매도 표시는 규칙별로 모양이 다르다. 규칙이 둘인데 한 모양으로 그리면
      화면이 규칙을 하나로 보이게 만든다.
-       A(이익 실현) = 아래를 향한 삼각형 — 청산가를 가리킨다
+       A(이익 실현) = 아래를 향한 삼각형 — 매도가를 가리킨다
        B(긴급 탈출) = X 자              — "전제가 깨져서 나온다"
-     같은 날 여러 포지션이 청산되면(2023-06-20 에 5건) 마커가 겹쳐 하나로 보인다.
+     같은 날 여러 포지션이 매도되면(2023-06-20 에 5건) 마커가 겹쳐 하나로 보인다.
      건수는 아래 이력표에서 센다.                                        */
   for (const e of sigs) {
     if (e.open || !e.exit) continue;
@@ -610,7 +610,7 @@ function renderSigChart() {
   document.getElementById("chartIntro").innerHTML =
     `매수 신호 <b>${sigs.length}회</b>가 언제·어느 가격에 떴는지. 파란 점선은 진입가 추세선이다.
      아래 패널은 252일 고점 대비 낙폭과 진입 문턱(${S.dd_filter}%)이다.<br>
-     청산은 규칙이 <b>둘</b>이고 먼저 걸리는 쪽으로 나온다 —
+     매도는 규칙이 <b>둘</b>이고 먼저 걸리는 쪽으로 나온다 —
      지금까지 <b>A ${nA}건</b>(아크 누적 -20% + 낙폭 회복, 이익 실현),
      <b>B ${nB}건</b>(아크 단일 주 ${S.big_sell}% 매도, 긴급 탈출).`;
   document.getElementById("chartNote").innerHTML =
@@ -625,7 +625,7 @@ function renderSigChart() {
 
 /* 신호가 몇 주 연속으로 뜨는지. 표에 있는 것은 전부 매수 신호다 —
    매도 신호는 여기 섞이지 않는다(매도는 RSI 로 판정하므로 아크 신호와 무관). */
-/* 청산 규칙 표시. 규칙이 둘이므로 어느 쪽으로 나왔는지 밝힌다.
+/* 매도 규칙 표시. 규칙이 둘이므로 어느 쪽으로 나왔는지 밝힌다.
    글자와 기호를 같이 쓴다 — 기호만 쓰면 표에서 무슨 뜻인지 알 수 없다. */
 function whyTag(e) {
   if (e.open) return `<span style="color:var(--ink-3)">—</span>`;
@@ -647,8 +647,8 @@ function renderRuns() {
     `아크가 테슬라를 매수한 이래 신호는 <b>총 ${total}회</b>, 이를 7일 이내 연속끼리 묶으면
      <b>${runs.length}개 국면</b>이다. 평균 <b>6개월에 한 번</b>꼴이며
      <b>그중 하나가 지난주(${runs[runs.length - 1].start})</b>에 떴다.
-     아래 '신호일' 은 전부 <b>매수 신호</b>다. 청산은 별도 규칙 둘로 판정하며,
-     어느 쪽으로 나왔는지 <b>청산 규칙</b> 열에 적었다.`;
+     아래 '신호일' 은 전부 <b>매수 신호</b>다. 매도는 별도 규칙 둘로 판정하며,
+     어느 쪽으로 나왔는지 <b>매도 규칙</b> 열에 적었다.`;
 
   let html = "";
   runs.slice().reverse().forEach((r, ri) => {
@@ -684,8 +684,8 @@ function renderRuns() {
      ${Math.max(...runs.map(r => r.weeks))}회다 — 매주 계속 뜬 적은 없다.<br><br>
      <b>완료된 ${done.length}개 국면은 ${wins}개가 수익</b>이고, 진행 중인 것이
      ${runs.length - done.length}개다.
-     <b>같은 국면이라도 청산일은 갈린다.</b> 아크 감소를 각 포지션의 진입 시점 대비로
-     재기 때문이다 — 2023-01 국면은 09-12 / 09-22 / 10-09 로 나뉘어 청산됐다.<br><br>
+     <b>같은 국면이라도 매도일은 갈린다.</b> 아크 감소를 각 포지션의 진입 시점 대비로
+     재기 때문이다 — 2023-01 국면은 09-12 / 09-22 / 10-09 로 나뉘어 매도됐다.<br><br>
      2023-01-17 만 화요일 매수인데, 1월 16일이 미국 휴장(MLK Day)이라 하루 밀렸다.<br><br>
      <b>점수는 신호가 뜬 그 주의 종합 점수다</b>(아크·RSI·낙폭·MACD·200일선·볼린저 백분위 평균).
      완료 15건에서 <b>점수와 수익률의 상관 r = +0.54</b> 였다 —
@@ -694,7 +694,7 @@ function renderRuns() {
      다만 n=15 이고, 낙폭은 이미 진입 필터에 쓰이므로 일부 순환이 있다.
      <b>점수가 낮다고 신호가 무효인 것은 아니다</b> — 15건 전부 수익이었고
      최저 점수(53)인 2025-08-15 도 +25.8% 였다.<br><br>
-     <b>이 승률은 착시다.</b> RSI 70 을 찍어야 청산되므로 반등하지 못한 국면은
+     <b>이 승률은 착시다.</b> RSI 70 을 찍어야 매도되므로 반등하지 못한 국면은
      아직 통계에 들어가지 않는다. 지난주 신호가 바로 그 상태다(RSI ${S.tech ? S.tech.rsi : "—"}).`;
 }
 
@@ -741,7 +741,7 @@ function renderMode() {
   const open = !!p.open;
   document.getElementById("modeIntro").innerHTML =
     `<b>신호마다 독립 포지션</b>이다. 신호가 뜰 때마다 새로 100 을 넣고,
-     각 포지션은 자기 진입일 기준으로 청산 조건을 본다.
+     각 포지션은 자기 진입일 기준으로 매도 조건을 본다.
      보유 중에 새 매수 신호가 떠도 그것대로 진입한다.`;
   const live = p.live || [];
   const st = p.stats || {};
@@ -765,8 +765,8 @@ function renderMode() {
         </tbody></table>
       </div>
       <p class="stamp" style="margin:12px 0 0;line-height:1.6">
-        <b>A</b> = 아크 누적 감소 AND 낙폭 회복 (둘 다 만족해야 청산) ·
-        <b>B</b> = 아크가 단일 주에 ${live[0].big_sell}% 이상 매도 (하나만으로 청산)<br>
+        <b>A</b> = 아크 누적 감소 AND 낙폭 회복 (둘 다 만족해야 매도) ·
+        <b>B</b> = 아크가 단일 주에 ${live[0].big_sell}% 이상 매도 (이것만으로도 매도)<br>
         완료 ${st.closed_n}건 평균 ${pct(st.closed_mean)} (승률 ${(st.closed_hit*100).toFixed(0)}%) ·
         보유 ${live.length}건 평균 ${pct(st.live_mean)} ·
         <b>전체 ${st.all_n}건 ${pct(st.all_mean)} (승률 ${(st.all_hit*100).toFixed(0)}%)</b> ·
@@ -855,15 +855,15 @@ function renderSell() {
       <td style="color:var(--ink-3)">${f.max.toFixed(2)}x</td></tr>`).join("");
 }
 
-/* 대량매도 경보. 청산 규칙(누적 -20%)과 별개로 관리한다 —
-   단일 주에 -7% 이상 판 것은 '이 포지션에서 발을 뺐다'와 다른 사건이다.
-   청산 신호가 아니라 하락 예측이므로 판정에 넣지 않고 경보로만 띄운다. */
+/* 아크 대량매도 = 매도 규칙 B 그 자체다. 규칙 A(누적 -20%)와 성격이 다르므로
+   따로 보여준다 — A 는 여러 주에 걸친 '누적 감소'고, 이건 단일 주 '사건'이다.
+   보유 중이면 이 카드가 켜지는 순간이 곧 매도 시점이다. */
 function renderBigSell() {
   const box = document.getElementById("bigSellBox");
   const hist = S.big_sells || [];
   const on = S.big_sell_on;
   document.getElementById("bsState").innerHTML = on
-    ? `<span class="neg">경보 발생</span>`
+    ? `<span class="neg">규칙 B 발동</span>`
     : `<span style="color:var(--ink-3)">평시</span>`;
   box.innerHTML = `
     <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start">
@@ -871,7 +871,7 @@ function renderBigSell() {
         <div class="stamp">이번 주 순매수율</div>
         <div style="font-family:var(--mono);font-size:30px;font-weight:700;line-height:1.1;
           color:${on ? "var(--sell)" : "var(--ink)"}">${S.net_pct >= 0 ? "+" : ""}${S.net_pct}%</div>
-        <div class="stamp" style="margin-top:4px">경보 기준 ${S.big_sell}% 이하</div>
+        <div class="stamp" style="margin-top:4px">발동 기준 ${S.big_sell}% 이하</div>
       </div>
       <div style="flex:1;min-width:300px">
         <div class="stamp" style="margin-bottom:8px">최근 대량매도 이력</div>
@@ -887,9 +887,13 @@ function renderBigSell() {
       </div>
     </div>
     <p class="stamp" style="margin:16px 0 0;line-height:1.6">
-      <b>이것은 청산 신호가 아니라 하락 예측이다.</b> 청산 규칙(아크 누적 -20% + 낙폭 회복)에
-      이 조건을 넣어 시험했을 때는 개선되지 않았다 — 대량매도가 났을 때 이미 손실 중인
-      경우가 많아 그때 팔면 손실을 확정하게 된다. 그래서 판정에 넣지 않고 경보로만 띄운다.<br><br>
+      <b>이것이 매도 규칙 B 다.</b> 보유 중에 이 카드가 켜지면 그 주가 매도 시점이다.
+      규칙 A(아크 누적 -20% + 낙폭 회복)를 기다리지 않는다.<br><br>
+      <b>한때 "무효" 라고 판정했던 규칙이다.</b> 규칙 A 에 이 조건을 <b>AND 로 묶어</b>
+      시험했더니 개선이 없었다 — A 는 낙폭이 회복된 이익 상태에서만 걸리는데 대량매도는
+      손실 중에도 나오므로, 둘을 함께 요구하면 B 가 죽는다.
+      <b>병렬(먼저 걸리는 쪽)로 바꾸자 살아났다</b>: 평가 2689 → 2819,
+      최악 -9.2% → -3.5%. 성격이 다른 신호는 합치지 말고 나란히 둬야 한다.<br><br>
       <b>검증.</b> 주간 순매수율 -7% 이하인 5건은 <b>3개월 뒤 전부 하락</b>했다
       (무작위 대비 -27.3%, p=0.013). 1% 단위로 훑어 -4% ~ -9% 전 구간이 음수인 고원이다.
       앞서 "아크 매도는 무효" 라고 했던 것은 <b>하위 10% 분위수</b>로만 시험했기 때문이다 —

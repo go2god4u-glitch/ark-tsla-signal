@@ -1,5 +1,5 @@
 {
-  "checked_utc": "2026-07-31T13:16:25+00:00",
+  "checked_utc": "2026-07-31T14:06:40+00:00",
   "week": "2026-07-31",
   "signal": false,
   "net": 74932,
@@ -7,7 +7,7 @@
   "gap": -16364,
   "net_pct": 2.74,
   "threshold_pct": 3.34,
-  "dd_now": -37.0,
+  "dd_now": -38.0,
   "big_sell": -7.0,
   "big_sell_on": false,
   "big_sells": [
@@ -64,9 +64,9 @@
   "thr_ok": false,
   "dd_ok": true,
   "shares": 2805275,
-  "price": 308.85,
-  "price_date": "2026-07-30",
-  "drawdown_from_ath": -37.0,
+  "price": 303.87,
+  "price_date": "2026-07-31",
+  "drawdown_from_ath": -38.0,
   "ath": 489.88,
   "ath_date": "2025-12-16",
   "prev_signal_week": "2026-07-24",
@@ -356,15 +356,15 @@
           "price": 309.22,
           "exit": null,
           "exit_price": null,
-          "days": 3,
-          "ret": -0.001197,
+          "days": 4,
+          "ret": -0.017302,
           "score": 78.0,
           "why": null,
           "open": true
         }
       ],
       "avg_price": 309.22,
-      "run_ret": -0.001197,
+      "run_ret": -0.017302,
       "open": true
     }
   ],
@@ -1831,14 +1831,14 @@
     }
   ],
   "tech": {
-    "rsi": 30.56,
-    "macd": -25.53,
-    "macd_signal": -17.06,
-    "ma50": 392.62,
-    "ma200": 412.22,
-    "bb_low": 285.72,
+    "rsi": 29.52,
+    "macd": -26.31,
+    "macd_signal": -18.91,
+    "ma50": 390.61,
+    "ma200": 411.56,
+    "bb_low": 277.41,
     "flags": {
-      "rsi_oversold": false,
+      "rsi_oversold": true,
       "macd_above_signal": false,
       "below_ma200": true,
       "below_ma50": true,
@@ -1847,14 +1847,14 @@
   },
   "score": {
     "week": "2026-07-31",
-    "total": 74.4,
+    "total": 74.7,
     "components": {
       "ark": 79.3,
-      "rsi": 95.6,
-      "dd": 87.8,
-      "macd": 0.4,
-      "ma": 96.4,
-      "bb": 86.7
+      "rsi": 96.7,
+      "dd": 88.9,
+      "macd": 0.8,
+      "ma": 96.7,
+      "bb": 85.5
     },
     "history": [
       {
@@ -2095,7 +2095,7 @@
       },
       {
         "d": "2026-07-31",
-        "s": 74.4
+        "s": 74.7
       }
     ]
   },

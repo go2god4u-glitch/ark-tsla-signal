@@ -44,7 +44,7 @@ def episodes(locs):
 
 
 def run_exit(V, buys, exit_fn, lo, yrs, cap=504):
-    """exit_fn(i) -> 청산 인덱스. 겹치는 매매는 하나로 합친다."""
+    """exit_fn(i) -> 매도 인덱스. 겹치는 매매는 하나로 합친다."""
     trades, occ = [], np.zeros(len(V), bool)
     for i in buys:
         if occ[i]:

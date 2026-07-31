@@ -54,7 +54,7 @@ def main():
     ax.plot(mdates.num2date(xs), np.exp(a + b * xs), color=C_TREND, lw=2,
             ls="--", zorder=4, label=f"신호 진입가 추세  연 {(np.exp(b*365)-1)*100:+.0f}%")
     ax.scatter([], [], s=90, color=C_SIG, label=f"매수 신호 ({len(sigs)}회)")
-    ax.scatter([], [], s=55, marker="v", color=C_EXIT, label="청산")
+    ax.scatter([], [], s=55, marker="v", color=C_EXIT, label="매도")
     ax.legend(loc="upper left", frameon=False, fontsize=10)
     ax.grid(axis="y", color=C_GRID, lw=0.7)
     ax.set_axisbelow(True)
