@@ -15,7 +15,7 @@ on:
         type: boolean
         default: false
       force_heartbeat:
-        description: "요일과 무관하게 주간 상태 알림 발송 (점검용)"
+        description: "상태 알림 즉시 발송 (점검용 — 이제 매일 자동 발송된다)"
         type: boolean
         default: false
 
@@ -102,9 +102,9 @@ jobs:
 
           ### 읽기 전에
 
-          - 완료된 사건 7개에서 나온 결과다. 확정된 것이 아니다.
+          - 완료된 매매 15건에서 나온 결과다. 확정된 것이 아니다.
           - 측정된 강도는 데이터 정제 파라미터에 민감하다(6개월 초과수익 +14.7% ~ +45.6%).
-          - 최근 신호 성적이 나쁘다. 2025-10 진입은 6개월 -24%.
+          - 15건 중 6건이 2023-01 한 국면에 몰려 있다. 독립 사건 수는 그보다 적다.
           - 이 기간 테슬라가 -72% 낙폭에서 회복했다는 사실이 결과에 이미 들어가 있다.
 
           **투자 자문이 아니다.** 자세한 한계는 [README](https://github.com/go2god4u-glitch/ark-tsla-signal#한계) 참조.
@@ -136,8 +136,8 @@ jobs:
             "청산은 다음 거래일 종가 기준입니다." \
             "한국시간 화요일 새벽 5~6시." \
             "" \
-            "주의: 매매 7건에서 나온 규칙입니다." \
-            "큰 상승을 놓칠 수 있습니다(과거 +39%에 팔았으나 6개월 보유였다면 +127%)." \
+            "주의: 완료 매매 15건에서 나온 규칙입니다." \
+            "큰 상승을 놓칠 수 있습니다. 규칙은 최고점을 노리지 않습니다." \
             "" \
             "https://go2god4u-glitch.github.io/ark-tsla-signal/")
           curl -sS -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
@@ -185,7 +185,8 @@ jobs:
             "  B 아크가 단일 주에 -7% 이상 매도 (긴급 탈출)" \
             "그때 다시 알림 갑니다." \
             "" \
-            "주의: 완료 사건 7건에서 나온 결과다. 확정된 것이 아니다." \
+            "주의: 완료 매매 15건(평균 +81.5%)에서 나온 결과다. 확정이 아니다." \
+            "15건 중 6건이 2023-01 한 국면에 몰려 있다." \
             "MDD -45% 를 견뎌야 나오는 수익이다." \
             "" \
             "https://go2god4u-glitch.github.io/ark-tsla-signal/")
@@ -196,10 +197,15 @@ jobs:
             -o /tmp/tg.json -w "HTTP %{http_code}\n"
           python3 -c "import json,sys;d=json.load(open('/tmp/tg.json'));print('전송:',d.get('ok'));sys.exit(0 if d.get('ok') else 1)"
 
-      - name: 주간 상태 알림 (하트비트)
-        # 신호가 없어도 매주 한 번 보낸다. 신호는 연 2회꼴이라, 조용하면
+      - name: 일간 상태 알림 (하트비트)
+        # 신호가 없어도 매일 아침 보낸다. 신호는 연 2회꼴이라, 조용하면
         # 고장인지 신호가 없는 건지 구분할 수 없다. 살아있음을 알리는 용도다.
-        # 금요일 22:00 UTC 실행 = 한국 토요일 07:00. 그 주 판정이 확정된 직후다.
+        # 22:00 UTC 실행 = 07:00 KST. 미국 장 마감 후라 그날 종가가 확정돼 있다.
+        #
+        # 주 1회(토요일 아침)였다가 매일로 바꿨다. 주 1회면 고장을 발견하는 데
+        # 최대 7일이 걸린다. 사용자가 매일 받기를 택했다.
+        # 주간 판정(금요일 확정)은 이 알림의 '판정 주' 줄에 그대로 실린다 —
+        # 주중에는 아직 확정 전 진행 상황이라는 뜻이고, 그래서 진행률을 함께 보낸다.
         if: steps.check.outputs.signal != 'true'
 
         env:
@@ -230,17 +236,14 @@ jobs:
           ALLRET: ${{ steps.pos.outputs.all_mean }}
           FORCE_HB: ${{ inputs.force_heartbeat }}
         run: |
-          # 한국 토요일 아침에만 보낸다 (= 금요일 UTC). 수동 테스트는 예외.
-          if [ "$FORCE_HB" != "true" ] && [ "$(date -u +%u)" != "5" ]; then
-            echo "금요일(UTC) 이 아니라 건너뜀"; exit 0
-          fi
+          # 매일 보낸다. 요일 조건 없음 (force_heartbeat 입력은 하위호환용으로 남긴다).
           if [ -z "$TG_TOKEN" ] || [ -z "$TG_CHAT" ]; then
             echo "텔레그램 시크릿 미설정 - 건너뜀"; exit 0
           fi
           TEXT=$(printf '%s\n' \
-            "ARK 테슬라 주간 점검 - 신호 없음" \
+            "ARK 테슬라 일간 점검 - 신호 없음" \
             "" \
-            "판정 주: ${WEEK}" \
+            "판정 주: ${WEEK} (금요일 마감에 확정)" \
             "순매수: ${NETP}% / 문턱: ${THRP}%  (진행률 ${PROG}%)" \
             "이번 주 신호 확률: ${PROB}% (${PDAY}일차 기준)" \
             "낙폭 필터: ${DDNOW}% / 기준 ${DDF}% -> $([ "$DDOK" = "true" ] && echo 통과 || echo 미달)" \
