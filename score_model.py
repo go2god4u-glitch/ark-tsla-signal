@@ -16,7 +16,7 @@
   미래 분포를 쓰지 않으므로 실전에서 같은 값이 재현된다.
 
 구성요소 (전부 '높을수록 매수 우호적'):
-  ark   아크 주간 순매수의 확장창 백분위
+  ark   아크 주간 순매수 **비율**의 확장창 백분위 (당주 제외 — 신호 문턱과 같은 자)
   rsi   RSI 의 역백분위 (낮을수록 높은 점수 = 과매도)
   dd    전고점 대비 낙폭의 역백분위 (깊을수록 높은 점수)
   macd  MACD 히스토그램의 백분위 (반등 전환)
@@ -58,6 +58,30 @@ def pctrank(s: pd.Series) -> pd.Series:
     return r.reindex(s.index)
 
 
+def ark_netpct(wide: pd.DataFrame) -> pd.Series:
+    """주간 순매수 **비율**(%). 신호 판정(signal_check.build)과 같은 정의다.
+
+    펀드별로 먼저 차분한 뒤 합산한다. 레벨을 합쳐서 차분하면 ARKX 처럼 중간에
+    편입되는 펀드의 첫 등장이 대량 매수로 잡힌다.
+    """
+    wk = wide.resample("W-FRI").last()
+    net = wk.diff().sum(axis=1, min_count=1)
+    base = wk.shift(1).sum(axis=1, min_count=1)
+    return net / base * 100
+
+
+def pctrank_past(s: pd.Series) -> pd.Series:
+    """과거 값들만 놓고 본 백분위. 당주 값은 분포에서 뺀다.
+
+    pctrank 는 자기 자신을 분포에 포함해서, 신호 문턱(shift(1) 로 과거만 쓴다)과
+    나란히 보여줄 값으로는 맞지 않는다. 이 함수는 문턱과 같은 기준이다.
+    """
+    v = s.dropna()
+    r = v.expanding(MIN_HIST).apply(
+        lambda a: (a[-1] >= a[:-1]).mean() if len(a) > 1 else np.nan, raw=True)
+    return r.reindex(s.index)
+
+
 def components(px: pd.Series, ark_w: pd.Series) -> pd.DataFrame:
     """주간 기준 구성요소. 전부 '높을수록 매수 우호적' 방향으로 정렬한다."""
     delta = px.diff()
@@ -78,7 +102,21 @@ def components(px: pd.Series, ark_w: pd.Series) -> pd.DataFrame:
     wk["ark_net"] = ark_w.reindex(wk.index)
 
     c = pd.DataFrame(index=wk.index)
-    c["ark"] = pctrank(wk["ark_net"])              # 많이 살수록 높음
+    # 아크는 **신호 판정과 같은 자**로 재야 한다. 화면에 "아크 79/90" 처럼
+    # 점수와 문턱(90분위)을 나란히 보여주므로, 다른 값을 재고 있으면 거짓말이 된다.
+    #
+    # 두 가지가 어긋나 있었다:
+    #   1) 절대 주식 수로 쟀다. 문턱은 비율(netpct)로 바꾼 지 오래다.
+    #      아크 규모가 5년 새 12M주 -> 2.3M주로 줄어, 절대 수로 재면 2021년
+    #      대량 매수가 분위수를 영구히 끌어올린다(DECISIONS '문턱을 비율로').
+    #   2) shift(1) 이 없어 당주 값이 자기 백분위 계산에 들어갔다.
+    #      판정에 안 쓰이니 룩어헤드 사고는 아니지만, 문턱과 나란히 놓을 값이
+    #      아니다.
+    # 실측: 같은 주를 주식 수로 재면 79.3, 비율로 재면 86.0 이었다.
+    #
+    # 비율 환산은 호출부(ark_w)에서 이미 해서 넘긴다. 여기서는 과거만 보는
+    # 백분위를 쓴다.
+    c["ark"] = pctrank_past(wk["ark_net"])
     c["rsi"] = 1 - pctrank(wk["rsi"])              # 낮을수록 높음
     c["dd"] = 1 - pctrank(wk["dd"])                # 깊을수록 높음
     c["macd"] = pctrank(wk["macd_hist"])           # 반등 전환일수록 높음
@@ -135,8 +173,7 @@ def main() -> None:
     px = load_prices()
     V = px.values
 
-    sh = build_daily(px)["shares"]
-    ark_w = sh.resample("W-FRI").last().dropna().diff()
+    ark_w = ark_netpct(build_daily(px).attrs["wide"])
 
     c = components(px, ark_w)
     cols = ["ark", "rsi", "dd", "macd", "ma", "bb"]

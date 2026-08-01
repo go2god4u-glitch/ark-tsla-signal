@@ -142,9 +142,9 @@ def score_state(px: pd.Series, sh: pd.Series) -> dict:
     기술적 지표는 신호를 강화하는 것이 아니라 희석한다.
     그래서 화면에는 '지금 무엇이 켜져 있는가'를 보여주는 용도로만 싣는다.
     """
-    from score_model import components          # 순환 임포트 방지: 함수 안에서 부른다
-    ark_w = sh.resample("W-FRI").last().dropna().diff()
-    c = components(px, ark_w)
+    from score_model import components, ark_netpct   # 순환 임포트 방지: 함수 안에서
+    # 아크 성분은 신호 문턱과 같은 자로 잰다 — 절대 주식 수가 아니라 비율.
+    c = components(px, ark_netpct(build_daily(px).attrs["wide"]))
     cols = ["ark", "rsi", "dd", "macd", "ma", "bb"]
     c = c.dropna(subset=cols)
     if c.empty:
