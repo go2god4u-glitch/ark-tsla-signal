@@ -212,7 +212,25 @@ def main() -> None:
                 f.write(f"sold_ret={round(float(np.mean([d['ret'] for d in ds]))*100,1)}\n")
                 f.write("sold_list=" + " / ".join(
                     f"{d['entry']} ${d['entry_price']:.0f} {d['ret']*100:+.1f}%" for d in ds) + "\n")
-            # 규칙 B 진행 상황 (보유 중일 때 참고)
+            # 규칙 B 진행 상황.
+            # 예전에는 "이번 주 2.74% / 발동 -7.0% 이하" 로만 보냈는데,
+            # 2.74% 는 위쪽 매수 순매수율과 같은 숫자다. 같은 값을 두 방향으로
+            # 재는 것이라(위: +문턱을 넘나 / 아래: -7% 아래로 가나) 라벨만 보고는
+            # 어느 쪽으로 가야 발동인지 알 수 없었다. 방향과 남은 거리를 밝힌다.
+            if cur_netpct <= BIG_SELL:
+                b_line = f"발동 — 이번 주 {cur_netpct:.2f}% 매도"
+                b_sub = ("보유 중이면 이번 주가 매도 시점이다"
+                         if live else "보유 포지션이 없어 해당 없음")
+            elif cur_netpct < 0:
+                b_line = f"아크가 파는 중 ({cur_netpct:.2f}%)"
+                b_sub = (f"발동은 {BIG_SELL}% 이하. "
+                         f"{abs(cur_netpct - BIG_SELL):.2f}%p 남음")
+            else:
+                b_line = f"아크가 사는 중 (+{cur_netpct:.2f}%)"
+                b_sub = (f"발동은 {BIG_SELL}% 이하로 팔 때. "
+                         f"{abs(cur_netpct - BIG_SELL):.2f}%p 남음")
+            f.write(f"bsell_line={b_line}\n")
+            f.write(f"bsell_sub={b_sub}\n")
             f.write(f"cur_netpct={st.get('cur_netpct', 0)}\n")
             f.write(f"big_sell={BIG_SELL}\n")
 

@@ -226,13 +226,13 @@ jobs:
           SCORE: ${{ steps.check.outputs.score }}
           PSCORE: ${{ steps.check.outputs.prev_score }}
           ASCORE: ${{ steps.check.outputs.ark_score }}
-          PROB: ${{ steps.prob.outputs.prob }}
-          PDAY: ${{ steps.prob.outputs.day }}
+          PROBLINE: ${{ steps.prob.outputs.prob_line }}
+          PROBSUB: ${{ steps.prob.outputs.prob_sub }}
           POSN: ${{ steps.pos.outputs.open_count }}
           PRSI: ${{ steps.pos.outputs.rsi }}
           PRET: ${{ steps.pos.outputs.live_mean }}
-          CNET: ${{ steps.pos.outputs.cur_netpct }}
-          BSELL: ${{ steps.pos.outputs.big_sell }}
+          BSLINE: ${{ steps.pos.outputs.bsell_line }}
+          BSSUB: ${{ steps.pos.outputs.bsell_sub }}
           ALLRET: ${{ steps.pos.outputs.all_mean }}
           FORCE_HB: ${{ inputs.force_heartbeat }}
         run: |
@@ -245,7 +245,8 @@ jobs:
             "" \
             "판정 주: ${WEEK} (금요일 마감에 확정)" \
             "순매수: ${NETP}% / 문턱: ${THRP}%  (진행률 ${PROG}%)" \
-            "이번 주 신호 확률: ${PROB}% (${PDAY}일차 기준)" \
+            "이번 주 신호 확률: ${PROBLINE}" \
+            "  └ ${PROBSUB}" \
             "낙폭 필터: ${DDNOW}% / 기준 ${DDF}% -> $([ "$DDOK" = "true" ] && echo 통과 || echo 미달)" \
             "" \
             "TSLA: \$${PRICE} (사상최고 대비 ${DD}%)" \
@@ -255,7 +256,8 @@ jobs:
             "직전 신호: ${PREV} (${AGO}주 전) · 그때 점수 ${PSCORE}/100" \
             "" \
             "보유 포지션: ${POSN}건 (평균 ${PRET}%)" \
-            "  매도 규칙 B: 이번 주 ${CNET}% / 발동 ${BSELL}% 이하" \
+            "  매도 규칙 B: ${BSLINE}" \
+            "    └ ${BSSUB}" \
             "과거 신호 16건 평균 수익: ${ALLRET}%" \
             "" \
             "데이터 기준일: ${HDATE}" \

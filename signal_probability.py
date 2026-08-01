@@ -195,13 +195,32 @@ def main() -> None:
     # 확률은 이 스텝이 직접 내보낸다.
     # signal_check 가 이 파일을 읽게 하면 실행 순서상 하루 전 값을 쓰게 된다
     # (signal_check 가 먼저 돌고 이 파일은 그 뒤에 갱신되므로).
+    #
+    # 알림 문구를 여기서 만든다. 예전에는 확률만 넘기고 진행률은 signal_check 것을
+    # 썼는데, 둘이 서로 다른 날 값이라 "진행률 82% 인데 확률 0%" 처럼 나갔다.
+    # 최신 날짜가 표본 부족이면 확률을 이전 날로 물리게 되므로, 어느 날 값인지
+    # 두 줄 모두에 밝힌다.
     if o := os.environ.get("GITHUB_OUTPUT"):
-        last = next((c for c in reversed(out_now) if c.get("prob") is not None), None)
+        cur_day = out_now[-1] if out_now else None
+        fb = next((c for c in reversed(out_now) if c.get("prob") is not None), None)
+        if cur_day is None:
+            line, sub = "계산 불가", "이번 주 관측 없음"
+        elif cur_day.get("prob") is not None:
+            line = f"{cur_day['prob']:.0f}% ({cur_day['day']}일차, 진행률 {cur_day['prog']:.0f}%)"
+            sub = (f"누적 {cur_day['cum_pct']:+.2f}% / 문턱 {cur_day['thr']:.2f}%")
+        else:
+            line = f"표본부족 ({cur_day['day']}일차 진행률 {cur_day['prog']:.0f}%)"
+            sub = (f"{fb['day']}일차 기준으로는 {fb['prob']:.0f}% 였음 "
+                   f"(진행률 {fb['prog']:.0f}%)" if fb else
+                   "이번 주는 아직 비교할 과거 표본이 없다")
         with open(o, "a") as f:
-            f.write(f"prob={last['prob'] if last else '-'}\n")
-            f.write(f"prog={last['prog'] if last else '-'}\n")
-            f.write(f"cum_pct={last['cum_pct'] if last else '-'}\n")
-            f.write(f"day={last['day'] if last else '-'}\n")
+            f.write(f"prob_line={line}\n")
+            f.write(f"prob_sub={sub}\n")
+            # 화면·기존 참조용으로 원시값도 남긴다
+            f.write(f"prob={fb['prob'] if fb else '-'}\n")
+            f.write(f"prog={cur_day['prog'] if cur_day else '-'}\n")
+            f.write(f"cum_pct={cur_day['cum_pct'] if cur_day else '-'}\n")
+            f.write(f"day={cur_day['day'] if cur_day else '-'}\n")
 
 
 if __name__ == "__main__":
