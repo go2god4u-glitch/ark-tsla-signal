@@ -67,11 +67,45 @@ def main():
         if not (full and miss) and not old:
             print(f"  ✓ {doc}")
 
+    bad += check_data_files()
+
     print()
     if bad:
         print(f"불일치 {bad}건")
         sys.exit(1)
     print("문서와 코드 일치")
+
+
+def check_data_files() -> int:
+    """data/*.json 이 전부 파싱되는가.
+
+    리베이스 충돌을 풀다가 `data/tsla_full.json` 에 충돌 마커(<<<<<<<)를 남긴 채
+    커밋하고 푸시한 적이 있다. 사이트가 읽는 원본이라 대시보드가 통째로 죽는다.
+    파이썬은 그 파일을 안 열어보면 모르고, 커밋도 조용히 통과한다.
+    푸시 전 검사에 넣어 두면 다시는 못 지나간다.
+    """
+    import glob
+    import json
+    import os
+
+    base = os.path.dirname(os.path.abspath(__file__))
+    print()
+    bad, files = 0, sorted(glob.glob(os.path.join(base, "data", "*.json")))
+    for p in files:
+        raw = open(p, encoding="utf-8", errors="replace").read()
+        name = os.path.relpath(p, base)
+        if "<<<<<<<" in raw or ">>>>>>>" in raw:
+            print(f"  ⚠ {name}: 병합 충돌 마커가 남아 있다")
+            bad += 1
+            continue
+        try:
+            json.loads(raw)
+        except json.JSONDecodeError as e:
+            print(f"  ⚠ {name}: JSON 파싱 실패 — {e}")
+            bad += 1
+    if not bad:
+        print(f"  ✓ data/*.json {len(files)}개 전부 정상")
+    return bad
 
 
 if __name__ == "__main__":

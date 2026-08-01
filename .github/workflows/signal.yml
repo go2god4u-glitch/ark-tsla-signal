@@ -227,7 +227,6 @@ jobs:
           PSCORE: ${{ steps.check.outputs.prev_score }}
           ASCORE: ${{ steps.check.outputs.ark_score }}
           PROBLINE: ${{ steps.prob.outputs.prob_line }}
-          PROBSUB: ${{ steps.prob.outputs.prob_sub }}
           POSN: ${{ steps.pos.outputs.open_count }}
           PRSI: ${{ steps.pos.outputs.rsi }}
           PRET: ${{ steps.pos.outputs.live_mean }}
@@ -245,8 +244,7 @@ jobs:
             "" \
             "판정 주: ${WEEK} (금요일 마감에 확정)" \
             "순매수: ${NETP}% / 문턱: ${THRP}%  (진행률 ${PROG}%)" \
-            "이번 주 신호 확률: ${PROBLINE}" \
-            "  └ ${PROBSUB}" \
+            "이번 주 신호가 뜰 확률: ${PROBLINE}" \
             "낙폭 필터: ${DDNOW}% / 기준 ${DDF}% -> $([ "$DDOK" = "true" ] && echo 통과 || echo 미달)" \
             "" \
             "TSLA: \$${PRICE} (사상최고 대비 ${DD}%)" \
