@@ -15,7 +15,7 @@ on:
         type: boolean
         default: false
       force_heartbeat:
-        description: "상태 알림 즉시 발송 (점검용 — 이제 매일 자동 발송된다)"
+        description: "상태 알림 강제 발송 (점검용)"
         type: boolean
         default: false
 
@@ -40,9 +40,34 @@ jobs:
 
       - run: pip install -r requirements.txt
 
+      - name: 실행 전 데이터 기준일 기록
+        id: before
+        run: |
+          echo "price_date=$(jq -r '.price_date // ""' data/signal_state.json)" >> "$GITHUB_OUTPUT"
+          echo "holdings_date=$(jq -r '.holdings_date // ""' data/signal_state.json)" >> "$GITHUB_OUTPUT"
+          echo "state_hash=$(jq -S 'del(.checked_utc)' data/signal_state.json | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
       - name: 신호 판정
         id: check
         run: python signal_check.py
+
+      - name: 새 데이터 확인
+        id: freshness
+        env:
+          OLD_PRICE_DATE: ${{ steps.before.outputs.price_date }}
+          NEW_PRICE_DATE: ${{ steps.check.outputs.price_date }}
+          OLD_HOLDINGS_DATE: ${{ steps.before.outputs.holdings_date }}
+          NEW_HOLDINGS_DATE: ${{ steps.check.outputs.holdings_date }}
+          OLD_STATE_HASH: ${{ steps.before.outputs.state_hash }}
+        run: |
+          NEW_STATE_HASH=$(jq -S 'del(.checked_utc)' data/signal_state.json | sha256sum | cut -d' ' -f1)
+          if [ "$NEW_STATE_HASH" != "$OLD_STATE_HASH" ]; then
+            echo "updated=true" >> "$GITHUB_OUTPUT"
+            echo "새 데이터 있음: 주가 ${OLD_PRICE_DATE:-없음} -> ${NEW_PRICE_DATE:-없음}, ARK ${OLD_HOLDINGS_DATE:-없음} -> ${NEW_HOLDINGS_DATE:-없음}"
+          else
+            echo "updated=false" >> "$GITHUB_OUTPUT"
+            echo "새 데이터 없음: 주가 $NEW_PRICE_DATE, ARK $NEW_HOLDINGS_DATE — 텔레그램을 보내지 않는다."
+          fi
 
       - name: 보유기간별 수익률 갱신
         run: python holding_returns.py
@@ -112,7 +137,7 @@ jobs:
           )"
 
       - name: 텔레그램 매도 알림
-        if: steps.pos.outputs.action == 'SELL'
+        if: steps.pos.outputs.action == 'SELL' && steps.freshness.outputs.updated == 'true'
         env:
           TG_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -148,7 +173,7 @@ jobs:
           python3 -c "import json,sys;d=json.load(open('/tmp/sell.json'));print('전송:',d.get('ok'));sys.exit(0 if d.get('ok') else 1)"
 
       - name: 텔레그램 알림
-        if: steps.check.outputs.signal == 'true' || inputs.force_issue
+        if: (steps.check.outputs.signal == 'true' && steps.freshness.outputs.updated == 'true') || inputs.force_issue
         env:
           TG_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -198,15 +223,10 @@ jobs:
           python3 -c "import json,sys;d=json.load(open('/tmp/tg.json'));print('전송:',d.get('ok'));sys.exit(0 if d.get('ok') else 1)"
 
       - name: 일간 상태 알림 (하트비트)
-        # 신호가 없어도 매일 아침 보낸다. 신호는 연 2회꼴이라, 조용하면
-        # 고장인지 신호가 없는 건지 구분할 수 없다. 살아있음을 알리는 용도다.
-        # 22:00 UTC 실행 = 07:00 KST. 미국 장 마감 후라 그날 종가가 확정돼 있다.
-        #
-        # 주 1회(토요일 아침)였다가 매일로 바꿨다. 주 1회면 고장을 발견하는 데
-        # 최대 7일이 걸린다. 사용자가 매일 받기를 택했다.
-        # 주간 판정(금요일 확정)은 이 알림의 '판정 주' 줄에 그대로 실린다 —
-        # 주중에는 아직 확정 전 진행 상황이라는 뜻이고, 그래서 진행률을 함께 보낸다.
-        if: steps.check.outputs.signal != 'true'
+        # 매일 점검은 유지하되, 주가와 ARK 보유 기준일이 모두 그대로면 보내지 않는다.
+        # 따라서 보통 새 데이터가 없는 일·월요일 아침에는 조용하다.
+        # 수동 force_heartbeat 는 알림 경로 점검을 위해 이 조건을 우회한다.
+        if: steps.check.outputs.signal != 'true' && (steps.freshness.outputs.updated == 'true' || inputs.force_heartbeat)
 
         env:
           TG_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
@@ -233,9 +253,7 @@ jobs:
           BSLINE: ${{ steps.pos.outputs.bsell_line }}
           BSSUB: ${{ steps.pos.outputs.bsell_sub }}
           ALLRET: ${{ steps.pos.outputs.all_mean }}
-          FORCE_HB: ${{ inputs.force_heartbeat }}
         run: |
-          # 매일 보낸다. 요일 조건 없음 (force_heartbeat 입력은 하위호환용으로 남긴다).
           if [ -z "$TG_TOKEN" ] || [ -z "$TG_CHAT" ]; then
             echo "텔레그램 시크릿 미설정 - 건너뜀"; exit 0
           fi

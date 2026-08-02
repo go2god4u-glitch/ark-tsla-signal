@@ -490,6 +490,7 @@ def main() -> None:
             f.write(f"net={state['net']}\n")
             f.write(f"threshold={state['threshold']}\n")
             f.write(f"price={state['price']}\n")
+            f.write(f"price_date={state['price_date']}\n")
             f.write(f"drawdown={state['drawdown_from_ath']}\n")
             f.write(f"dd_now={state['dd_now']}\ndd_filter={DD_FILTER}\n")
             f.write(f"thr_ok={'true' if state['thr_ok'] else 'false'}\n")
