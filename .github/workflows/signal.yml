@@ -80,6 +80,13 @@ jobs:
         id: pos
         run: python position_tracker.py
 
+      # 신호 집합에 의존하므로 signal_check 뒤에 둔다.
+      # 실패해도 알림은 나가야 하므로 이 스텝만 막아 둔다.
+      - name: 과거 신호 이후 경로와 비교
+        id: trend
+        continue-on-error: true
+        run: python trend_compare.py
+
       - name: 데이터 갱신분 커밋
         run: |
           git config user.name  "github-actions[bot]"
@@ -245,7 +252,6 @@ jobs:
           HDATE: ${{ steps.check.outputs.holdings_date }}
           SCORE: ${{ steps.check.outputs.score }}
           PSCORE: ${{ steps.check.outputs.prev_score }}
-          ASCORE: ${{ steps.check.outputs.ark_score }}
           PROBLINE: ${{ steps.prob.outputs.prob_line }}
           POSN: ${{ steps.pos.outputs.open_count }}
           PRSI: ${{ steps.pos.outputs.rsi }}
@@ -266,9 +272,7 @@ jobs:
             "낙폭 필터: ${DDNOW}% / 기준 ${DDF}% -> $([ "$DDOK" = "true" ] && echo 통과 || echo 미달)" \
             "" \
             "TSLA: \$${PRICE} (사상최고 대비 ${DD}%)" \
-            "이번 주 점수: ${SCORE}/100 (참고값 — 6개 항목 평균)" \
-            "  신호에 쓰이는 것은 아크(${ASCORE}/90)와 낙폭 2개뿐" \
-            "  나머지 RSI·MACD·이평선·볼린저는 참고용" \
+            "이번 주 점수: ${SCORE}/100 (참고값 — 판정에는 쓰지 않는다)" \
             "직전 신호: ${PREV} (${AGO}주 전) · 그때 점수 ${PSCORE}/100" \
             "" \
             "보유 포지션: ${POSN}건 (평균 ${PRET}%)" \

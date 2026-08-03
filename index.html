@@ -200,6 +200,35 @@
     <div class="card"><div style="padding:20px" id="modeBox"></div></div>
   </section>
 
+  <section id="tcSection" hidden>
+    <h2 style="font-size:17px;font-weight:700;margin:8px 0 4px" id="tcTitle"></h2>
+    <p id="tcIntro" style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px"></p>
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title" id="tcHead"></span>
+        <span class="card-title" id="tcGroup"></span>
+      </div>
+      <div style="padding:18px 20px" id="tcStrip"></div>
+    </div>
+    <div class="card table-scroll" style="margin-top:14px">
+      <div class="card-head"><span class="card-title">지금 위치가 앞날을 말해주는가</span></div>
+      <table><thead><tr>
+        <th scope="col">시점</th><th scope="col">n</th><th scope="col">피어슨</th>
+        <th scope="col">순위상관</th><th scope="col">국면 하나 빼면</th><th scope="col">해석</th>
+      </tr></thead><tbody id="tcPred"></tbody></table>
+    </div>
+    <div class="card table-scroll" style="margin-top:14px">
+      <div class="card-head"><span class="card-title">과거 국면들의 지평별 수익률</span>
+        <span class="card-title">지금 값으로 조건을 걸지 않은 분포</span></div>
+      <table><thead><tr>
+        <th scope="col">지평</th><th scope="col">n</th><th scope="col">중앙값</th>
+        <th scope="col">최소</th><th scope="col">최대</th><th scope="col">양수</th>
+        <th scope="col" id="tcPeerHead">같은 그룹</th>
+      </tr></thead><tbody id="tcHz"></tbody></table>
+    </div>
+    <p class="stamp" id="tcNote" style="line-height:1.6;margin-top:12px"></p>
+  </section>
+
   <section>
     <h2 style="font-size:17px;font-weight:700;margin:8px 0 4px">주가 위의 매수 신호</h2>
     <p id="chartIntro" style="color:var(--ink-2);font-size:13.5px;margin:0 0 14px"></p>
@@ -393,7 +422,7 @@ const F = {
   sgn: v => (v >= 0 ? "+" : "") + v.toLocaleString("en-US"),
   usd: v => "$" + v.toFixed(2),
 };
-let S = null, B = null, PR = null, P = null, SS = null;
+let S = null, B = null, PR = null, P = null, SS = null, TC = null;
 
 /* 보는 사람이 어디에 있든 한국시간으로 고정해 보여준다.
    서버가 남기는 checked_utc 는 UTC 라 그대로 쓰면 9시간 어긋난 것처럼 읽힌다. */
@@ -421,12 +450,13 @@ async function load() {
   try {
     // Pages 와 CDN 이 캐시하므로 쿼리로 무력화한다. no-store 만으로는 부족하다.
     const q = "?t=" + Date.now();
-    const [r, r2, r3, r4, r5] = await Promise.all([
+    const [r, r2, r3, r4, r5, r6] = await Promise.all([
       fetch("data/signal_state.json" + q, { cache: "no-store" }),
       fetch("data/holding_returns.json" + q, { cache: "no-store" }),
       fetch("data/signal_probability.json" + q, { cache: "no-store" }),
       fetch("data/position.json" + q, { cache: "no-store" }),
       fetch("data/sell_search.json" + q, { cache: "no-store" }),
+      fetch("data/trend_compare.json" + q, { cache: "no-store" }),
     ]);
     if (!r.ok) throw new Error("HTTP " + r.status);
     S = await r.json();
@@ -434,6 +464,7 @@ async function load() {
     PR = r3.ok ? await r3.json() : null;
     P = r4.ok ? await r4.json() : null;
     SS = r5.ok ? await r5.json() : null;
+    TC = r6.ok ? await r6.json() : null;
     render();
     stamp.innerHTML = `데이터 기준 <b>${S.holdings_date}</b> · 마지막 업데이트 ` +
       `<b>${kst(S.checked_utc)}</b> <span style="color:var(--ink-3)">(${ago(S.checked_utc)})</span>` +
@@ -483,6 +514,7 @@ function render() {
   renderSigChart();
   renderRuns();
   renderMode();
+  renderTrend();
   renderProb();
   renderSell();
   renderBigSell();
@@ -632,6 +664,117 @@ function whyTag(e) {
   const b = (e.why || "").startsWith("B");
   return `<span title="${e.why || ""}" style="white-space:nowrap;color:var(--ink-2)">`
        + (b ? `✕ B 긴급` : `▲ A 이익`) + `</span>`;
+}
+
+/* 지금 흐름 vs 과거 신호 이후 경로.
+   화면에서도 '아홉 개를 전부 보여준다' 는 원칙을 지킨다 — n=9 에서 백분위 하나만
+   띄우면 표본 크기가 숨는다. 점 아홉 개를 실제 위치에 찍고 지금을 그 위에 얹는다.
+   낙폭 그룹(얕음/깊음)은 색이 아니라 **모양**으로 나눈다. 색만 쓰면 구분이 안 되는
+   사람이 있고, 인쇄하면 사라진다. */
+function renderTrend() {
+  const sec = document.getElementById("tcSection");
+  if (!TC || !TC.at_day || !TC.at_day.length) { sec.hidden = true; return; }
+  sec.hidden = false;
+  const pc = x => (x == null ? "—" : (x >= 0 ? "+" : "") + (x * 100).toFixed(1) + "%");
+
+  document.getElementById("tcTitle").textContent =
+    `지금 흐름은 과거 신호 이후와 견줘 어떤가`;
+  document.getElementById("tcIntro").innerHTML =
+    `이번 진입 <b>${TC.entry}</b>(신호 ${TC.signal}) 이후 <b>${TC.day}거래일</b>이 지났다.
+     과거 신호들도 각자 진입일부터 같은 거래일 수만큼 재서 나란히 놓는다 —
+     같은 나이의 포지션끼리 비교하는 것이다.<br>
+     표본은 <b>국면 ${TC.n_episodes}개</b>다. 진입은 ${TC.n_entries}회지만 7일 이내 연속은
+     경로가 거의 같아 독립 관측이 아니므로 국면 첫 진입만 센다.`;
+  document.getElementById("tcHead").textContent =
+    `진입 후 ${TC.day}거래일 시점의 수익률`;
+  document.getElementById("tcGroup").textContent =
+    `이번 진입 낙폭 ${TC.cur_dd.toFixed(1)}% · ${TC.group} 국면`;
+
+  /* ---- 점 그래프: 과거 9개 + 지금 ---- */
+  const xs = TC.at_day.map(d => d.ret).concat([TC.cur_ret]);
+  const lo = Math.min(...xs), hi = Math.max(...xs);
+  const pad = Math.max((hi - lo) * 0.12, 0.005);
+  const a = lo - pad, b = hi + pad;
+  const X = v => ((v - a) / (b - a)) * 100;
+  const rows = TC.at_day.slice().sort((p, q) => p.ret - q.ret).map(d => {
+    const deep = d.grp === "깊음";
+    const mark = deep
+      ? `<span style="position:absolute;left:${X(d.ret)}%;top:50%;
+           transform:translate(-50%,-50%);width:9px;height:9px;
+           background:var(--ink-2);"></span>`
+      : `<span style="position:absolute;left:${X(d.ret)}%;top:50%;
+           transform:translate(-50%,-50%) rotate(45deg);width:9px;height:9px;
+           border:1.6px solid var(--ink-2);"></span>`;
+    return `<div style="display:grid;grid-template-columns:104px 1fr 62px;gap:10px;
+              align-items:center;margin:5px 0">
+      <span class="stamp">${d.entry}</span>
+      <span style="position:relative;height:14px;border-bottom:1px solid var(--line-2)">${mark}</span>
+      <span style="font-family:var(--mono);font-size:12px;text-align:right;
+        color:var(--ink-3)">${pc(d.ret)}</span>
+    </div>`;
+  }).join("");
+  /* 0% 선. 바깥 컨테이너에 left:X% 로 얹으면 라벨 열까지 포함한 폭 기준이 되어
+     점들과 다른 자로 계산된다(지금 데이터에선 8px 차이라 우연히 맞아 보였다).
+     같은 grid 를 겹쳐 두 번째 열 안에 그린다 — 점과 정확히 같은 기준이 된다. */
+  const zero = (a <= 0 && 0 <= b)
+    ? `<div style="position:absolute;inset:0;display:grid;
+         grid-template-columns:104px 1fr 62px;gap:10px;pointer-events:none">
+         <span></span>
+         <span style="position:relative"><span style="position:absolute;
+           left:${X(0)}%;top:0;bottom:0;width:1px;background:var(--line)"></span></span>
+         <span></span></div>` : "";
+  document.getElementById("tcStrip").innerHTML = `
+    <div class="chart-legend" style="padding:0 0 10px">
+      <span><svg width="12" height="12" aria-hidden="true"><rect x="2" y="2" width="8" height="8"
+        fill="var(--ink-2)"/></svg>깊은 낙폭 국면</span>
+      <span><svg width="12" height="12" aria-hidden="true"><rect x="2.5" y="2.5" width="7" height="7"
+        fill="none" stroke="var(--ink-2)" stroke-width="1.6"
+        transform="rotate(45 6 6)"/></svg>얕은 낙폭 국면</span>
+      <span><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="4.5"
+        fill="var(--buy)"/></svg>지금</span>
+    </div>
+    <div style="position:relative">${zero}${rows}
+      <div style="display:grid;grid-template-columns:104px 1fr 62px;gap:10px;
+           align-items:center;margin:5px 0;border-top:1px solid var(--line);padding-top:8px">
+        <span class="stamp" style="color:var(--ink);font-weight:650">지금</span>
+        <span style="position:relative;height:14px">
+          <span style="position:absolute;left:${X(TC.cur_ret)}%;top:50%;
+            transform:translate(-50%,-50%);width:11px;height:11px;border-radius:50%;
+            background:var(--buy)"></span></span>
+        <span style="font-family:var(--mono);font-size:12px;text-align:right;
+          font-weight:650">${pc(TC.cur_ret)}</span>
+      </div>
+    </div>
+    <div class="stamp" style="margin-top:10px;line-height:1.6">
+      과거 ${TC.n_episodes}개 중앙값 <b>${pc(TC.median)}</b> ·
+      지금은 ${TC.n_episodes + 1}개 중 <b>${TC.rank}번째로 낮다</b>.
+      ${TC.peer_n ? `같은 '${TC.group}' 국면 ${TC.peer_n}개만 보면 중앙값
+        <b>${pc(TC.peer_median)}</b> 다.` : ""}
+    </div>`;
+
+  /* ---- 예측력 표 ---- */
+  document.getElementById("tcPred").innerHTML = (TC.predictive || []).map(d => {
+    const solid = d.verdict === "관계가 버틴다";
+    return `<tr>
+      <td>${d.label}</td><td>${d.n}</td>
+      <td class="${solid ? "pos" : ""}">${d.r >= 0 ? "+" : ""}${d.r.toFixed(2)}</td>
+      <td>${d.spearman >= 0 ? "+" : ""}${d.spearman.toFixed(2)}</td>
+      <td>${d.loo_lo >= 0 ? "+" : ""}${d.loo_lo.toFixed(2)} ~ ${d.loo_hi >= 0 ? "+" : ""}${d.loo_hi.toFixed(2)}</td>
+      <td style="${solid ? "" : "color:var(--ink-3)"}">${d.verdict}</td></tr>`;
+  }).join("");
+
+  /* ---- 지평별 분포 ---- */
+  document.getElementById("tcPeerHead").textContent = `'${TC.group}' 국면만`;
+  document.getElementById("tcHz").innerHTML = (TC.horizons || []).map(d => `<tr>
+      <td>${d.label}</td><td>${d.n}</td>
+      <td class="${d.median >= 0 ? "pos" : "neg"}">${pc(d.median)}</td>
+      <td class="neg">${pc(d.min)}</td><td class="pos">${pc(d.max)}</td>
+      <td>${(d.hit * 100).toFixed(0)}%</td>
+      <td style="color:var(--ink-3)">${d.peer_median == null ? "—"
+        : `${pc(d.peer_median)} (n=${d.peer_n})`}</td></tr>`).join("");
+
+  document.getElementById("tcNote").innerHTML =
+    (TC.verdict || []).map(x => `<b>·</b> ${x}`).join("<br><br>");
 }
 
 function renderRuns() {
