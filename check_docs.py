@@ -15,6 +15,16 @@ FULL_DOCS = ["README.md", "docs/ALGORITHM.md", "docs/HOW_IT_WORKS.md"]
 SUMMARY_DOCS = ["docs/README.md"]
 SPEC_DOCS = FULL_DOCS + SUMMARY_DOCS
 
+# 판정 규칙이 아닌 보조 모듈의 상수는 문서 하나에서만 설명한다.
+# 이것을 위의 want 에 넣으면 FULL_DOCS 세 곳 전부에 그 문자열을 요구해
+# 관계없는 문서까지 오염된다. 그래서 '어느 문서에서 검사할지' 를 따로 붙인다.
+SCOPED = [
+    ("trend_compare.py", "DEEP_CUT", ["-45%"], "docs/HOW_IT_WORKS.md",
+     "흐름 비교의 깊음/얕음 경계"),
+    ("trend_compare.py", "MONTH", ["개월", "월당"], "docs/HOW_IT_WORKS.md",
+     "월당 초과(초과 ÷ 개월)"),
+]
+
 def const(path, name):
     m = re.search(rf'^{name}\s*=\s*(-?[\d.]+)', open(path).read(), re.M)
     return float(m.group(1)) if m else None
@@ -67,6 +77,7 @@ def main():
         if not (full and miss) and not old:
             print(f"  ✓ {doc}")
 
+    bad += check_scoped()
     bad += check_data_files()
 
     print()
@@ -74,6 +85,30 @@ def main():
         print(f"불일치 {bad}건")
         sys.exit(1)
     print("문서와 코드 일치")
+
+
+def check_scoped() -> int:
+    """보조 모듈 상수를 '그것을 설명하기로 한 문서' 에서만 확인한다.
+
+    상수가 코드에서 사라졌는데 문서에만 남는 경우도 잡는다 —
+    코드에 없으면 그 문서가 유령 사양을 설명하고 있다는 뜻이다.
+    """
+    print()
+    bad = 0
+    for src, name, pats, doc, desc in SCOPED:
+        v = const(src, name)
+        if v is None:
+            print(f"  ⚠ {src}: 상수 {name} 을 못 찾았다 ({desc})")
+            bad += 1
+            continue
+        txt = open(doc).read()
+        if not all(p in txt for p in pats):
+            miss = [p for p in pats if p not in txt]
+            print(f"  ⚠ {doc}: {desc} 설명 누락 {miss} ({src}:{name}={v})")
+            bad += 1
+        else:
+            print(f"  ✓ {doc} ← {src}:{name}={v} ({desc})")
+    return bad
 
 
 def check_data_files() -> int:

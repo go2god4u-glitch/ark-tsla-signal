@@ -122,7 +122,11 @@
 | `signal_probability.py` | 주중 부분 데이터로 그 주 신호 확률 추정 |
 | `position_tracker.py` | 전 구간 재생 → 현재 포지션·매수/매도 동작 확정 |
 | `holding_returns.py` | 보유기간별 수익률 갱신 |
+| `trend_compare.py` | **판정에 관여하지 않음** — 지금 포지션을 과거 신호 이후 경로와 비교(화면용) |
 | `.github/workflows/signal.yml` | 매일 22:00 UTC (한국 07:00) 자동 실행 |
+
+`trend_compare.py` 는 규칙이 아니라 맥락 화면이다. 매수/매도 판정에 어떤 입력도 주지 않는다.
+`signal_check.build()` 를 그대로 빌려 쓰고, 신호 건수를 재현하지 못하면 그 자리에서 죽는다.
 
 ## 7. 알림
 

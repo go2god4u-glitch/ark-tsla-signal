@@ -55,6 +55,7 @@ DEEP_CUT = -45.0                           # 진입 낙폭 깊음/얕음 경계
 EARLY = (5, 10, 21, 42)                    # 예측력을 물어볼 이른 시점들
 FWD = (5, 21, 63, 126, 252)                # '지금부터 앞으로' 를 물어볼 지평
 TARGETS = (10, 20, 30, 50)                 # 목표 수익률(%) — 도달까지 며칠 걸렸나
+MONTH = 21.0                               # 한 달 = 거래일 21일 (월당 초과 계산용)
 
 # 넣지 않기로 한 지표들 (재봤고, 의미가 없어서 뺐다):
 #   경로 모양 유사도 매칭 — 지금 며칠치 점 몇 개로 '닮은 국면'을 고르는 것은
@@ -281,7 +282,8 @@ def main() -> None:
     print("=" * 78)
     print("   같은 기간 무작위 진입을 나란히 둔다. 차이(초과)가 곧 **신호의 값어치**다.")
     print("   절대 수익이 큰 지평과 초과가 큰 지평은 다르다 — 뒤로 갈수록 시장이 먹는다.")
-    print(f"   {'지평':<8s}{'n':>4s}{'신호':>9s}{'무작위':>9s}{'초과':>9s}"
+    print("   '월당' 은 초과를 개월로 나눈 시간 효율이다. 총액 정점과 또 다른 질문이다.")
+    print(f"   {'지평':<8s}{'n':>4s}{'신호':>9s}{'무작위':>9s}{'초과':>9s}{'월당':>9s}"
           f"{'승률':>7s}{'무작위':>7s}   {'얕은 국면만':>14s}")
     lo_i0, hi_i0 = int(past_ep["i"].min()), len(V) - 1
     horizon_rows = []
@@ -299,19 +301,49 @@ def main() -> None:
               if (r["dd"] <= DEEP_CUT) == (cur["dd"] <= DEEP_CUT)]
         pv = [x for x in pv if x is not None]
         ptxt = (f"{np.median(pv)*100:+.1f}% (n={len(pv)})" if pv else "—")
+        # 월당 초과 = 시간 효율. 오래 들면 총액은 커져도 '한 달에 얼마' 는 묽어진다.
+        pm = excess / (k / MONTH)
         print(f"   {label(k):<8s}{len(a):>4d}{np.median(a)*100:>+8.1f}%"
-              f"{bmed*100:>+8.1f}%{excess*100:>+8.1f}%"
+              f"{bmed*100:>+8.1f}%{excess*100:>+8.1f}%{pm*100:>+8.1f}%"
               f"{(a > 0).mean()*100:>6.0f}%{bhit*100:>6.0f}%   {ptxt:>14s}")
         horizon_rows.append({"k": k, "label": label(k), "n": len(a),
                              "median": float(np.median(a)), "min": float(a.min()),
                              "max": float(a.max()), "hit": float((a > 0).mean()),
                              "base_median": bmed, "base_hit": bhit, "excess": excess,
+                             "excess_pm": pm, "edge": (a > 0).mean() > bhit,
                              "peer_median": float(np.median(pv)) if pv else None,
                              "peer_n": len(pv)})
     peak = max(horizon_rows, key=lambda r: r["excess"])
     print(f"   -> 초과가 가장 큰 지평은 **{peak['label']}** ({peak['excess']*100:+.1f}%p)."
           f" 절대 수익 최대는 "
           f"{max(horizon_rows, key=lambda r: r['median'])['label']} 이다 — 다른 질문이다.")
+
+    # ---- 시간 효율의 정점, 그리고 그게 국면 하나에 흔들리는가 ----
+    # 승률조차 무작위보다 못한 지평(1~2주)은 후보에서 뺀다. 초과가 +0.0%p 여도
+    # 개월로 나누면 큰 수가 나와 정점을 가로챈다.
+    elig = [r for r in horizon_rows if r["edge"] and r["excess"] > 0]
+    peak_pm = max(elig, key=lambda r: r["excess_pm"]) if elig else None
+    pm_vote = {}
+    if peak_pm:
+        for drop in range(len(past_ep)):
+            keep = past_ep.drop(past_ep.index[drop])
+            best, bestv = None, -9e9
+            for r in horizon_rows:
+                if not (r["edge"] and r["excess"] > 0):
+                    continue
+                vv = [path_ret(V, int(x["i"]), r["k"]) for _, x in keep.iterrows()]
+                vv = [x for x in vv if x is not None]
+                if not vv:
+                    continue
+                e_ = (float(np.median(vv)) - r["base_median"]) / (r["k"] / MONTH)
+                if e_ > bestv:
+                    best, bestv = r["label"], e_
+            pm_vote[best] = pm_vote.get(best, 0) + 1
+        print(f"   -> 월당 초과가 가장 큰 지평은 **{peak_pm['label']}** "
+              f"({peak_pm['excess_pm']*100:+.1f}%p/월). 총액 정점({peak['label']})과 다르다.")
+        print("      국면 하나씩 빼면 정점이 어디로 가나: "
+              + " · ".join(f"{k_} {v_}회" for k_, v_ in
+                           sorted(pm_vote.items(), key=lambda x: -x[1])))
 
     # ================================================================
     # 4. 지금부터 앞으로 — 무작위 진입과 견줘 우위가 있는가
@@ -461,6 +493,28 @@ def main() -> None:
         f"(무작위 중앙값 {best_ex['label']} {best_ex['base_median']*100:+.1f}% -> "
         f"{horizon_rows[-1]['label']} {horizon_rows[-1]['base_median']*100:+.1f}%). "
         f"신호가 벌어주는 몫은 {best_ex['label']} 부근에서 정점이고 그 뒤로 희석된다.")
+    if peak_pm:
+        stable = pm_vote.get(peak_pm["label"], 0)
+        rivals = [f"{k_}({v_}회)" for k_, v_ in sorted(pm_vote.items(), key=lambda x: -x[1])
+                  if k_ != peak_pm["label"]]
+        lines.append(
+            f"'시간 대비' 로 물으면 답이 또 갈린다. 초과를 개월로 나눈 월당 초과는 "
+            f"{peak_pm['label']}({peak_pm['excess_pm']*100:+.1f}%p/월)이 가장 높고, "
+            f"총액 정점인 {best_ex['label']}"
+            f"({[r for r in horizon_rows if r['label'] == best_ex['label']][0]['excess_pm']*100:+.1f}%p/월)"
+            f"보다 앞선다. 다만 국면 하나를 빼면 정점이 {len(past_ep)}번 중 "
+            f"{stable}번만 {peak_pm['label']}에 남는다"
+            + (f" (나머지는 {' · '.join(rivals)})" if rivals else "")
+            + f". 국면 {len(past_ep)}개에서 이 정도 차이는 잡음 구간이다. "
+            f"승률로 보면 {peak_pm['label']} {peak_pm['hit']*100:.0f}% 대 "
+            f"{best_ex['label']} {[r for r in horizon_rows if r['label'] == best_ex['label']][0]['hit']*100:.0f}% 다.")
+        lines.append(
+            f"이 표는 주가 경로지 매도 규칙 성과가 아니다. "
+            f"'{peak_pm['label']} 뒤 고정 매도' 나 '{best_ex['label']} 뒤 고정 매도' 는 "
+            f"이 틀에서 백테스트한 적이 없다. 예전에 '6개월 고정 보유' 가 성적은 났지만 "
+            f"'원칙이 없다' 는 이유로 기각된 전례가 있다(CLAUDE.md 2번). "
+            f"실제 규칙 A/B 의 보유 기간 중앙값은 106거래일(약 5개월)이라 "
+            f"이 구간 안에 자연히 들어와 있다.")
     mr = {t: (int(np.median(reach[t])) if reach[t] else None) for t in TARGETS}
     got = [t for t in TARGETS if len(reach[t]) == len(past_ep)]
     if got:
@@ -496,6 +550,9 @@ def main() -> None:
                      "within_group": within, "within_n": int(grp_mask.sum())},
         "horizons": horizon_rows,
         "peak_excess": best_ex["label"], "peak_abs": best_abs["label"],
+        "peak_pm": peak_pm["label"] if peak_pm else None,
+        "peak_pm_value": peak_pm["excess_pm"] if peak_pm else None,
+        "peak_pm_vote": pm_vote, "month_days": MONTH,
         "forward": fwd_rows,
         "targets": list(TARGETS),
         "wait": wait_rows,

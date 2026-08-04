@@ -239,9 +239,11 @@
       <table><thead><tr>
         <th scope="col">지평</th><th scope="col">n</th><th scope="col">신호</th>
         <th scope="col">무작위</th><th scope="col">초과</th>
+        <th scope="col">월당 초과</th>
         <th scope="col">승률</th><th scope="col" id="tcPeerHead">같은 그룹</th>
       </tr></thead><tbody id="tcHz"></tbody></table>
     </div>
+    <p class="stamp" id="tcPmNote" style="line-height:1.6;margin-top:12px"></p>
     <p class="stamp" id="tcNote" style="line-height:1.6;margin-top:12px"></p>
   </section>
 
@@ -826,22 +828,38 @@ function renderTrend() {
   /* ---- 지평별 분포 ---- */
   document.getElementById("tcPeerHead").textContent = `'${TC.group}' 국면만`;
   document.getElementById("tcHzNote").textContent =
-    `초과 정점 ${TC.peak_excess} · 절대 수익 최대 ${TC.peak_abs}`;
+    `초과 정점 ${TC.peak_excess} · 절대 수익 최대 ${TC.peak_abs}`
+    + (TC.peak_pm ? ` · 월당 정점 ${TC.peak_pm}` : "");
   /* 초과(신호 - 무작위)가 곧 신호의 값어치다. 절대 수익이 큰 지평과
-     초과가 큰 지평은 다르다 — 뒤로 갈수록 시장 몫이 늘어난다. 정점을 표시한다. */
-  const pk = TC.peak_excess;
+     초과가 큰 지평은 다르다 — 뒤로 갈수록 시장 몫이 늘어난다.
+     '월당' 은 그것을 개월로 나눈 시간 효율이라 정점이 또 다르다.
+     셋을 각각 다른 표시로 구분한다. 한 줄에 두 정점이 겹칠 수 있다. */
+  const pk = TC.peak_excess, pkm = TC.peak_pm;
   document.getElementById("tcHz").innerHTML = (TC.horizons || []).map(d => {
-    const top = d.label === pk;
-    return `<tr${top ? ` style="background:color-mix(in srgb,var(--buy) 9%,transparent)"` : ""}>
-      <td${top ? ' style="font-weight:650"' : ""}>${d.label}${top ? " ←" : ""}</td>
+    const top = d.label === pk, tpm = d.label === pkm;
+    const mark = (top ? " ← 총액" : "") + (tpm ? " ← 월당" : "");
+    return `<tr${top || tpm ? ` style="background:color-mix(in srgb,var(--buy) ${top ? 9 : 5}%,transparent)"` : ""}>
+      <td${top || tpm ? ' style="font-weight:650"' : ""}>${d.label}${mark}</td>
       <td>${d.n}</td>
       <td class="${d.median >= 0 ? "pos" : "neg"}">${pc(d.median)}</td>
       <td style="color:var(--ink-3)">${pc(d.base_median)}</td>
       <td class="${d.excess >= 0 ? "pos" : "neg"}"${top ? ' style="font-weight:650"' : ""}>${pc(d.excess)}</td>
+      <td class="${d.excess_pm >= 0 ? "pos" : "neg"}"${tpm ? ' style="font-weight:650"' : ""}>${
+        d.excess_pm == null ? "—" : pc(d.excess_pm) + "/월"}</td>
       <td>${(d.hit * 100).toFixed(0)}%<span style="color:var(--ink-3)"> / ${(d.base_hit * 100).toFixed(0)}%</span></td>
       <td style="color:var(--ink-3)">${d.peer_median == null ? "—"
         : `${pc(d.peer_median)} (n=${d.peer_n})`}</td></tr>`;
   }).join("");
+  /* 월당 정점은 국면 하나에 흔들린다. 정점만 굵게 칠하고 끝내면
+     그 불안정성이 안 보인다. 하나씩 뺐을 때의 표를 그대로 붙인다. */
+  const vote = TC.peak_pm_vote || {};
+  const nEp = Object.values(vote).reduce((a, b) => a + b, 0);
+  document.getElementById("tcPmNote").innerHTML = !nEp ? "" :
+    `<b>월당 정점은 국면 하나에 흔들린다.</b> 국면을 하나씩 빼고 다시 고르면
+     ${Object.entries(vote).sort((a, b) => b[1] - a[1])
+       .map(([k, v]) => `<b>${k}</b> ${v}회`).join(" · ")}
+     로 갈린다(총 ${nEp}회). 정점 하나를 답으로 읽으면 안 되고,
+     <b>1~3개월 구간이 시간 대비 효율이 높다</b>는 정도가 표본이 감당하는 결론이다.`;
 
   document.getElementById("tcNote").innerHTML =
     (TC.verdict || []).map(x => `<b>·</b> ${x}`).join("<br><br>");

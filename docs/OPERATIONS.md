@@ -10,9 +10,14 @@
   2. holding_returns.py     보유기간별 수익률 갱신
   3. signal_probability.py  주중 신호 확률 (이 스텝이 직접 출력한다)
   4. position_tracker.py    전 구간 재생 → 포지션·동작 확정
-  5. data/ 자동 커밋
-  6. 알림 발송
+  5. trend_compare.py       지금 흐름 vs 과거 신호 이후 (continue-on-error)
+  6. data/ 자동 커밋
+  7. 알림 발송
 ```
+
+> 5번만 `continue-on-error: true` 다. 화면용 보조 모듈이라
+> **여기서 죽어도 알림은 나가야 한다.** 대신 신호 집합에 의존하므로
+> `signal_check.py` 뒤에 두고, 신호 건수를 재현 못 하면 스스로 죽는다.
 
 > Actions 의 cron 은 정시에 뜨지 않는다. 30~60분 밀리는 것이 정상이다.
 > 실측 22:48 UTC. 그래서 실제 실행 시각을 로그와 알림에 남긴다.
