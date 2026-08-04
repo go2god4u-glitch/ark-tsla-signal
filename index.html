@@ -211,6 +211,22 @@
       <div style="padding:18px 20px" id="tcStrip"></div>
     </div>
     <div class="card table-scroll" style="margin-top:14px">
+      <div class="card-head"><span class="card-title" id="tcFwdHead"></span>
+        <span class="card-title">구간 하한이 무작위보다 위일 때만 '우위'</span></div>
+      <table><thead><tr>
+        <th scope="col">앞으로</th><th scope="col">오른 국면</th><th scope="col">비율</th>
+        <th scope="col">95% 구간</th><th scope="col">무작위 진입</th>
+        <th scope="col">차이</th><th scope="col">판정</th>
+      </tr></thead><tbody id="tcFwd"></tbody></table>
+    </div>
+
+    <div class="card table-scroll" style="margin-top:14px">
+      <div class="card-head"><span class="card-title">목표까지 걸린 거래일 · 그 사이 최악</span>
+        <span class="card-title" id="tcWaitNow"></span></div>
+      <table><thead><tr id="tcWaitHead"></tr></thead><tbody id="tcWait"></tbody></table>
+    </div>
+
+    <div class="card table-scroll" style="margin-top:14px">
       <div class="card-head"><span class="card-title">지금 위치가 앞날을 말해주는가</span></div>
       <table><thead><tr>
         <th scope="col">시점</th><th scope="col">n</th><th scope="col">피어슨</th>
@@ -751,6 +767,50 @@ function renderTrend() {
       ${TC.peer_n ? `같은 '${TC.group}' 국면 ${TC.peer_n}개만 보면 중앙값
         <b>${pc(TC.peer_median)}</b> 다.` : ""}
     </div>`;
+
+  /* ---- 앞으로 오를 비율 (무작위 대비) ----
+     '확률 ~%' 로만 쓰면 n=9 라는 사실이 숨는다. 원자료(x/n)와 95% 구간,
+     같은 기간 무작위 진입을 나란히 둔다. 무작위보다 못하면 신호가 아니라 시장이다. */
+  document.getElementById("tcFwdHead").textContent =
+    `지금(${TC.day}거래일차)부터 앞으로 오를 비율 · 국면 ${TC.n_episodes}개`;
+  document.getElementById("tcFwd").innerHTML = (TC.forward || []).map(d => {
+    const win = d.verdict === "우위 있다";
+    const none = d.verdict === "우위 없다";
+    return `<tr>
+      <td>${d.label}</td><td>${d.up}/${d.n}</td>
+      <td class="${win ? "pos" : ""}">${(d.rate * 100).toFixed(0)}%</td>
+      <td style="color:var(--ink-3)">${(d.ci_lo * 100).toFixed(0)}~${(d.ci_hi * 100).toFixed(0)}%</td>
+      <td style="color:var(--ink-3)">${(d.base * 100).toFixed(0)}%</td>
+      <td class="${d.edge >= 0 ? "pos" : "neg"}">${d.edge >= 0 ? "+" : ""}${(d.edge * 100).toFixed(0)}%p</td>
+      <td style="${win ? "font-weight:650" : none ? "color:var(--ink-3)" : ""}">${d.verdict}</td>
+    </tr>`;
+  }).join("");
+
+  /* ---- 목표 도달 소요일 + 그 사이 최악 ---- */
+  const tg = TC.targets || [];
+  document.getElementById("tcWaitHead").innerHTML =
+    `<th scope="col">진입</th>` + tg.map(t => `<th scope="col">+${t}%</th>`).join("")
+    + `<th scope="col">6개월 내 최악</th>`;
+  document.getElementById("tcWaitNow").textContent =
+    `지금 ${TC.day}거래일까지 최악 ${(TC.mae_now * 100).toFixed(1)}%`;
+  const wrows = (TC.wait || []).map(d => `<tr>
+      <td>${d.entry}</td>`
+    + tg.map(t => {
+        const v = d.reach[t];
+        return `<td>${v == null ? `<span style="color:var(--ink-3)">미도달</span>` : v + "일"}</td>`;
+      }).join("")
+    + `<td class="neg">${(d.mae6 * 100).toFixed(1)}%</td></tr>`).join("");
+  const med = `<tr style="border-top:1px solid var(--line)">
+      <td style="font-weight:650">중앙값</td>`
+    + tg.map(t => {
+        const v = (TC.wait_median || {})[t];
+        return `<td style="font-weight:650">${v == null ? "—" : v + "일"}</td>`;
+      }).join("")
+    + `<td class="neg" style="font-weight:650">${(TC.mae6_median * 100).toFixed(1)}%</td></tr>
+    <tr><td style="color:var(--ink-3)">도달 국면</td>`
+    + tg.map(t => `<td style="color:var(--ink-3)">${(TC.wait_reached || {})[t]}/${TC.n_episodes}</td>`).join("")
+    + `<td></td></tr>`;
+  document.getElementById("tcWait").innerHTML = wrows + med;
 
   /* ---- 예측력 표 ---- */
   document.getElementById("tcPred").innerHTML = (TC.predictive || []).map(d => {

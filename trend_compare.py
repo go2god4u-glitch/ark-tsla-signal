@@ -52,6 +52,17 @@ HORIZONS = (5, 10, 21, 42, 63, 126, 252)   # 거래일: 1주 1개월 2개월 3�
 OUTCOME = 126                              # '앞날' 의 기준 지평 = 6개월
 DEEP_CUT = -45.0                           # 진입 낙폭 깊음/얕음 경계
 EARLY = (5, 10, 21, 42)                    # 예측력을 물어볼 이른 시점들
+FWD = (5, 21, 63, 126, 252)                # '지금부터 앞으로' 를 물어볼 지평
+TARGETS = (10, 20, 30, 50)                 # 목표 수익률(%) — 도달까지 며칠 걸렸나
+
+# 넣지 않기로 한 지표들 (재봤고, 의미가 없어서 뺐다):
+#   경로 모양 유사도 매칭 — 지금 며칠치 점 몇 개로 '닮은 국면'을 고르는 것은
+#     잡음이다. 게다가 닮은 것만 골라 그 결과를 보면 표본이 2~3개로 줄어
+#     무슨 값이든 나온다.
+#   '처음 +로 돌아선 날' — 과거 9개 국면 전부 1~6일이었다. 거의 항상 참이라
+#     정보가 없다.
+#   1주 앞 확률은 표에 남기되 우위가 없다는 사실을 그대로 보여준다
+#     (4/9=44% vs 무작위 47%). 지우면 '언제부터 우위가 생기는지' 를 알 수 없다.
 
 
 def label(k: int) -> str:
@@ -109,6 +120,32 @@ def loo_range(a, b):
     v = [float(np.corrcoef(np.delete(a, i), np.delete(b, i))[0, 1])
          for i in range(len(a))]
     return min(v), max(v)
+
+
+def wilson(k: int, n: int, z: float = 1.96):
+    """이항 비율의 95% 신뢰구간.
+
+    n=9 에서 '9/9 = 100%' 를 그냥 100% 라고 쓰면 거짓말이다. 실제 구간은
+    70~100% 다. 확률처럼 보이는 숫자일수록 구간을 같이 줘야 한다.
+    """
+    if n == 0:
+        return 0.0, 1.0
+    p = k / n
+    den = 1 + z * z / n
+    c = (p + z * z / (2 * n)) / den
+    h = z / den * np.sqrt(p * (1 - p) / n + z * z / (4 * n * n))
+    return max(0.0, c - h), min(1.0, c + h)
+
+
+def base_up_rate(V: np.ndarray, lo: int, hi: int, k: int) -> float:
+    """같은 기간 무작위 진입의 상승 비율.
+
+    기준을 15년 전체에서 뽑으면 안 된다. 테슬라는 2010년 이후 200배 올랐고,
+    국면이 다른 표본을 섞으면 어떤 신호든 좋아 보이거나 나빠 보인다.
+    신호가 존재한 구간에서만 뽑는다. (DECISIONS '비교 기준은 같은 기간에서')
+    """
+    pool = np.arange(lo, max(lo + 1, hi - k))
+    return float((V[pool + k] / V[pool] - 1 > 0).mean())
 
 
 def verdict_of(pear: float, sp: float, lo, hi) -> str:
@@ -265,10 +302,91 @@ def main() -> None:
                              "peer_n": len(pv)})
 
     # ================================================================
-    # 4. 판정 — 전부 데이터에서 만든 문장
+    # 4. 지금부터 앞으로 — 무작위 진입과 견줘 우위가 있는가
     # ================================================================
     print("\n" + "=" * 78)
-    print("4. 결론")
+    print(f"4. 지금({day}거래일차)부터 앞으로 오를 비율")
+    print("=" * 78)
+    print("   '확률' 처럼 보이지만 국면 9개를 센 것이다. 한 개가 11%p 다.")
+    print("   그래서 원자료(x/n)와 95% 구간을 같이 싣고,")
+    print("   같은 기간 무작위 진입과 견준다 — 그보다 못하면 신호가 아니라 시장이다.")
+    print(f"   {'앞으로':<8s}{'국면':>9s}{'비율':>7s}{'95% 구간':>14s}"
+          f"{'무작위':>8s}{'차이':>8s}   판정")
+    lo_i, hi_i = int(past_ep["i"].min()), len(V) - 1
+    fwd_rows = []
+    for k in FWD:
+        # 이름 주의: 위쪽 `vals` 는 '같은 나이 시점의 값들' 이라 덮어쓰면 안 된다.
+        fwd_v = [V[i + day + k] / V[i + day] - 1
+                 for i in past_ep["i"] if i + day + k < len(V)]
+        if len(fwd_v) < 4:
+            continue
+        a_ = np.array(fwd_v)
+        up = int((a_ > 0).sum())
+        cl, cu = wilson(up, len(a_))
+        bp = base_up_rate(V, lo_i, hi_i, k)
+        edge = up / len(a_) - bp
+        # 구간 하한이 무작위보다 위일 때만 '우위' 라고 쓴다.
+        vd = ("우위 있다" if cl > bp else
+              "우위 없다" if up / len(a_) <= bp else "말할 수 없다")
+        print(f"   {label(k):<8s}{f'{up}/{len(a_)}':>9s}{up/len(a_)*100:>6.0f}%"
+              f"{f'{cl*100:.0f}~{cu*100:.0f}%':>14s}{bp*100:>7.0f}%"
+              f"{edge*100:>+7.0f}%p   {vd}")
+        fwd_rows.append({"k": k, "label": label(k), "n": len(a_), "up": up,
+                         "rate": up / len(a_), "ci_lo": cl, "ci_hi": cu,
+                         "base": bp, "edge": edge, "verdict": vd,
+                         "median": float(np.median(a_))})
+    n_var = len({r["n"] for r in fwd_rows})
+    if n_var > 1:
+        print(f"   * 지평마다 n 이 다르다(가장 최근 국면은 아직 12개월이 안 지났다).")
+        print(f"     표본이 바뀌면 엄밀한 비교가 아니다 — 8개로 고정해도 결론은 같았다.")
+
+    # ================================================================
+    # 5. 얼마나 기다렸나 / 얼마나 견뎠나
+    # ================================================================
+    print("\n" + "=" * 78)
+    print("5. 목표 도달까지 걸린 거래일, 그리고 그 사이 최악")
+    print("=" * 78)
+    print("   '기다리면 오르나' 에 대한 실제 답이다. 진입가 대비 목표다.")
+    print(f"   {'진입':<12s}" + "".join(f"{f'+{t}%':>9s}" for t in TARGETS)
+          + f"{'6개월 내 최악':>14s}")
+    reach = {t: [] for t in TARGETS}
+    wait_rows = []
+    for _, r in past_ep.iterrows():
+        i = int(r["i"])
+        H = min(252, len(V) - 1 - i)
+        pth = np.array([V[i + j] / V[i] - 1 for j in range(H + 1)])
+        row, hit = "", {}
+        for t in TARGETS:
+            wq = np.where(pth >= t / 100)[0]
+            if len(wq):
+                reach[t].append(int(wq[0]))
+                hit[t] = int(wq[0])
+                row += f"{int(wq[0]):>7d}일"
+            else:
+                hit[t] = None
+                row += f"{'미도달':>9s}"
+        mae6 = float(pth[:min(127, len(pth))].min())
+        print(f"   {r['entry']:%Y-%m-%d}{row}{mae6*100:>13.1f}%")
+        wait_rows.append({"entry": r["entry"].strftime("%Y-%m-%d"),
+                          "reach": hit, "mae6": mae6})
+    print(f"   {'중앙값':<12s}"
+          + "".join((f"{int(np.median(reach[t])):>7d}일" if reach[t] else f"{'—':>9s}")
+                    for t in TARGETS)
+          + f"{np.median([w['mae6'] for w in wait_rows])*100:>13.1f}%")
+    print(f"   {'도달 국면':<12s}"
+          + "".join(f"{len(reach[t])}/{len(past_ep)}".rjust(9) for t in TARGETS))
+    cur_path = np.array([V[int(cur["i"]) + j] / V[int(cur["i"])] - 1
+                         for j in range(day + 1)])
+    print(f"   {'지금':<12s}" + " " * (9 * len(TARGETS))
+          + f"{cur_path.min()*100:>13.1f}%  <- {day}거래일까지의 최악")
+    print("   ** 최악은 지평을 밝혀야 한다. 같은 국면도 1개월 기준과 12개월 기준이")
+    print("      크게 다르다(2022-02-28: 1개월 -12.0% / 12개월 -62.7%).")
+
+    # ================================================================
+    # 6. 판정 — 전부 데이터에서 만든 문장
+    # ================================================================
+    print("\n" + "=" * 78)
+    print("6. 결론")
     print("=" * 78)
     med = float(np.median(arr))
     where = ("중앙값보다 위" if cur_ret > med else
@@ -307,6 +425,30 @@ def main() -> None:
                 f"피어슨 {p['r']:+.2f} 이지만 순위상관 {p['spearman']:+.2f}, "
                 f"하나씩 빼면 {p['loo_lo']:+.2f}~{p['loo_hi']:+.2f} 로 흔들린다 — "
                 f"{p['verdict']}. 지금 위치로 앞날을 점치면 안 된다.")
+    win = [r for r in fwd_rows if r["verdict"] == "우위 있다"]
+    if win:
+        lines.append(
+            "지금부터 앞으로는, 무작위 진입 대비 우위가 "
+            + " · ".join(f"{r['label']} {r['up']}/{r['n']}"
+                         f"(구간 {r['ci_lo']*100:.0f}~{r['ci_hi']*100:.0f}%, "
+                         f"무작위 {r['base']*100:.0f}%)" for r in win)
+            + " 에서 확인된다. 구간 하한이 무작위보다 위일 때만 '우위' 라고 적었다."
+            + (f" 반면 " + " · ".join(
+                f"{r['label']}({r['rate']*100:.0f}% vs 무작위 {r['base']*100:.0f}%)"
+                for r in fwd_rows if r["verdict"] == "우위 없다")
+               + " 는 우위가 없다 — 기다림에도 유효 구간이 있다는 뜻이다."
+               if any(r["verdict"] == "우위 없다" for r in fwd_rows) else ""))
+    mr = {t: (int(np.median(reach[t])) if reach[t] else None) for t in TARGETS}
+    got = [t for t in TARGETS if len(reach[t]) == len(past_ep)]
+    if got:
+        lines.append(
+            "과거 국면 "
+            + " · ".join(f"+{t}% 는 {len(reach[t])}/{len(past_ep)}개가 중앙값 {mr[t]}거래일"
+                         for t in got)
+            + " 만에 닿았다. 다만 그 사이 6개월 내 최악은 중앙값 "
+            + f"{np.median([x['mae6'] for x in wait_rows])*100:.1f}% 였고, "
+            + f"지금은 {day}거래일까지 {cur_path.min()*100:.1f}% 다. "
+            + "기다리는 동안 견뎌야 하는 폭이다.")
     lines.append(
         f"표본은 국면 {len(arr)}개이고 그중 큰 수익은 2023년 회복장에 몰려 있다. "
         f"한 국면이 들고 나면 중앙값도 상관도 크게 움직인다. "
@@ -330,6 +472,14 @@ def main() -> None:
         "confound": {"dd_outcome": dd_out, "dd_early": dd_early,
                      "within_group": within, "within_n": int(grp_mask.sum())},
         "horizons": horizon_rows,
+        "forward": fwd_rows,
+        "targets": list(TARGETS),
+        "wait": wait_rows,
+        "wait_median": {str(t): (int(np.median(reach[t])) if reach[t] else None)
+                        for t in TARGETS},
+        "wait_reached": {str(t): len(reach[t]) for t in TARGETS},
+        "mae_now": float(cur_path.min()),
+        "mae6_median": float(np.median([x["mae6"] for x in wait_rows])),
         "verdict": lines,
     }
     with open(OUT, "w") as f:
