@@ -1,9 +1,9 @@
 {
-  "as_of": "2026-08-03",
+  "as_of": "2026-08-04",
   "entry": "2026-07-27",
   "signal": "2026-07-24",
-  "day": 5,
-  "cur_ret": 0.041588465496395166,
+  "day": 6,
+  "cur_ret": 0.058631410682494556,
   "cur_dd": -36.10067860308386,
   "group": "\uc595\uc74c",
   "deep_cut": -45.0,
@@ -14,60 +14,60 @@
       "entry": "2022-02-28",
       "dd": -34.15209302259798,
       "grp": "\uc595\uc74c",
-      "ret": -0.07565230388022315
+      "ret": -0.052881976250752416
     },
     {
       "entry": "2024-01-29",
       "dd": -37.529828087636865,
       "grp": "\uc595\uc74c",
-      "ret": -0.05169431464834218
-    },
-    {
-      "entry": "2024-04-01",
-      "dd": -40.07295442806069,
-      "grp": "\uc595\uc74c",
-      "ret": -0.012783960036289455
+      "ret": -0.030534681799132213
     },
     {
       "entry": "2025-07-21",
       "dd": -31.302879181523945,
       "grp": "\uc595\uc74c",
-      "ret": -0.008828256515260202
+      "ret": -0.02219239016124175
     },
     {
       "entry": "2023-04-24",
       "dd": -50.907037103188,
       "grp": "\uae4a\uc74c",
-      "ret": -0.004429413763061385
+      "ret": -0.013780408804119348
     },
     {
-      "entry": "2025-08-18",
-      "dd": -31.113239767968203,
+      "entry": "2024-04-01",
+      "dd": -40.07295442806069,
       "grp": "\uc595\uc74c",
-      "ret": 0.03413295833753316
+      "ret": 0.009473825194296515
     },
     {
       "entry": "2023-03-20",
       "dd": -52.822908508253576,
       "grp": "\uae4a\uc74c",
-      "ret": 0.04671212855985685
+      "ret": 0.03241474729280358
+    },
+    {
+      "entry": "2025-08-18",
+      "dd": -31.113239767968203,
+      "grp": "\uc595\uc74c",
+      "ret": 0.049260083498117835
     },
     {
       "entry": "2023-01-09",
       "dd": -70.38893185869588,
       "grp": "\uae4a\uc74c",
-      "ret": 0.09785429722458083
+      "ret": 0.07522753935680315
     },
     {
       "entry": "2025-03-17",
       "dd": -47.9056384448487,
       "grp": "\uae4a\uc74c",
-      "ret": 0.16965682565251172
+      "ret": 0.21062149194815327
     }
   ],
-  "rank": 7,
-  "median": -0.004429413763061385,
-  "peer_median": -0.012783960036289455,
+  "rank": 8,
+  "median": 0.009473825194296515,
+  "peer_median": -0.02219239016124175,
   "peer_n": 5,
   "predictive": [
     {
@@ -77,7 +77,7 @@
       "r": 0.7780770600706272,
       "spearman": 0.7666666666666667,
       "loo_lo": 0.7181923085483733,
-      "loo_hi": 0.8756954251982096,
+      "loo_hi": 0.8756954251982093,
       "verdict": "\uad00\uacc4\uac00 \ubc84\ud2f4\ub2e4"
     },
     {
@@ -86,8 +86,8 @@
       "n": 9,
       "r": 0.8491102337588066,
       "spearman": 0.6833333333333333,
-      "loo_lo": 0.661137316322415,
-      "loo_hi": 0.9269938034809017,
+      "loo_lo": 0.6611373163224151,
+      "loo_hi": 0.9269938034809015,
       "verdict": "\uad00\uacc4\uac00 \ubc84\ud2f4\ub2e4"
     },
     {
@@ -104,7 +104,7 @@
       "k": 42,
       "label": "2\uac1c\uc6d4",
       "n": 9,
-      "r": 0.4792293207267812,
+      "r": 0.47922932072678115,
       "spearman": 0.5166666666666667,
       "loo_lo": 0.3434351885398068,
       "loo_hi": 0.6732160613628159,
@@ -113,7 +113,7 @@
   ],
   "confound": {
     "dd_outcome": -0.8448860012329381,
-    "dd_early": -0.5671726237175079,
+    "dd_early": -0.567172623717508,
     "within_group": 0.577349311594072,
     "within_n": 5
   },
@@ -126,9 +126,9 @@
       "min": -0.07565230388022315,
       "max": 0.16965682565251172,
       "hit": 0.4444444444444444,
-      "base_median": -0.004754129854271261,
-      "base_hit": 0.47058823529411764,
-      "excess": 0.00032471609120987566,
+      "base_median": -0.004709280410295669,
+      "base_hit": 0.47106690777576854,
+      "excess": 0.00027986664723428367,
       "peer_median": -0.012783960036289455,
       "peer_n": 5
     },
@@ -140,9 +140,9 @@
       "min": -0.11955013648817547,
       "max": 0.2013860183904277,
       "hit": 0.4444444444444444,
-      "base_median": -0.0007109732145967884,
-      "base_hit": 0.4990909090909091,
-      "excess": -0.013954023906748159,
+      "base_median": -0.0010288235434179338,
+      "base_hit": 0.4986376021798365,
+      "excess": -0.013636173577927013,
       "peer_median": -0.05854053712574181,
       "peer_n": 5
     },
@@ -154,9 +154,9 @@
       "min": -0.014515708933748317,
       "max": 0.6806378803366666,
       "hit": 0.8888888888888888,
-      "base_median": -0.008599114824977216,
-      "base_hit": 0.4830119375573921,
-      "excess": 0.07624335865967546,
+      "base_median": -0.008778530029359521,
+      "base_hit": 0.48256880733944957,
+      "excess": 0.07642277386405777,
       "peer_median": 0.058188870457966724,
       "peer_n": 5
     },
@@ -168,9 +168,9 @@
       "min": -0.0792960769414458,
       "max": 0.5785912106185025,
       "hit": 0.7777777777777778,
-      "base_median": -0.0004767731446605472,
-      "base_hit": 0.5,
-      "excess": 0.26946523092413954,
+      "base_median": -0.001242746890169899,
+      "base_hit": 0.49953227315247895,
+      "excess": 0.2702312046696489,
       "peer_median": 0.02037434106014535,
       "peer_n": 5
     },
@@ -182,9 +182,9 @@
       "min": -0.1272934068212218,
       "max": 0.6319901187256738,
       "hit": 0.8888888888888888,
-      "base_median": 0.01423147812979697,
-      "base_hit": 0.5195797516714422,
-      "excess": 0.32313042213739096,
+      "base_median": 0.01386557601326599,
+      "base_hit": 0.5190839694656488,
+      "excess": 0.32349632425392194,
       "peer_median": 0.19769432227098704,
       "peer_n": 5
     },
@@ -196,9 +196,9 @@
       "min": -0.018347254569774263,
       "max": 1.2709359427048188,
       "hit": 0.8888888888888888,
-      "base_median": 0.035885871952411,
-      "base_hit": 0.5355691056910569,
-      "excess": 0.26882035904978674,
+      "base_median": 0.0358830137292141,
+      "base_hit": 0.5350253807106599,
+      "excess": 0.26882321727298364,
       "peer_median": 0.22723476199412462,
       "peer_n": 5
     },
@@ -210,9 +210,9 @@
       "min": -0.36955300267149327,
       "max": 1.3822052320177147,
       "hit": 0.8888888888888888,
-      "base_median": 0.13604029680733287,
-      "base_hit": 0.6297502714440825,
-      "excess": 0.23886160355252306,
+      "base_median": 0.13530809024861123,
+      "base_hit": 0.6290672451193059,
+      "excess": 0.2395938101112447,
       "peer_median": 0.20572258305309266,
       "peer_n": 5
     },
@@ -224,9 +224,9 @@
       "min": -0.30113852164052546,
       "max": 1.0964752219888965,
       "hit": 0.625,
-      "base_median": 0.19646286399335255,
-      "base_hit": 0.6643356643356644,
-      "excess": 0.17969528803564916,
+      "base_median": 0.19593367211684032,
+      "base_hit": 0.6647264260768335,
+      "excess": 0.1802244799121614,
       "peer_median": 0.3761581520290017,
       "peer_n": 4
     }
@@ -238,40 +238,40 @@
       "k": 5,
       "label": "1\uc8fc",
       "n": 9,
-      "up": 4,
-      "rate": 0.4444444444444444,
-      "ci_lo": 0.188775429471914,
-      "ci_hi": 0.7333526542559703,
-      "base": 0.47058823529411764,
-      "edge": -0.02614379084967322,
+      "up": 3,
+      "rate": 0.3333333333333333,
+      "ci_lo": 0.12058159868274287,
+      "ci_hi": 0.6458026525009103,
+      "base": 0.47106690777576854,
+      "edge": -0.13773357444243522,
       "verdict": "\uc6b0\uc704 \uc5c6\ub2e4",
-      "median": -0.047490606394353985
+      "median": -0.02730468249390372
     },
     {
       "k": 21,
       "label": "1\uac1c\uc6d4",
       "n": 9,
-      "up": 6,
-      "rate": 0.6666666666666666,
-      "ci_lo": 0.3541973474990897,
-      "ci_hi": 0.8794184013172571,
-      "base": 0.4830119375573921,
-      "edge": 0.18365472910927455,
+      "up": 5,
+      "rate": 0.5555555555555556,
+      "ci_lo": 0.2666473457440297,
+      "ci_hi": 0.811224570528086,
+      "base": 0.48256880733944957,
+      "edge": 0.07298674821610601,
       "verdict": "\ub9d0\ud560 \uc218 \uc5c6\ub2e4",
-      "median": 0.08010079358451305
+      "median": 0.08841840852166283
     },
     {
       "k": 63,
       "label": "3\uac1c\uc6d4",
       "n": 9,
-      "up": 8,
-      "rate": 0.8888888888888888,
-      "ci_lo": 0.5649937852319399,
-      "ci_hi": 0.9801096286728695,
-      "base": 0.5195797516714422,
-      "edge": 0.3693091372174466,
-      "verdict": "\uc6b0\uc704 \uc788\ub2e4",
-      "median": 0.3044680146947685
+      "up": 7,
+      "rate": 0.7777777777777778,
+      "ci_lo": 0.45258334367280534,
+      "ci_hi": 0.9367762376877729,
+      "base": 0.5190839694656488,
+      "edge": 0.25869380831212896,
+      "verdict": "\ub9d0\ud560 \uc218 \uc5c6\ub2e4",
+      "median": 0.3544055548798606
     },
     {
       "k": 126,
@@ -281,10 +281,10 @@
       "rate": 1.0,
       "ci_lo": 0.7008472464490407,
       "ci_hi": 1.0,
-      "base": 0.5355691056910569,
-      "edge": 0.46443089430894313,
+      "base": 0.5350253807106599,
+      "edge": 0.46497461928934014,
       "verdict": "\uc6b0\uc704 \uc788\ub2e4",
-      "median": 0.2727177843929338
+      "median": 0.2712088212720696
     },
     {
       "k": 252,
@@ -294,10 +294,10 @@
       "rate": 0.625,
       "ci_lo": 0.30573785458380187,
       "ci_hi": 0.863158240538479,
-      "base": 0.6643356643356644,
-      "edge": -0.03933566433566438,
+      "base": 0.6647264260768335,
+      "edge": -0.03972642607683352,
       "verdict": "\uc6b0\uc704 \uc5c6\ub2e4",
-      "median": 0.24929048425926392
+      "median": 0.20715380502766279
     }
   ],
   "targets": [
@@ -413,12 +413,12 @@
   "mae_now": -0.03524996395270241,
   "mae6_median": -0.0787238153987938,
   "verdict": [
-    "\uc9c0\uae08\uc740 \uc9c4\uc785 5\uac70\ub798\uc77c\ucc28\uc774\uace0 +4.2% \ub2e4. \uacfc\uac70 \uad6d\uba74 9\uac1c\uc758 \uac19\uc740 \uc2dc\uc810 \uc911\uc559\uac12\uc740 -0.4% \uc774\ubbc0\ub85c \uc911\uc559\uac12\ubcf4\ub2e4 \uc704, \uacfc\uac70 \ubc94\uc704(-7.6% ~ +17.0%) \uc548\uc5d0 \uc788\ub2e4.",
-    "\uc9c4\uc785 \ub099\ud3ed\uc774 \ube44\uc2b7\ud55c '\uc595\uc74c' \uad6d\uba74 5\uac1c\ub9cc \ubcf4\uba74 \uac19\uc740 \uc2dc\uc810 \uc911\uc559\uac12\uc774 -1.3% \uc774\uace0, \uc9c0\uae08\uc740 \uadf8\uc911 6\uac1c \uc911 6\ubc88\uc9f8\ub2e4. \ub099\ud3ed\uc774 \uae4a\uc744\uc218\ub85d \uc774\ud6c4 \uc218\uc775\uc774 \ucef8\uc73c\ubbc0\ub85c(\uc9c4\uc785\ub099\ud3ed -> 6\uac1c\uc6d4 \uc0c1\uad00 -0.84), \uc804\uccb4\ub97c \ubb49\ub6b1\uadf8\ub9b0 \uc911\uc559\uac12\uc740 \uc9c0\uae08 \uc0c1\ud669\ubcf4\ub2e4 \ub099\uad00\uc801\uc774\ub2e4. \uac19\uc740 \uadf8\ub8f9\ub07c\ub9ac \ube44\uad50\ud55c \ucabd\uc774 \ub9de\ub2e4.",
+    "\uc9c0\uae08\uc740 \uc9c4\uc785 6\uac70\ub798\uc77c\ucc28\uc774\uace0 +5.9% \ub2e4. \uacfc\uac70 \uad6d\uba74 9\uac1c\uc758 \uac19\uc740 \uc2dc\uc810 \uc911\uc559\uac12\uc740 +0.9% \uc774\ubbc0\ub85c \uc911\uc559\uac12\ubcf4\ub2e4 \uc704, \uacfc\uac70 \ubc94\uc704(-5.3% ~ +21.1%) \uc548\uc5d0 \uc788\ub2e4.",
+    "\uc9c4\uc785 \ub099\ud3ed\uc774 \ube44\uc2b7\ud55c '\uc595\uc74c' \uad6d\uba74 5\uac1c\ub9cc \ubcf4\uba74 \uac19\uc740 \uc2dc\uc810 \uc911\uc559\uac12\uc774 -2.2% \uc774\uace0, \uc9c0\uae08\uc740 \uadf8\uc911 6\uac1c \uc911 6\ubc88\uc9f8\ub2e4. \ub099\ud3ed\uc774 \uae4a\uc744\uc218\ub85d \uc774\ud6c4 \uc218\uc775\uc774 \ucef8\uc73c\ubbc0\ub85c(\uc9c4\uc785\ub099\ud3ed -> 6\uac1c\uc6d4 \uc0c1\uad00 -0.84), \uc804\uccb4\ub97c \ubb49\ub6b1\uadf8\ub9b0 \uc911\uc559\uac12\uc740 \uc9c0\uae08 \uc0c1\ud669\ubcf4\ub2e4 \ub099\uad00\uc801\uc774\ub2e4. \uac19\uc740 \uadf8\ub8f9\ub07c\ub9ac \ube44\uad50\ud55c \ucabd\uc774 \ub9de\ub2e4.",
     "1\uc8fc\ucc28 \uc218\uc775\ub960\uacfc 6\uac1c\uc6d4 \uacb0\uacfc\ub294 \uacfc\uac70 9\uac1c \uad6d\uba74\uc5d0\uc11c \ud53c\uc5b4\uc2a8 +0.78 / \uc21c\uc704 +0.77, \ud558\ub098\uc529 \ube7c\ub3c4 +0.72~+0.88 \ub85c \ubc29\ud5a5\uc774 \uc720\uc9c0\ub41c\ub2e4 \u2014 \ucd08\ubc18 \ud750\ub984\uc774 \ub05d\uc744 \uc5b4\ub290 \uc815\ub3c4 \uc608\uace0\ud588\ub2e4\ub294 \ub73b\uc774\ub2e4. \ub099\ud3ed \uadf8\ub8f9 \uc548\uc5d0\uc11c\ub9cc \ubd10\ub3c4 +0.58 \ub85c \ub0a8\uc73c\ubbc0\ub85c \ub099\ud3ed\uc758 \uadf8\ub9bc\uc790\ub9cc\uc740 \uc544\ub2c8\uc9c0\ub9cc, \uadf8 \ud45c\ubcf8\uc740 5\uac1c\ubfd0\uc774\ub2e4.",
-    "\uc9c0\uae08\ubd80\ud130 \uc55e\uc73c\ub85c\ub294, \ubb34\uc791\uc704 \uc9c4\uc785 \ub300\ube44 \uc6b0\uc704\uac00 3\uac1c\uc6d4 8/9(\uad6c\uac04 56~98%, \ubb34\uc791\uc704 52%) \u00b7 6\uac1c\uc6d4 9/9(\uad6c\uac04 70~100%, \ubb34\uc791\uc704 54%) \uc5d0\uc11c \ud655\uc778\ub41c\ub2e4. \uad6c\uac04 \ud558\ud55c\uc774 \ubb34\uc791\uc704\ubcf4\ub2e4 \uc704\uc77c \ub54c\ub9cc '\uc6b0\uc704' \ub77c\uace0 \uc801\uc5c8\ub2e4. \ubc18\uba74 1\uc8fc(44% vs \ubb34\uc791\uc704 47%) \u00b7 12\uac1c\uc6d4(62% vs \ubb34\uc791\uc704 66%) \ub294 \uc6b0\uc704\uac00 \uc5c6\ub2e4 \u2014 \uae30\ub2e4\ub9bc\uc5d0\ub3c4 \uc720\ud6a8 \uad6c\uac04\uc774 \uc788\ub2e4\ub294 \ub73b\uc774\ub2e4.",
+    "\uc9c0\uae08\ubd80\ud130 \uc55e\uc73c\ub85c\ub294, \ubb34\uc791\uc704 \uc9c4\uc785 \ub300\ube44 \uc6b0\uc704\uac00 6\uac1c\uc6d4 9/9(\uad6c\uac04 70~100%, \ubb34\uc791\uc704 54%) \uc5d0\uc11c \ud655\uc778\ub41c\ub2e4. \uad6c\uac04 \ud558\ud55c\uc774 \ubb34\uc791\uc704\ubcf4\ub2e4 \uc704\uc77c \ub54c\ub9cc '\uc6b0\uc704' \ub77c\uace0 \uc801\uc5c8\ub2e4. \ubc18\uba74 1\uc8fc(33% vs \ubb34\uc791\uc704 47%) \u00b7 12\uac1c\uc6d4(62% vs \ubb34\uc791\uc704 66%) \ub294 \uc6b0\uc704\uac00 \uc5c6\ub2e4 \u2014 \uae30\ub2e4\ub9bc\uc5d0\ub3c4 \uc720\ud6a8 \uad6c\uac04\uc774 \uc788\ub2e4\ub294 \ub73b\uc774\ub2e4.",
     "'\uc5b8\uc81c\uae4c\uc9c0 \ub4e4\uace0 \uc788\uc5b4\uc57c \ud558\ub098' \ub294 \ub450 \uc9c8\ubb38\uc774 \uc11e\uc774\uae30 \uc27d\ub2e4. \uc808\ub300 \uc218\uc775\uc774 \uac00\uc7a5 \ud070 \uc9c0\ud3c9\uc740 12\uac1c\uc6d4(+37.6%) \uc9c0\ub9cc, \uac19\uc740 \uae30\uac04 \ubb34\uc791\uc704 \uc9c4\uc785\uc744 \ube7c\uba74 \ucd08\uacfc\uac00 \uac00\uc7a5 \ud070 \uc9c0\ud3c9\uc740 3\uac1c\uc6d4(+32.3%p) \ub2e4. \ub4a4\ub85c \uac08\uc218\ub85d \uc218\uc775\uc740 \ucee4\uc9c0\ub418 \uadf8\uc911 \uc2dc\uc7a5 \ubaab\uc774 \ub298\uc5b4\ub09c\ub2e4(\ubb34\uc791\uc704 \uc911\uc559\uac12 3\uac1c\uc6d4 +1.4% -> 12\uac1c\uc6d4 +19.6%). \uc2e0\ud638\uac00 \ubc8c\uc5b4\uc8fc\ub294 \ubaab\uc740 3\uac1c\uc6d4 \ubd80\uadfc\uc5d0\uc11c \uc815\uc810\uc774\uace0 \uadf8 \ub4a4\ub85c \ud76c\uc11d\ub41c\ub2e4.",
-    "\uacfc\uac70 \uad6d\uba74 +10% \ub294 9/9\uac1c\uac00 \uc911\uc559\uac12 17\uac70\ub798\uc77c \u00b7 +20% \ub294 9/9\uac1c\uac00 \uc911\uc559\uac12 25\uac70\ub798\uc77c \u00b7 +30% \ub294 9/9\uac1c\uac00 \uc911\uc559\uac12 39\uac70\ub798\uc77c \ub9cc\uc5d0 \ub2ff\uc558\ub2e4. \ub2e4\ub9cc \uadf8 \uc0ac\uc774 6\uac1c\uc6d4 \ub0b4 \ucd5c\uc545\uc740 \uc911\uc559\uac12 -7.9% \uc600\uace0, \uc9c0\uae08\uc740 5\uac70\ub798\uc77c\uae4c\uc9c0 -3.5% \ub2e4. \uae30\ub2e4\ub9ac\ub294 \ub3d9\uc548 \uacac\ub38c\uc57c \ud558\ub294 \ud3ed\uc774\ub2e4.",
+    "\uacfc\uac70 \uad6d\uba74 +10% \ub294 9/9\uac1c\uac00 \uc911\uc559\uac12 17\uac70\ub798\uc77c \u00b7 +20% \ub294 9/9\uac1c\uac00 \uc911\uc559\uac12 25\uac70\ub798\uc77c \u00b7 +30% \ub294 9/9\uac1c\uac00 \uc911\uc559\uac12 39\uac70\ub798\uc77c \ub9cc\uc5d0 \ub2ff\uc558\ub2e4. \ub2e4\ub9cc \uadf8 \uc0ac\uc774 6\uac1c\uc6d4 \ub0b4 \ucd5c\uc545\uc740 \uc911\uc559\uac12 -7.9% \uc600\uace0, \uc9c0\uae08\uc740 6\uac70\ub798\uc77c\uae4c\uc9c0 -3.5% \ub2e4. \uae30\ub2e4\ub9ac\ub294 \ub3d9\uc548 \uacac\ub38c\uc57c \ud558\ub294 \ud3ed\uc774\ub2e4.",
     "\ud45c\ubcf8\uc740 \uad6d\uba74 9\uac1c\uc774\uace0 \uadf8\uc911 \ud070 \uc218\uc775\uc740 2023\ub144 \ud68c\ubcf5\uc7a5\uc5d0 \ubab0\ub824 \uc788\ub2e4. \ud55c \uad6d\uba74\uc774 \ub4e4\uace0 \ub098\uba74 \uc911\uc559\uac12\ub3c4 \uc0c1\uad00\ub3c4 \ud06c\uac8c \uc6c0\uc9c1\uc778\ub2e4. \uc774 \ube44\uad50\ub294 '\uc9c0\uae08\uc774 \uacfc\uac70\uc640 \uacac\uc918 \uc774\uc0c1\ud55c\uac00' \ub97c \ubcf4\ub294 \ub9e5\ub77d\uc774\uc9c0 \uc608\uce21\uc774 \uc544\ub2c8\ub2e4."
   ]
 }
