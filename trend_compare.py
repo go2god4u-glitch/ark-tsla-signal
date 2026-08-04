@@ -48,7 +48,8 @@ import signal_check as sc
 BASE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(BASE, "data", "trend_compare.json")
 
-HORIZONS = (5, 10, 21, 42, 63, 126, 252)   # 거래일: 1주 1개월 2개월 3개월 6개월 12개월
+HORIZONS = (5, 10, 21, 42, 63, 126, 189, 252)  # 거래일. 9개월을 넣어
+                                           # 정점 이후 희석되는 모습을 본다
 OUTCOME = 126                              # '앞날' 의 기준 지평 = 6개월
 DEEP_CUT = -45.0                           # 진입 낙폭 깊음/얕음 경계
 EARLY = (5, 10, 21, 42)                    # 예측력을 물어볼 이른 시점들
@@ -66,8 +67,8 @@ TARGETS = (10, 20, 30, 50)                 # 목표 수익률(%) — 도달까�
 
 
 def label(k: int) -> str:
-    return {5: "1주", 10: "2주", 21: "1개월", 42: "2개월",
-            63: "3개월", 126: "6개월", 252: "12개월"}.get(k, f"{k}일")
+    return {5: "1주", 10: "2주", 21: "1개월", 42: "2개월", 63: "3개월",
+            126: "6개월", 189: "9개월", 252: "12개월"}.get(k, f"{k}일")
 
 
 def load():
@@ -278,9 +279,11 @@ def main() -> None:
     print("\n" + "=" * 78)
     print("3. 과거 국면들의 지평별 수익률 (지금 값으로 조건을 걸지 않은 분포)")
     print("=" * 78)
-    print("   지금 위치가 좋다/나쁘다로 앞날을 좁히면 표본이 2~3개로 줄어 무의미하다.")
-    print(f"   {'지평':<8s}{'n':>4s}{'중앙값':>9s}{'최소':>9s}{'최대':>9s}"
-          f"{'양수':>7s}   {'낙폭 얕은 국면만':>18s}")
+    print("   같은 기간 무작위 진입을 나란히 둔다. 차이(초과)가 곧 **신호의 값어치**다.")
+    print("   절대 수익이 큰 지평과 초과가 큰 지평은 다르다 — 뒤로 갈수록 시장이 먹는다.")
+    print(f"   {'지평':<8s}{'n':>4s}{'신호':>9s}{'무작위':>9s}{'초과':>9s}"
+          f"{'승률':>7s}{'무작위':>7s}   {'얕은 국면만':>14s}")
+    lo_i0, hi_i0 = int(past_ep["i"].min()), len(V) - 1
     horizon_rows = []
     for k in HORIZONS:
         allv = [path_ret(V, int(r["i"]), k) for _, r in past_ep.iterrows()]
@@ -288,18 +291,27 @@ def main() -> None:
         if not allv:
             continue
         a = np.array(allv)
+        pool = np.arange(lo_i0, max(lo_i0 + 1, hi_i0 - k))
+        base = V[pool + k] / V[pool] - 1
+        bmed, bhit = float(np.median(base)), float((base > 0).mean())
+        excess = float(np.median(a)) - bmed
         pv = [path_ret(V, int(r["i"]), k) for _, r in past_ep.iterrows()
               if (r["dd"] <= DEEP_CUT) == (cur["dd"] <= DEEP_CUT)]
         pv = [x for x in pv if x is not None]
         ptxt = (f"{np.median(pv)*100:+.1f}% (n={len(pv)})" if pv else "—")
         print(f"   {label(k):<8s}{len(a):>4d}{np.median(a)*100:>+8.1f}%"
-              f"{a.min()*100:>+8.1f}%{a.max()*100:>+8.1f}%"
-              f"{(a > 0).mean()*100:>6.0f}%   {ptxt:>18s}")
+              f"{bmed*100:>+8.1f}%{excess*100:>+8.1f}%"
+              f"{(a > 0).mean()*100:>6.0f}%{bhit*100:>6.0f}%   {ptxt:>14s}")
         horizon_rows.append({"k": k, "label": label(k), "n": len(a),
                              "median": float(np.median(a)), "min": float(a.min()),
                              "max": float(a.max()), "hit": float((a > 0).mean()),
+                             "base_median": bmed, "base_hit": bhit, "excess": excess,
                              "peer_median": float(np.median(pv)) if pv else None,
                              "peer_n": len(pv)})
+    peak = max(horizon_rows, key=lambda r: r["excess"])
+    print(f"   -> 초과가 가장 큰 지평은 **{peak['label']}** ({peak['excess']*100:+.1f}%p)."
+          f" 절대 수익 최대는 "
+          f"{max(horizon_rows, key=lambda r: r['median'])['label']} 이다 — 다른 질문이다.")
 
     # ================================================================
     # 4. 지금부터 앞으로 — 무작위 진입과 견줘 우위가 있는가
@@ -438,6 +450,17 @@ def main() -> None:
                 for r in fwd_rows if r["verdict"] == "우위 없다")
                + " 는 우위가 없다 — 기다림에도 유효 구간이 있다는 뜻이다."
                if any(r["verdict"] == "우위 없다" for r in fwd_rows) else ""))
+    best_ex = max(horizon_rows, key=lambda r: r["excess"])
+    best_abs = max(horizon_rows, key=lambda r: r["median"])
+    lines.append(
+        f"'언제까지 들고 있어야 하나' 는 두 질문이 섞이기 쉽다. "
+        f"절대 수익이 가장 큰 지평은 {best_abs['label']}"
+        f"({best_abs['median']*100:+.1f}%) 지만, 같은 기간 무작위 진입을 빼면 "
+        f"초과가 가장 큰 지평은 {best_ex['label']}({best_ex['excess']*100:+.1f}%p) 다. "
+        f"뒤로 갈수록 수익은 커지되 그중 시장 몫이 늘어난다"
+        f"(무작위 중앙값 {best_ex['label']} {best_ex['base_median']*100:+.1f}% -> "
+        f"{horizon_rows[-1]['label']} {horizon_rows[-1]['base_median']*100:+.1f}%). "
+        f"신호가 벌어주는 몫은 {best_ex['label']} 부근에서 정점이고 그 뒤로 희석된다.")
     mr = {t: (int(np.median(reach[t])) if reach[t] else None) for t in TARGETS}
     got = [t for t in TARGETS if len(reach[t]) == len(past_ep)]
     if got:
@@ -472,6 +495,7 @@ def main() -> None:
         "confound": {"dd_outcome": dd_out, "dd_early": dd_early,
                      "within_group": within, "within_n": int(grp_mask.sum())},
         "horizons": horizon_rows,
+        "peak_excess": best_ex["label"], "peak_abs": best_abs["label"],
         "forward": fwd_rows,
         "targets": list(TARGETS),
         "wait": wait_rows,
