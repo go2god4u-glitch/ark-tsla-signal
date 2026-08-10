@@ -1,13 +1,13 @@
 {
-  "checked_utc": "2026-08-09T22:22:46+00:00",
-  "week": "2026-08-07",
+  "checked_utc": "2026-08-10T22:29:52+00:00",
+  "week": "2026-08-14",
   "signal": false,
-  "net": -31828,
-  "threshold": 93725,
-  "gap": -125553,
-  "net_pct": -1.13,
+  "net": 2226,
+  "threshold": 92586,
+  "gap": -90360,
+  "net_pct": 0.08,
   "threshold_pct": 3.34,
-  "dd_now": -32.9,
+  "dd_now": -32.5,
   "big_sell": -7.0,
   "big_sell_on": false,
   "big_sells": [
@@ -63,14 +63,14 @@
   "dd_filter": -30.0,
   "thr_ok": false,
   "dd_ok": true,
-  "shares": 2773447,
-  "price": 328.58,
-  "price_date": "2026-08-07",
-  "drawdown_from_ath": -32.9,
+  "shares": 2775673,
+  "price": 330.88,
+  "price_date": "2026-08-10",
+  "drawdown_from_ath": -32.5,
   "ath": 489.88,
   "ath_date": "2025-12-16",
   "prev_signal_week": "2026-07-24",
-  "prev_signal_weeks_ago": 2,
+  "prev_signal_weeks_ago": 3,
   "prev_signal_entry": "2026-07-27",
   "prev_signal_price": 309.22,
   "signal_weeks_total": 16,
@@ -356,15 +356,15 @@
           "price": 309.22,
           "exit": null,
           "exit_price": null,
-          "days": 9,
-          "ret": 0.062609,
+          "days": 10,
+          "ret": 0.070047,
           "score": 78.0,
           "why": null,
           "open": true
         }
       ],
       "avg_price": 309.22,
-      "run_ret": 0.062609,
+      "run_ret": 0.070047,
       "open": true
     }
   ],
@@ -1681,15 +1681,10 @@
       -32.9
     ]
   },
-  "holdings_date": "2026-08-07",
-  "holdings": 2773447,
-  "holdings_chg": -1376,
+  "holdings_date": "2026-08-10",
+  "holdings": 2775673,
+  "holdings_chg": 2226,
   "recent": [
-    {
-      "d": "2026-06-24",
-      "s": 2591211,
-      "c": 375.53
-    },
     {
       "d": "2026-06-25",
       "s": 2547109,
@@ -1834,15 +1829,20 @@
       "d": "2026-08-07",
       "s": 2773447,
       "c": 328.58
+    },
+    {
+      "d": "2026-08-10",
+      "s": 2775673,
+      "c": 330.88
     }
   ],
   "tech": {
-    "rsi": 41.41,
-    "macd": -19.76,
-    "macd_signal": -20.78,
-    "ma50": 380.44,
-    "ma200": 408.8,
-    "bb_low": 271.11,
+    "rsi": 42.52,
+    "macd": -18.07,
+    "macd_signal": -20.24,
+    "ma50": 378.22,
+    "ma200": 408.24,
+    "bb_low": 271.96,
     "flags": {
       "rsi_oversold": false,
       "macd_above_signal": true,
@@ -1852,21 +1852,17 @@
     }
   },
   "score": {
-    "week": "2026-08-07",
-    "total": 73.2,
+    "week": "2026-08-14",
+    "total": 76.6,
     "components": {
-      "ark": 33.9,
-      "rsi": 79.5,
-      "dd": 83.4,
-      "macd": 86.1,
-      "ma": 93.4,
-      "bb": 62.8
+      "ark": 57.1,
+      "rsi": 76.6,
+      "dd": 82.4,
+      "macd": 91.3,
+      "ma": 92.6,
+      "bb": 59.4
     },
     "history": [
-      {
-        "d": "2025-06-20",
-        "s": 50.7
-      },
       {
         "d": "2025-06-27",
         "s": 55.2
@@ -2102,16 +2098,14 @@
       {
         "d": "2026-08-07",
         "s": 73.2
+      },
+      {
+        "d": "2026-08-14",
+        "s": 76.6
       }
     ]
   },
   "weekly": [
-    {
-      "d": "2026-04-24",
-      "net": 337484,
-      "thr": 88786,
-      "sig": false
-    },
     {
       "d": "2026-05-01",
       "net": -412875,
@@ -2200,6 +2194,12 @@
       "d": "2026-08-07",
       "net": -31828,
       "thr": 93725,
+      "sig": false
+    },
+    {
+      "d": "2026-08-14",
+      "net": 2226,
+      "thr": 92586,
       "sig": false
     }
   ]
