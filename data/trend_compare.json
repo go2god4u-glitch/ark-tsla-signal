@@ -1,9 +1,9 @@
 {
-  "as_of": "2026-08-20",
+  "as_of": "2026-08-21",
   "entry": "2026-07-27",
   "signal": "2026-07-24",
-  "day": 18,
-  "cur_ret": 0.1161309214162991,
+  "day": 19,
+  "cur_ret": 0.17346867576193525,
   "cur_dd": -36.10067860308386,
   "group": "\uc595\uc74c",
   "deep_cut": -45.0,
@@ -14,60 +14,60 @@
       "entry": "2024-04-01",
       "dd": -40.07295442806069,
       "grp": "\uc595\uc74c",
-      "ret": -0.028763888310750496
-    },
-    {
-      "entry": "2024-01-29",
-      "dd": -37.529828087636865,
-      "grp": "\uc595\uc74c",
-      "ret": 0.0054470674321343004
-    },
-    {
-      "entry": "2023-03-20",
-      "dd": -52.822908508253576,
-      "grp": "\uae4a\uc74c",
-      "ret": 0.009549795361528002
+      "ret": -0.0395503246563812
     },
     {
       "entry": "2025-07-21",
       "dd": -31.302879181523945,
       "grp": "\uc595\uc74c",
-      "ret": 0.021583599344479065
+      "ret": 0.006301584175340658
+    },
+    {
+      "entry": "2023-03-20",
+      "dd": -52.822908508253576,
+      "grp": "\uae4a\uc74c",
+      "ret": 0.020682091602361785
+    },
+    {
+      "entry": "2024-01-29",
+      "dd": -37.529828087636865,
+      "grp": "\uc595\uc74c",
+      "ret": 0.04436181608766976
     },
     {
       "entry": "2025-03-17",
       "dd": -47.9056384448487,
       "grp": "\uae4a\uc74c",
-      "ret": 0.06045964338373677
+      "ret": 0.06008152338891426
     },
     {
       "entry": "2023-04-24",
       "dd": -50.907037103188,
       "grp": "\uae4a\uc74c",
-      "ret": 0.08821898535015471
+      "ret": 0.10821283302153972
     },
     {
       "entry": "2022-02-28",
       "dd": -34.15209302259798,
       "grp": "\uc595\uc74c",
-      "ret": 0.1648495064432327
+      "ret": 0.16108129053348552
     },
     {
       "entry": "2025-08-18",
       "dd": -31.113239767968203,
       "grp": "\uc595\uc74c",
-      "ret": 0.1813462170759852
+      "ret": 0.2234156941897596
     },
     {
       "entry": "2023-01-09",
       "dd": -70.38893185869588,
       "grp": "\uae4a\uc74c",
-      "ret": 0.5862069053379837
+      "ret": 0.6261167234332621
     }
   ],
-  "rank": 7,
-  "median": 0.06045964338373677,
-  "peer_median": 0.021583599344479065,
+  "rank": 8,
+  "median": 0.06008152338891426,
+  "peer_median": 0.04436181608766976,
   "peer_n": 5,
   "predictive": [
     {
@@ -126,10 +126,10 @@
       "min": -0.07565230388022315,
       "max": 0.16965682565251172,
       "hit": 0.4444444444444444,
-      "base_median": -0.004036909092328789,
-      "base_hit": 0.47674418604651164,
-      "excess": -0.0003925046707325963,
-      "excess_pm": -0.0016485196170769045,
+      "base_median": -0.003997160512870579,
+      "base_hit": 0.4772117962466488,
+      "excess": -0.00043225325019080607,
+      "excess_pm": -0.0018154636508013857,
       "edge": 0.0,
       "peer_median": -0.012783960036289455,
       "peer_n": 5
@@ -142,10 +142,10 @@
       "min": -0.11955013648817547,
       "max": 0.2013860183904277,
       "hit": 0.4444444444444444,
-      "base_median": 0.00033225132541980784,
-      "base_hit": 0.5013477088948787,
-      "excess": -0.014997248446764755,
-      "excess_pm": -0.031494221738205985,
+      "base_median": 0.00042344877102051814,
+      "base_hit": 0.5017953321364452,
+      "excess": -0.015088445892365465,
+      "excess_pm": -0.03168573637396748,
       "edge": 0.0,
       "peer_median": -0.05854053712574181,
       "peer_n": 5
@@ -158,10 +158,10 @@
       "min": -0.014515708933748317,
       "max": 0.6806378803366666,
       "hit": 0.8888888888888888,
-      "base_median": -0.0114281120148651,
-      "base_hit": 0.47731397459165154,
-      "excess": 0.07907235584956335,
-      "excess_pm": 0.07907235584956335,
+      "base_median": -0.011666945623972746,
+      "base_hit": 0.4768812330009066,
+      "excess": 0.079311189458671,
+      "excess_pm": 0.079311189458671,
       "edge": 1.0,
       "peer_median": 0.058188870457966724,
       "peer_n": 5
@@ -174,10 +174,10 @@
       "min": -0.0792960769414458,
       "max": 0.5785912106185025,
       "hit": 0.7777777777777778,
-      "base_median": -0.0037688073839757807,
-      "base_hit": 0.4939870490286771,
-      "excess": 0.2727572651634548,
-      "excess_pm": 0.1363786325817274,
+      "base_median": -0.0039053723219126812,
+      "base_hit": 0.49353049907578556,
+      "excess": 0.2728938301013917,
+      "excess_pm": 0.13644691505069584,
       "edge": 1.0,
       "peer_median": 0.02037434106014535,
       "peer_n": 5
@@ -190,10 +190,10 @@
       "min": -0.1272934068212218,
       "max": 0.6319901187256738,
       "hit": 0.8888888888888888,
-      "base_median": 0.011086391763029613,
-      "base_hit": 0.5132075471698113,
-      "excess": 0.3262755085041583,
-      "excess_pm": 0.10875850283471944,
+      "base_median": 0.01067415434606711,
+      "base_hit": 0.5127238454288408,
+      "excess": 0.3266877459211208,
+      "excess_pm": 0.10889591530704028,
       "edge": 1.0,
       "peer_median": 0.19769432227098704,
       "peer_n": 5
@@ -206,10 +206,10 @@
       "min": -0.018347254569774263,
       "max": 1.2709359427048188,
       "hit": 0.8888888888888888,
-      "base_median": 0.032387280965848086,
-      "base_hit": 0.5285857572718154,
-      "excess": 0.27231895003634965,
-      "excess_pm": 0.04538649167272494,
+      "base_median": 0.032349047224200844,
+      "base_hit": 0.5280561122244489,
+      "excess": 0.2723571837779969,
+      "excess_pm": 0.045392863962999484,
       "edge": 1.0,
       "peer_median": 0.22723476199412462,
       "peer_n": 5
@@ -222,10 +222,10 @@
       "min": -0.36955300267149327,
       "max": 1.3822052320177147,
       "hit": 0.8888888888888888,
-      "base_median": 0.1328310845058256,
-      "base_hit": 0.6209850107066381,
-      "excess": 0.24207081585403034,
-      "excess_pm": 0.02689675731711448,
+      "base_median": 0.13270956743718876,
+      "base_hit": 0.6203208556149733,
+      "excess": 0.24219233292266718,
+      "excess_pm": 0.026910259213629686,
       "edge": 1.0,
       "peer_median": 0.20572258305309266,
       "peer_n": 5
@@ -238,10 +238,10 @@
       "min": -0.30113852164052546,
       "max": 1.0964752219888965,
       "hit": 0.6666666666666666,
-      "base_median": 0.18705709100808376,
-      "base_hit": 0.6670493685419059,
-      "excess": -0.04848355487454192,
-      "excess_pm": -0.00404029623954516,
+      "base_median": 0.18679229640203976,
+      "base_hit": 0.6674311926605505,
+      "excess": -0.04821876026849792,
+      "excess_pm": -0.004018230022374826,
       "edge": 0.0,
       "peer_median": 0.13857353613354184,
       "peer_n": 5
@@ -250,7 +250,7 @@
   "peak_excess": "3\uac1c\uc6d4",
   "peak_abs": "9\uac1c\uc6d4",
   "peak_pm": "2\uac1c\uc6d4",
-  "peak_pm_value": 0.1363786325817274,
+  "peak_pm_value": 0.13644691505069584,
   "peak_pm_vote": {
     "2\uac1c\uc6d4": 4,
     "3\uac1c\uc6d4": 3,
@@ -262,14 +262,14 @@
       "k": 5,
       "label": "1\uc8fc",
       "n": 9,
-      "up": 6,
-      "rate": 0.6666666666666666,
-      "ci_lo": 0.3541973474990897,
-      "ci_hi": 0.8794184013172571,
-      "base": 0.47674418604651164,
-      "edge": 0.189922480620155,
+      "up": 5,
+      "rate": 0.5555555555555556,
+      "ci_lo": 0.2666473457440297,
+      "ci_hi": 0.811224570528086,
+      "base": 0.4772117962466488,
+      "edge": 0.0783437593089068,
       "verdict": "\ub9d0\ud560 \uc218 \uc5c6\ub2e4",
-      "median": 0.04285150012555361
+      "median": 0.028587888059129707
     },
     {
       "k": 21,
@@ -279,10 +279,10 @@
       "rate": 0.5555555555555556,
       "ci_lo": 0.2666473457440297,
       "ci_hi": 0.811224570528086,
-      "base": 0.47731397459165154,
-      "edge": 0.07824158096390404,
+      "base": 0.4768812330009066,
+      "edge": 0.07867432255464896,
       "verdict": "\ub9d0\ud560 \uc218 \uc5c6\ub2e4",
-      "median": 0.053237825874417055
+      "median": 0.04682465439796135
     },
     {
       "k": 63,
@@ -292,10 +292,10 @@
       "rate": 0.6666666666666666,
       "ci_lo": 0.3541973474990897,
       "ci_hi": 0.8794184013172571,
-      "base": 0.5132075471698113,
-      "edge": 0.1534591194968553,
+      "base": 0.5127238454288408,
+      "edge": 0.15394282123782588,
       "verdict": "\ub9d0\ud560 \uc218 \uc5c6\ub2e4",
-      "median": 0.21821474496412074
+      "median": 0.2160878303586018
     },
     {
       "k": 126,
@@ -305,23 +305,23 @@
       "rate": 0.7777777777777778,
       "ci_lo": 0.45258334367280534,
       "ci_hi": 0.9367762376877729,
-      "base": 0.5285857572718154,
-      "edge": 0.24919202050596234,
+      "base": 0.5280561122244489,
+      "edge": 0.24972166555332886,
       "verdict": "\ub9d0\ud560 \uc218 \uc5c6\ub2e4",
-      "median": 0.32053817142791097
+      "median": 0.28209079888569155
     },
     {
       "k": 252,
       "label": "12\uac1c\uc6d4",
       "n": 8,
-      "up": 4,
-      "rate": 0.5,
-      "ci_lo": 0.21521252682444186,
-      "ci_hi": 0.7847874731755582,
-      "base": 0.6670493685419059,
-      "edge": -0.16704936854190588,
+      "up": 5,
+      "rate": 0.625,
+      "ci_lo": 0.30573785458380187,
+      "ci_hi": 0.863158240538479,
+      "base": 0.6674311926605505,
+      "edge": -0.04243119266055051,
       "verdict": "\uc6b0\uc704 \uc5c6\ub2e4",
-      "median": 5.9003812917513e-05
+      "median": 0.027474923061644563
     }
   ],
   "targets": [
@@ -437,13 +437,13 @@
   "mae_now": -0.03524996395270241,
   "mae6_median": -0.0787238153987938,
   "verdict": [
-    "\uc9c0\uae08\uc740 \uc9c4\uc785 18\uac70\ub798\uc77c\ucc28\uc774\uace0 +11.6% \ub2e4. \uacfc\uac70 \uad6d\uba74 9\uac1c\uc758 \uac19\uc740 \uc2dc\uc810 \uc911\uc559\uac12\uc740 +6.0% \uc774\ubbc0\ub85c \uc911\uc559\uac12\ubcf4\ub2e4 \uc704, \uacfc\uac70 \ubc94\uc704(-2.9% ~ +58.6%) \uc548\uc5d0 \uc788\ub2e4.",
-    "\uc9c4\uc785 \ub099\ud3ed\uc774 \ube44\uc2b7\ud55c '\uc595\uc74c' \uad6d\uba74 5\uac1c\ub9cc \ubcf4\uba74 \uac19\uc740 \uc2dc\uc810 \uc911\uc559\uac12\uc774 +2.2% \uc774\uace0, \uc9c0\uae08\uc740 \uadf8\uc911 6\uac1c \uc911 4\ubc88\uc9f8\ub2e4. \ub099\ud3ed\uc774 \uae4a\uc744\uc218\ub85d \uc774\ud6c4 \uc218\uc775\uc774 \ucef8\uc73c\ubbc0\ub85c(\uc9c4\uc785\ub099\ud3ed -> 6\uac1c\uc6d4 \uc0c1\uad00 -0.84), \uc804\uccb4\ub97c \ubb49\ub6b1\uadf8\ub9b0 \uc911\uc559\uac12\uc740 \uc9c0\uae08 \uc0c1\ud669\ubcf4\ub2e4 \ub099\uad00\uc801\uc774\ub2e4. \uac19\uc740 \uadf8\ub8f9\ub07c\ub9ac \ube44\uad50\ud55c \ucabd\uc774 \ub9de\ub2e4.",
+    "\uc9c0\uae08\uc740 \uc9c4\uc785 19\uac70\ub798\uc77c\ucc28\uc774\uace0 +17.3% \ub2e4. \uacfc\uac70 \uad6d\uba74 9\uac1c\uc758 \uac19\uc740 \uc2dc\uc810 \uc911\uc559\uac12\uc740 +6.0% \uc774\ubbc0\ub85c \uc911\uc559\uac12\ubcf4\ub2e4 \uc704, \uacfc\uac70 \ubc94\uc704(-4.0% ~ +62.6%) \uc548\uc5d0 \uc788\ub2e4.",
+    "\uc9c4\uc785 \ub099\ud3ed\uc774 \ube44\uc2b7\ud55c '\uc595\uc74c' \uad6d\uba74 5\uac1c\ub9cc \ubcf4\uba74 \uac19\uc740 \uc2dc\uc810 \uc911\uc559\uac12\uc774 +4.4% \uc774\uace0, \uc9c0\uae08\uc740 \uadf8\uc911 6\uac1c \uc911 5\ubc88\uc9f8\ub2e4. \ub099\ud3ed\uc774 \uae4a\uc744\uc218\ub85d \uc774\ud6c4 \uc218\uc775\uc774 \ucef8\uc73c\ubbc0\ub85c(\uc9c4\uc785\ub099\ud3ed -> 6\uac1c\uc6d4 \uc0c1\uad00 -0.84), \uc804\uccb4\ub97c \ubb49\ub6b1\uadf8\ub9b0 \uc911\uc559\uac12\uc740 \uc9c0\uae08 \uc0c1\ud669\ubcf4\ub2e4 \ub099\uad00\uc801\uc774\ub2e4. \uac19\uc740 \uadf8\ub8f9\ub07c\ub9ac \ube44\uad50\ud55c \ucabd\uc774 \ub9de\ub2e4.",
     "1\uac1c\uc6d4\ucc28 \uc218\uc775\ub960\uacfc 6\uac1c\uc6d4 \uacb0\uacfc\uc758 \uad00\uacc4\ub294 \ud53c\uc5b4\uc2a8 +0.57 \uc774\uc9c0\ub9cc \uc21c\uc704\uc0c1\uad00 +0.00, \ud558\ub098\uc529 \ube7c\uba74 -0.55~+0.72 \ub85c \ud754\ub4e4\ub9b0\ub2e4 \u2014 \uadf9\ub2e8\uac12\uc774 \ub9cc\ub4e0 \uac12 \u2014 \uad00\uacc4\ub85c \ubcf4\uba74 \uc548 \ub41c\ub2e4. \uc9c0\uae08 \uc704\uce58\ub85c \uc55e\ub0a0\uc744 \uc810\uce58\uba74 \uc548 \ub41c\ub2e4.",
-    "'\uc5b8\uc81c\uae4c\uc9c0 \ub4e4\uace0 \uc788\uc5b4\uc57c \ud558\ub098' \ub294 \ub450 \uc9c8\ubb38\uc774 \uc11e\uc774\uae30 \uc27d\ub2e4. \uc808\ub300 \uc218\uc775\uc774 \uac00\uc7a5 \ud070 \uc9c0\ud3c9\uc740 9\uac1c\uc6d4(+37.5%) \uc9c0\ub9cc, \uac19\uc740 \uae30\uac04 \ubb34\uc791\uc704 \uc9c4\uc785\uc744 \ube7c\uba74 \ucd08\uacfc\uac00 \uac00\uc7a5 \ud070 \uc9c0\ud3c9\uc740 3\uac1c\uc6d4(+32.6%p) \ub2e4. \ub4a4\ub85c \uac08\uc218\ub85d \uc218\uc775\uc740 \ucee4\uc9c0\ub418 \uadf8\uc911 \uc2dc\uc7a5 \ubaab\uc774 \ub298\uc5b4\ub09c\ub2e4(\ubb34\uc791\uc704 \uc911\uc559\uac12 3\uac1c\uc6d4 +1.1% -> 12\uac1c\uc6d4 +18.7%). \uc2e0\ud638\uac00 \ubc8c\uc5b4\uc8fc\ub294 \ubaab\uc740 3\uac1c\uc6d4 \ubd80\uadfc\uc5d0\uc11c \uc815\uc810\uc774\uace0 \uadf8 \ub4a4\ub85c \ud76c\uc11d\ub41c\ub2e4.",
+    "'\uc5b8\uc81c\uae4c\uc9c0 \ub4e4\uace0 \uc788\uc5b4\uc57c \ud558\ub098' \ub294 \ub450 \uc9c8\ubb38\uc774 \uc11e\uc774\uae30 \uc27d\ub2e4. \uc808\ub300 \uc218\uc775\uc774 \uac00\uc7a5 \ud070 \uc9c0\ud3c9\uc740 9\uac1c\uc6d4(+37.5%) \uc9c0\ub9cc, \uac19\uc740 \uae30\uac04 \ubb34\uc791\uc704 \uc9c4\uc785\uc744 \ube7c\uba74 \ucd08\uacfc\uac00 \uac00\uc7a5 \ud070 \uc9c0\ud3c9\uc740 3\uac1c\uc6d4(+32.7%p) \ub2e4. \ub4a4\ub85c \uac08\uc218\ub85d \uc218\uc775\uc740 \ucee4\uc9c0\ub418 \uadf8\uc911 \uc2dc\uc7a5 \ubaab\uc774 \ub298\uc5b4\ub09c\ub2e4(\ubb34\uc791\uc704 \uc911\uc559\uac12 3\uac1c\uc6d4 +1.1% -> 12\uac1c\uc6d4 +18.7%). \uc2e0\ud638\uac00 \ubc8c\uc5b4\uc8fc\ub294 \ubaab\uc740 3\uac1c\uc6d4 \ubd80\uadfc\uc5d0\uc11c \uc815\uc810\uc774\uace0 \uadf8 \ub4a4\ub85c \ud76c\uc11d\ub41c\ub2e4.",
     "'\uc2dc\uac04 \ub300\ube44' \ub85c \ubb3c\uc73c\uba74 \ub2f5\uc774 \ub610 \uac08\ub9b0\ub2e4. \ucd08\uacfc\ub97c \uac1c\uc6d4\ub85c \ub098\ub208 \uc6d4\ub2f9 \ucd08\uacfc\ub294 2\uac1c\uc6d4(+13.6%p/\uc6d4)\uc774 \uac00\uc7a5 \ub192\uace0, \ucd1d\uc561 \uc815\uc810\uc778 3\uac1c\uc6d4(+10.9%p/\uc6d4)\ubcf4\ub2e4 \uc55e\uc120\ub2e4. \ub2e4\ub9cc \uad6d\uba74 \ud558\ub098\ub97c \ube7c\uba74 \uc815\uc810\uc774 9\ubc88 \uc911 4\ubc88\ub9cc 2\uac1c\uc6d4\uc5d0 \ub0a8\ub294\ub2e4 (\ub098\uba38\uc9c0\ub294 3\uac1c\uc6d4(3\ud68c) \u00b7 1\uac1c\uc6d4(2\ud68c)). \uad6d\uba74 9\uac1c\uc5d0\uc11c \uc774 \uc815\ub3c4 \ucc28\uc774\ub294 \uc7a1\uc74c \uad6c\uac04\uc774\ub2e4. \uc2b9\ub960\ub85c \ubcf4\uba74 2\uac1c\uc6d4 78% \ub300 3\uac1c\uc6d4 89% \ub2e4.",
     "\uc774 \ud45c\ub294 \uc8fc\uac00 \uacbd\ub85c\uc9c0 \ub9e4\ub3c4 \uaddc\uce59 \uc131\uacfc\uac00 \uc544\ub2c8\ub2e4. '2\uac1c\uc6d4 \ub4a4 \uace0\uc815 \ub9e4\ub3c4' \ub098 '3\uac1c\uc6d4 \ub4a4 \uace0\uc815 \ub9e4\ub3c4' \ub294 \uc774 \ud2c0\uc5d0\uc11c \ubc31\ud14c\uc2a4\ud2b8\ud55c \uc801\uc774 \uc5c6\ub2e4. \uc608\uc804\uc5d0 '6\uac1c\uc6d4 \uace0\uc815 \ubcf4\uc720' \uac00 \uc131\uc801\uc740 \ub0ac\uc9c0\ub9cc '\uc6d0\uce59\uc774 \uc5c6\ub2e4' \ub294 \uc774\uc720\ub85c \uae30\uac01\ub41c \uc804\ub840\uac00 \uc788\ub2e4(CLAUDE.md 2\ubc88). \uc2e4\uc81c \uaddc\uce59 A/B \uc758 \ubcf4\uc720 \uae30\uac04 \uc911\uc559\uac12\uc740 106\uac70\ub798\uc77c(\uc57d 5\uac1c\uc6d4)\uc774\ub77c \uc774 \uad6c\uac04 \uc548\uc5d0 \uc790\uc5f0\ud788 \ub4e4\uc5b4\uc640 \uc788\ub2e4.",
-    "\uacfc\uac70 \uad6d\uba74 +10% \ub294 9/9\uac1c\uac00 \uc911\uc559\uac12 17\uac70\ub798\uc77c \u00b7 +20% \ub294 9/9\uac1c\uac00 \uc911\uc559\uac12 25\uac70\ub798\uc77c \u00b7 +30% \ub294 9/9\uac1c\uac00 \uc911\uc559\uac12 39\uac70\ub798\uc77c \ub9cc\uc5d0 \ub2ff\uc558\ub2e4. \ub2e4\ub9cc \uadf8 \uc0ac\uc774 6\uac1c\uc6d4 \ub0b4 \ucd5c\uc545\uc740 \uc911\uc559\uac12 -7.9% \uc600\uace0, \uc9c0\uae08\uc740 18\uac70\ub798\uc77c\uae4c\uc9c0 -3.5% \ub2e4. \uae30\ub2e4\ub9ac\ub294 \ub3d9\uc548 \uacac\ub38c\uc57c \ud558\ub294 \ud3ed\uc774\ub2e4.",
+    "\uacfc\uac70 \uad6d\uba74 +10% \ub294 9/9\uac1c\uac00 \uc911\uc559\uac12 17\uac70\ub798\uc77c \u00b7 +20% \ub294 9/9\uac1c\uac00 \uc911\uc559\uac12 25\uac70\ub798\uc77c \u00b7 +30% \ub294 9/9\uac1c\uac00 \uc911\uc559\uac12 39\uac70\ub798\uc77c \ub9cc\uc5d0 \ub2ff\uc558\ub2e4. \ub2e4\ub9cc \uadf8 \uc0ac\uc774 6\uac1c\uc6d4 \ub0b4 \ucd5c\uc545\uc740 \uc911\uc559\uac12 -7.9% \uc600\uace0, \uc9c0\uae08\uc740 19\uac70\ub798\uc77c\uae4c\uc9c0 -3.5% \ub2e4. \uae30\ub2e4\ub9ac\ub294 \ub3d9\uc548 \uacac\ub38c\uc57c \ud558\ub294 \ud3ed\uc774\ub2e4.",
     "\ud45c\ubcf8\uc740 \uad6d\uba74 9\uac1c\uc774\uace0 \uadf8\uc911 \ud070 \uc218\uc775\uc740 2023\ub144 \ud68c\ubcf5\uc7a5\uc5d0 \ubab0\ub824 \uc788\ub2e4. \ud55c \uad6d\uba74\uc774 \ub4e4\uace0 \ub098\uba74 \uc911\uc559\uac12\ub3c4 \uc0c1\uad00\ub3c4 \ud06c\uac8c \uc6c0\uc9c1\uc778\ub2e4. \uc774 \ube44\uad50\ub294 '\uc9c0\uae08\uc774 \uacfc\uac70\uc640 \uacac\uc918 \uc774\uc0c1\ud55c\uac00' \ub97c \ubcf4\ub294 \ub9e5\ub77d\uc774\uc9c0 \uc608\uce21\uc774 \uc544\ub2c8\ub2e4."
   ]
 }
