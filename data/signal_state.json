@@ -1,5 +1,5 @@
 {
-  "checked_utc": "2026-08-27T02:46:09+00:00",
+  "checked_utc": "2026-08-28T05:53:53+00:00",
   "week": "2026-08-28",
   "signal": false,
   "net": -52840,
@@ -7,7 +7,7 @@
   "gap": -143975,
   "net_pct": -1.93,
   "threshold_pct": 3.33,
-  "dd_now": -29.4,
+  "dd_now": -27.6,
   "big_sell": -7.0,
   "big_sell_on": false,
   "big_sells": [
@@ -64,9 +64,9 @@
   "thr_ok": false,
   "dd_ok": false,
   "shares": 2681612,
-  "price": 345.82,
-  "price_date": "2026-08-26",
-  "drawdown_from_ath": -29.4,
+  "price": 354.81,
+  "price_date": "2026-08-27",
+  "drawdown_from_ath": -27.6,
   "ath": 489.88,
   "ath_date": "2025-12-16",
   "prev_signal_week": "2026-07-24",
@@ -356,15 +356,15 @@
           "price": 309.22,
           "exit": null,
           "exit_price": null,
-          "days": 22,
-          "ret": 0.118362,
+          "days": 23,
+          "ret": 0.147435,
           "score": 78.0,
           "why": null,
           "open": true
         }
       ],
       "avg_price": 309.22,
-      "run_ret": 0.118362,
+      "run_ret": 0.147435,
       "open": true
     }
   ],
@@ -1693,15 +1693,10 @@
       -28.5
     ]
   },
-  "holdings_date": "2026-08-26",
+  "holdings_date": "2026-08-27",
   "holdings": 2681612,
-  "holdings_chg": -42294,
+  "holdings_chg": 0,
   "recent": [
-    {
-      "d": "2026-07-15",
-      "s": 2651261,
-      "c": 394.46
-    },
     {
       "d": "2026-07-16",
       "s": 2644121,
@@ -1846,15 +1841,20 @@
       "d": "2026-08-26",
       "s": 2681612,
       "c": 345.82
+    },
+    {
+      "d": "2026-08-27",
+      "s": 2681612,
+      "c": 354.81
     }
   ],
   "tech": {
-    "rsi": 49.82,
-    "macd": -1.46,
-    "macd_signal": -5.78,
-    "ma50": 362.42,
-    "ma200": 401.78,
-    "bb_low": 306.38,
+    "rsi": 53.87,
+    "macd": -0.51,
+    "macd_signal": -4.73,
+    "ma50": 361.43,
+    "ma200": 401.41,
+    "bb_low": 310.07,
     "flags": {
       "rsi_oversold": false,
       "macd_above_signal": true,
@@ -1865,14 +1865,14 @@
   },
   "score": {
     "week": "2026-08-28",
-    "total": 61.7,
+    "total": 56.1,
     "components": {
       "ark": 20.1,
-      "rsi": 54.4,
-      "dd": 76.9,
-      "macd": 96.7,
-      "ma": 87.2,
-      "bb": 35.1
+      "rsi": 42.5,
+      "dd": 73.4,
+      "macd": 96.3,
+      "ma": 84.3,
+      "bb": 20.1
     },
     "history": [
       {
@@ -2113,7 +2113,7 @@
       },
       {
         "d": "2026-08-28",
-        "s": 61.7
+        "s": 56.1
       }
     ]
   },
