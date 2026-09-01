@@ -1,5 +1,5 @@
 {
-  "checked_utc": "2026-08-31T00:07:05+00:00",
+  "checked_utc": "2026-09-01T00:56:06+00:00",
   "week": "2026-08-28",
   "signal": false,
   "net": -23902,
@@ -64,9 +64,9 @@
   "thr_ok": false,
   "dd_ok": false,
   "shares": 2710550,
-  "price": 348.75,
-  "price_date": "2026-08-28",
-  "drawdown_from_ath": -28.8,
+  "price": 367.95,
+  "price_date": "2026-08-31",
+  "drawdown_from_ath": -24.9,
   "ath": 489.88,
   "ath_date": "2025-12-16",
   "prev_signal_week": "2026-07-24",
@@ -356,15 +356,15 @@
           "price": 309.22,
           "exit": null,
           "exit_price": null,
-          "days": 24,
-          "ret": 0.127838,
+          "days": 25,
+          "ret": 0.18993,
           "score": 78.0,
           "why": null,
           "open": true
         }
       ],
       "avg_price": 309.22,
-      "run_ret": 0.127838,
+      "run_ret": 0.18993,
       "open": true
     }
   ],
@@ -1852,17 +1852,17 @@
     }
   ],
   "tech": {
-    "rsi": 50.89,
-    "macd": -0.25,
-    "macd_signal": -3.83,
-    "ma50": 360.47,
-    "ma200": 400.93,
-    "bb_low": 314.38,
+    "rsi": 58.69,
+    "macd": 1.49,
+    "macd_signal": -2.77,
+    "ma50": 359.82,
+    "ma200": 400.57,
+    "bb_low": 314.75,
     "flags": {
       "rsi_oversold": false,
       "macd_above_signal": true,
       "below_ma200": true,
-      "below_ma50": true,
+      "below_ma50": false,
       "below_bb": false
     }
   },
