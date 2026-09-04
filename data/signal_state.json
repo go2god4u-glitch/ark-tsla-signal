@@ -1,13 +1,13 @@
 {
-  "checked_utc": "2026-09-03T23:43:44+00:00",
+  "checked_utc": "2026-09-04T23:36:47+00:00",
   "week": "2026-09-04",
   "signal": false,
-  "net": -32806,
+  "net": -3868,
   "threshold": 90264,
-  "gap": -123070,
-  "net_pct": -1.21,
+  "gap": -94132,
+  "net_pct": -0.14,
   "threshold_pct": 3.33,
-  "dd_now": -23.2,
+  "dd_now": -27.7,
   "big_sell": -7.0,
   "big_sell_on": false,
   "big_sells": [
@@ -63,10 +63,10 @@
   "dd_filter": -30.0,
   "thr_ok": false,
   "dd_ok": false,
-  "shares": 2677744,
-  "price": 376.36,
-  "price_date": "2026-09-03",
-  "drawdown_from_ath": -23.2,
+  "shares": 2706682,
+  "price": 354.08,
+  "price_date": "2026-09-04",
+  "drawdown_from_ath": -27.7,
   "ath": 489.88,
   "ath_date": "2025-12-16",
   "prev_signal_week": "2026-07-24",
@@ -356,15 +356,15 @@
           "price": 309.22,
           "exit": null,
           "exit_price": null,
-          "days": 28,
-          "ret": 0.217143,
+          "days": 29,
+          "ret": 0.145075,
           "score": 78.0,
           "why": null,
           "open": true
         }
       ],
       "avg_price": 309.22,
-      "run_ret": 0.217143,
+      "run_ret": 0.145075,
       "open": true
     }
   ],
@@ -1699,15 +1699,10 @@
       -27.1
     ]
   },
-  "holdings_date": "2026-09-03",
-  "holdings": 2677744,
-  "holdings_chg": -2226,
+  "holdings_date": "2026-09-04",
+  "holdings": 2706682,
+  "holdings_chg": 28938,
   "recent": [
-    {
-      "d": "2026-07-22",
-      "s": 2592632,
-      "c": 374.01
-    },
     {
       "d": "2026-07-23",
       "s": 2578352,
@@ -1851,34 +1846,39 @@
     {
       "d": "2026-09-03",
       "s": 2677744,
-      "c": 376.36
+      "c": 376.37
+    },
+    {
+      "d": "2026-09-04",
+      "s": 2706682,
+      "c": 354.08
     }
   ],
   "tech": {
-    "rsi": 60.54,
-    "macd": 4.07,
-    "macd_signal": 0.0,
-    "ma50": 358.37,
-    "ma200": 399.83,
-    "bb_low": 321.01,
+    "rsi": 50.93,
+    "macd": 3.66,
+    "macd_signal": 0.73,
+    "ma50": 357.95,
+    "ma200": 399.56,
+    "bb_low": 323.65,
     "flags": {
       "rsi_oversold": false,
       "macd_above_signal": true,
       "below_ma200": true,
-      "below_ma50": false,
+      "below_ma50": true,
       "below_bb": false
     }
   },
   "score": {
     "week": "2026-09-04",
-    "total": 49.2,
+    "total": 65.8,
     "components": {
-      "ark": 32.8,
-      "rsi": 25.9,
-      "dd": 62.1,
-      "macd": 96.2,
-      "ma": 74.9,
-      "bb": 3.2
+      "ark": 50.5,
+      "rsi": 50.7,
+      "dd": 73.9,
+      "macd": 92.8,
+      "ma": 83.7,
+      "bb": 43.3
     },
     "history": [
       {
@@ -2119,7 +2119,7 @@
       },
       {
         "d": "2026-09-04",
-        "s": 49.2
+        "s": 65.8
       }
     ]
   },
@@ -2216,7 +2216,7 @@
     },
     {
       "d": "2026-09-04",
-      "net": -32806,
+      "net": -3868,
       "thr": 90264,
       "sig": false
     }
