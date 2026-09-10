@@ -1,10 +1,10 @@
 {
-  "updated": "2026-09-09T23:44:28+00:00",
-  "cur_netpct": 0.96,
+  "updated": "2026-09-10T23:36:45+00:00",
+  "cur_netpct": 0.95,
   "big_sell": -7.0,
-  "price_date": "2026-09-09",
-  "price": 367.81,
-  "rsi": 55.6,
+  "price_date": "2026-09-10",
+  "price": 363.56,
+  "rsi": 53.7,
   "rsi_level": 70,
   "max_hold": 504,
   "action": "NONE",
@@ -152,15 +152,15 @@
     {
       "entry": "2026-07-27",
       "entry_price": 309.22,
-      "days": 31,
-      "days_left": 473,
-      "ret": 0.189477,
-      "ark_drop": -0.0095,
-      "dd": -24.9,
+      "days": 32,
+      "days_left": 472,
+      "ret": 0.175732,
+      "ark_drop": -0.0097,
+      "dd": -25.8,
       "need_ark": 20.0,
       "need_dd": -20.0,
       "big_sell": -7.0,
-      "deadline": "2028-07-02"
+      "deadline": "2028-07-01"
     }
   ],
   "stats": {
@@ -168,11 +168,11 @@
     "closed_mean": 0.815298,
     "closed_hit": 1.0,
     "closed_worst": 0.315959,
-    "live_mean": 0.189477,
+    "live_mean": 0.175732,
     "all_n": 16,
-    "all_mean": 0.776184,
+    "all_mean": 0.775325,
     "all_hit": 1.0,
     "invested": 1600,
-    "value": 2842.0
+    "value": 2841.0
   }
 }
