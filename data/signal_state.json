@@ -1,13 +1,13 @@
 {
-  "checked_utc": "2026-09-17T23:50:22+00:00",
+  "checked_utc": "2026-09-18T23:47:46+00:00",
   "week": "2026-09-18",
   "signal": false,
-  "net": 7042,
+  "net": 5400,
   "threshold": 90913,
-  "gap": -83871,
-  "net_pct": 0.26,
+  "gap": -85513,
+  "net_pct": 0.2,
   "threshold_pct": 3.32,
-  "dd_now": -25.2,
+  "dd_now": -25.6,
   "big_sell": -7.0,
   "big_sell_on": false,
   "big_sells": [
@@ -63,10 +63,10 @@
   "dd_filter": -30.0,
   "thr_ok": false,
   "dd_ok": false,
-  "shares": 2741549,
-  "price": 366.2,
-  "price_date": "2026-09-17",
-  "drawdown_from_ath": -25.2,
+  "shares": 2739907,
+  "price": 364.27,
+  "price_date": "2026-09-18",
+  "drawdown_from_ath": -25.6,
   "ath": 489.88,
   "ath_date": "2025-12-16",
   "prev_signal_week": "2026-07-24",
@@ -356,15 +356,15 @@
           "price": 309.22,
           "exit": null,
           "exit_price": null,
-          "days": 37,
-          "ret": 0.18427,
+          "days": 38,
+          "ret": 0.178029,
           "score": 78.0,
           "why": null,
           "open": true
         }
       ],
       "avg_price": 309.22,
-      "run_ret": 0.18427,
+      "run_ret": 0.178029,
       "open": true
     }
   ],
@@ -1708,15 +1708,10 @@
       -26.9
     ]
   },
-  "holdings_date": "2026-09-17",
-  "holdings": 1028998,
-  "holdings_chg": -1704341,
+  "holdings_date": "2026-09-18",
+  "holdings": 1027356,
+  "holdings_chg": -1642,
   "recent": [
-    {
-      "d": "2026-08-05",
-      "s": 2802223,
-      "c": 321.55
-    },
     {
       "d": "2026-08-06",
       "s": 2774823,
@@ -1861,15 +1856,20 @@
       "d": "2026-09-17",
       "s": 1028998,
       "c": 366.2
+    },
+    {
+      "d": "2026-09-18",
+      "s": 1027356,
+      "c": 364.27
     }
   ],
   "tech": {
-    "rsi": 54.81,
-    "macd": 3.79,
-    "macd_signal": 3.59,
-    "ma50": 351.09,
-    "ma200": 397.65,
-    "bb_low": 341.6,
+    "rsi": 53.77,
+    "macd": 3.81,
+    "macd_signal": 3.64,
+    "ma50": 350.25,
+    "ma200": 397.33,
+    "bb_low": 343.64,
     "flags": {
       "rsi_oversold": false,
       "macd_above_signal": true,
@@ -1880,14 +1880,14 @@
   },
   "score": {
     "week": "2026-09-18",
-    "total": 59.2,
+    "total": 60.8,
     "components": {
-      "ark": 60.8,
-      "rsi": 40.5,
-      "dd": 67.7,
-      "macd": 76.6,
-      "ma": 77.5,
-      "bb": 31.9
+      "ark": 59.1,
+      "rsi": 43.0,
+      "dd": 68.5,
+      "macd": 74.9,
+      "ma": 78.2,
+      "bb": 41.2
     },
     "history": [
       {
@@ -2128,7 +2128,7 @@
       },
       {
         "d": "2026-09-18",
-        "s": 59.2
+        "s": 60.8
       }
     ]
   },
@@ -2225,7 +2225,7 @@
     },
     {
       "d": "2026-09-18",
-      "net": 7042,
+      "net": 5400,
       "thr": 90913,
       "sig": false
     }
