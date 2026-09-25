@@ -1,5 +1,5 @@
 {
-  "checked_utc": "2026-09-24T00:09:58+00:00",
+  "checked_utc": "2026-09-25T00:11:39+00:00",
   "week": "2026-09-25",
   "signal": false,
   "net": 36020,
@@ -7,7 +7,7 @@
   "gap": -54993,
   "net_pct": 1.31,
   "threshold_pct": 3.32,
-  "dd_now": -22.7,
+  "dd_now": -22.4,
   "big_sell": -7.0,
   "big_sell_on": false,
   "big_sells": [
@@ -64,9 +64,9 @@
   "thr_ok": false,
   "dd_ok": false,
   "shares": 1063376,
-  "price": 378.9,
-  "price_date": "2026-09-22",
-  "drawdown_from_ath": -22.7,
+  "price": 380.12,
+  "price_date": "2026-09-23",
+  "drawdown_from_ath": -22.4,
   "ath": 489.88,
   "ath_date": "2025-12-16",
   "prev_signal_week": "2026-07-24",
@@ -356,15 +356,15 @@
           "price": 309.22,
           "exit": null,
           "exit_price": null,
-          "days": 40,
-          "ret": 0.225341,
+          "days": 41,
+          "ret": 0.229287,
           "score": 78.0,
           "why": null,
           "open": true
         }
       ],
       "avg_price": 309.22,
-      "run_ret": 0.225341,
+      "run_ret": 0.229287,
       "open": true
     }
   ],
@@ -1711,15 +1711,10 @@
       -23.4
     ]
   },
-  "holdings_date": "2026-09-22",
+  "holdings_date": "2026-09-23",
   "holdings": 1063376,
   "holdings_chg": 0,
   "recent": [
-    {
-      "d": "2026-08-10",
-      "s": 2775673,
-      "c": 330.88
-    },
     {
       "d": "2026-08-11",
       "s": 2777899,
@@ -1864,15 +1859,20 @@
       "d": "2026-09-22",
       "s": 1063376,
       "c": 378.9
+    },
+    {
+      "d": "2026-09-23",
+      "s": 1063376,
+      "c": 380.12
     }
   ],
   "tech": {
-    "rsi": 60.08,
-    "macd": 5.57,
-    "macd_signal": 4.19,
-    "ma50": 349.28,
-    "ma200": 396.72,
-    "bb_low": 343.28,
+    "rsi": 60.59,
+    "macd": 6.31,
+    "macd_signal": 4.61,
+    "ma50": 348.96,
+    "ma200": 396.34,
+    "bb_low": 343.87,
     "flags": {
       "rsi_oversold": false,
       "macd_above_signal": true,
@@ -1883,14 +1883,14 @@
   },
   "score": {
     "week": "2026-09-25",
-    "total": 55.1,
+    "total": 55.5,
     "components": {
       "ark": 75.8,
-      "rsi": 26.9,
-      "dd": 60.6,
-      "macd": 87.4,
-      "ma": 71.3,
-      "bb": 8.4
+      "rsi": 25.8,
+      "dd": 60.0,
+      "macd": 89.4,
+      "ma": 70.9,
+      "bb": 10.9
     },
     "history": [
       {
@@ -2131,7 +2131,7 @@
       },
       {
         "d": "2026-09-25",
-        "s": 55.1
+        "s": 55.5
       }
     ]
   },
