@@ -76,7 +76,8 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt
 새로고침 버튼이 있는 현재 상태 페이지. 매일 갱신된다.
 게시용 정적 아티팩트는 데이터가 파일에 박혀 있어 새로고침이 불가능하므로,
 같은 출처에서 `data/signal_state.json` 을 fetch 할 수 있는 Pages 로 올렸다.
-전체 분석은 [상세 대시보드](https://go2god4u-glitch.github.io/ark-tsla-signal/app.html).
+`app.html` 은 옛 정의(ARKK+ARKQ, 절대 주식 수, 낙폭 필터 없음)의 산출물이라
+라이브 규칙이 아니다. 현재 상태는 위 페이지를 본다.
 
 ## 자동화 — 신호 알림
 

@@ -404,7 +404,7 @@
   </section>
 
   <section class="card">
-    <div class="card-head"><span class="card-title">최근 16주 — 주간 순매수 vs 문턱</span></div>
+    <div class="card-head"><span class="card-title">최근 16주 — 주간 순매수 · 신호 이후 누적</span></div>
     <div id="weeklyChart"></div>
   </section>
 
@@ -415,8 +415,7 @@
       <li>측정된 강도는 데이터 정제 파라미터에 민감하다 (6개월 초과수익 +14.7% ~ +45.6%).</li>
       <li>최근 신호 성적이 나쁘다. 2025-10 진입은 6개월 -24%.</li>
       <li>이 기간 테슬라가 -72% 낙폭에서 회복했다는 사실이 결과에 이미 들어가 있다.</li>
-      <li><b>투자 자문이 아니다.</b> 전체 분석은
-        <a href="app.html">상세 대시보드</a>,
+      <li><b>투자 자문이 아니다.</b>
         한계는 <a href="https://github.com/go2god4u-glitch/ark-tsla-signal#한계">README</a> 참조.</li>
     </ul>
   </section>
@@ -497,13 +496,19 @@ async function load() {
 function render() {
   document.getElementById("weekLabel").textContent = "판정 주 " + S.week;
   const on = S.signal;
+  const provisional = !!S.provisional;
+  const closed = S.week_complete !== false;
   const ratio = Math.max(0, Math.min(1, S.net / S.threshold));
+  const stamp = on
+    ? "다음 거래일 종가 진입 시점이다"
+    : (provisional
+        ? "조건은 맞지만 금요일이 닫히지 않았다"
+        : (closed ? "문턱 미달" : "금요일 마감에 확정"));
   document.getElementById("verdictBox").innerHTML = `
     <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start">
       <div>
         <div class="big ${on ? "on" : "off"}">${on ? "ON" : "OFF"}</div>
-        <div class="stamp" style="margin-top:8px">${on
-          ? "다음 거래일 종가 진입 시점이다" : "문턱 미달"}</div>
+        <div class="stamp" style="margin-top:8px">${stamp}</div>
       </div>
       <dl class="kv" style="flex:1;min-width:280px">
         <dt>그 주 순매수</dt><dd class="${S.net >= 0 ? "pos" : "neg"}">${F.sgn(S.net)} 주</dd>
@@ -1362,14 +1367,20 @@ function bars(id, wk) {
   const el = document.getElementById(id);
   const W = Math.max(320, el.clientWidth || 800), H = 210;
   const P = { l: 58, r: 16, t: 16, b: 40 };
-  const vals = wk.map(x => x.net), thr = wk.map(x => x.thr);
-  const m = Math.max(...vals.map(Math.abs), ...thr.map(Math.abs)) * 1.15;
+  const vals = wk.map(x => x.net);
+  // 누적선: 창 안의 가장 최근 매수 신호 주부터 순매수를 쌓는다(신호 주 포함).
+  // 그 앞 주는 null — 선을 그리지 않는다. 창 안에 신호가 없으면 첫 주부터 쌓는다.
+  const s0 = Math.max(0, wk.map(x => x.sig).lastIndexOf(true));
+  let run = 0;
+  const cum = wk.map((x, i) => i < s0 ? null : (run += x.net));
+  wk.forEach((x, i) => { x.cum = cum[i]; });
+  const m = Math.max(...vals.map(Math.abs), ...cum.map(v => Math.abs(v || 0))) * 1.15;
   const X = i => P.l + (i + 0.5) / wk.length * (W - P.l - P.r);
   const Y = v => H - P.b - (v + m) / (2 * m) * (H - P.t - P.b);
   const bw = (W - P.l - P.r) / wk.length * 0.6;
   const slot = (W - P.l - P.r) / wk.length;
   let s = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img"
-    aria-label="최근 ${wk.length}주 주간 순매수와 신호 문턱 비교">`;
+    aria-label="최근 ${wk.length}주 주간 순매수와 최근 신호 이후 누적 순매수">`;
   for (const v of [-m / 2, 0, m / 2]) {
     s += `<line class="grid-line" x1="${P.l}" y1="${Y(v)}" x2="${W - P.r}" y2="${Y(v)}"/>
           <text class="axis-text" x="${P.l - 8}" y="${Y(v) + 3.5}" text-anchor="end">${(v / 1e6).toFixed(1)}M</text>`;
@@ -1381,12 +1392,12 @@ function bars(id, wk) {
       width="${bw.toFixed(1)}" height="${Math.max(1.5, Math.abs(y1 - y0)).toFixed(1)}"
       fill="${x.sig ? "var(--buy)" : x.net >= 0 ? "var(--arkk)" : "var(--sell)"}" opacity=".9"/>`;
   });
-  // 문턱선. 값의 변동폭이 축 범위 대비 작아 거의 수평으로 보인다.
-  s += `<polyline points="${thr.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ")}"
+  // 누적선. 신호 이후 아크가 더 샀는지(위로) 되팔았는지(아래로)를 본다.
+  s += `<polyline points="${cum.map((v, i) => v === null ? "" : `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ")}"
         fill="none" stroke="var(--buy)" stroke-width="1.6" stroke-dasharray="5 3"/>`;
-  const lastThr = thr[thr.length - 1];
-  s += `<text class="axis-text" x="${W - P.r}" y="${Y(lastThr) - 6}" text-anchor="end"
-        fill="var(--buy)">신호 문턱 ${(lastThr / 1000).toFixed(0)}k</text>`;
+  const lastCum = cum[cum.length - 1];
+  s += `<text class="axis-text" x="${W - P.r}" y="${Y(lastCum) - 6}" text-anchor="end"
+        fill="var(--buy)">신호 이후 누적 ${lastCum >= 0 ? "+" : ""}${(lastCum / 1000).toFixed(0)}k</text>`;
   // 날짜: 3주 간격으로 찍고 기울여 겹침을 피한다. 나머지는 hover 로 본다.
   wk.forEach((x, i) => {
     if (i % 3 !== 0 && i !== wk.length - 1) return;
@@ -1412,6 +1423,7 @@ function bars(id, wk) {
         `순매수 <b class="${cls(x.net)}">${F.sgn(x.net)}</b> 주<br>` +
         `문턱 &nbsp;&nbsp;<b>${F.sgn(x.thr)}</b> 주<br>` +
         `차이 &nbsp;&nbsp;<b class="${cls(gap)}">${F.sgn(gap)}</b> 주 (${(x.net / x.thr * 100).toFixed(0)}%)<br>` +
+        (x.cum === null ? "" : `신호 이후 누적 <b class="${cls(x.cum)}">${F.sgn(x.cum)}</b> 주<br>`) +
         `<span style="color:${x.sig ? "var(--buy)" : "var(--ink-3)"}">` +
         `${x.sig ? "★ 매수 신호 발생" : "신호 없음"}</span>`;
       tip.classList.add("on");

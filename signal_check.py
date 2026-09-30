@@ -247,7 +247,21 @@ def build_daily(px: pd.Series) -> pd.DataFrame:
     # 하루짜리 결측에는 타당하다. 다만 펀드가 아직 등장하기 전(ARKX 이전 구간)에는
     # 채우지 않는다 — limit_area="inside" 가 그 역할을 한다.
     filled = wide[cols].ffill(limit_area="inside")
-    out = pd.DataFrame({"shares": filled.sum(axis=1, min_count=1)}).dropna()
+    # 끝자락 구멍도 채운다 — 단, 그 펀드가 원본에 아직 보고되고 있는 날만.
+    #
+    # limit_area="inside" 는 '뒤에 유효값이 다시 나온' 구멍만 채운다. 정제가
+    # 어떤 펀드를 **지금까지 계속** 버리고 있으면 그 칸은 끝자락 NaN 이라 안 채워지고,
+    # 펀드가 합계에서 통째로 빠진다.
+    # 실측: 2026-09-17 부터 ARKK 의 AUM 이 $6.4B -> $9.9B 로 뛰어 정제가 계속 버렸고,
+    #       합계가 2,733,339 -> 1,028,998 (-62%) 로 찍혔다. 아크는 팔지 않았다.
+    #       매도 규칙 A 의 '아크 누적 -20%' 가 거짓으로 충족된 상태였다.
+    # 과거 구간은 나중에 유효값이 돌아와 inside 로 채워졌으므로(2025-09 의 32일 등)
+    # 백테스트는 '버린 기간 = 직전 값 유지' 로 검증됐다. 실전도 같은 자로 잰다.
+    # 원본에 행이 없는 펀드(청산된 CTRU)는 채우지 않는다.
+    present = (d.pivot_table(index="date", columns="fund", values="shares_adj", aggfunc="last")
+               .reindex(index=filled.index, columns=cols).notna())
+    filled = filled.where(filled.notna() | ~present, wide[cols].ffill())
+    out =pd.DataFrame({"shares": filled.sum(axis=1, min_count=1)}).dropna()
     out["close"] = px.reindex(out.index).ffill()
     out.attrs["wide"] = filled
     return out
@@ -283,6 +297,44 @@ def build(px: pd.Series) -> pd.DataFrame:
     # 화면 표시는 주식 수가 직관적이므로 문턱을 주식 수로 환산해 함께 싣는다.
     w["thr"] = w["thr_pct"] / 100 * w["shares"].shift(1)
     return w.dropna(subset=["thr_pct"])
+
+
+def week_is_closed(week_end, holdings_date, px: pd.Series,
+                   now_utc: datetime | None = None) -> bool:
+    """공식 매수 신호(`state['signal']`)를 내도 되는 주인가.
+
+    `build()` 의 주간 행은 월~목 데이터도 금요일 라벨로 묶는다.
+    그 값을 그대로 ON 으로 보내면 주중에 확정 알림이 나간다.
+    과거 3주는 주중 ON 이었다가 금요일에 꺼졌다.
+
+    완료 조건 (달력 휴장표를 쓰지 않는다):
+
+      UTC 날짜 < 그 주 금요일   →  미완료 (월~목은 절대 확정하지 않는다)
+      UTC 날짜 > 그 주 금요일   →  완료
+          금 공시가 끝내 안 온 주(2026-07-31)는 토에 목 last() 로 확정한다.
+      UTC 날짜 == 금요일
+          last_session = 그 주(토~금) px 에 있는 마지막 거래일
+          holdings_date >= last_session  이면 완료.
+          휴장 금요일(2024-03-29)은 last_session=목 → 금 22:00 UTC 에 목 공시로 확정.
+          금이 거래일인데 공시만 없으면 미완료.
+
+    휴장 금요일을 목 밤에 확정하지 않는 이유: 목 시점에서 '금이 휴장인지' 를
+    px 만으로는 모른다. 금 UTC 까지 미뤄도 진입(다음 거래일 종가)은 월요일이다.
+    """
+    now = (now_utc or datetime.now(timezone.utc)).date()
+    friday = pd.Timestamp(week_end).date()
+    if now < friday:
+        return False
+    if now > friday:
+        return True
+    week_lo = pd.Timestamp(friday) - pd.Timedelta(days=6)
+    week_hi = pd.Timestamp(friday)
+    sessions = px.loc[(px.index.normalize() >= week_lo)
+                      & (px.index.normalize() <= week_hi)]
+    if sessions.empty:
+        return False
+    last_session = sessions.index[-1].date()
+    return pd.Timestamp(holdings_date).date() >= last_session
 
 
 def _chart_series(px: pd.Series) -> dict:
@@ -394,7 +446,7 @@ def main() -> None:
     w = build(px)
 
     cur = w.iloc[-1]
-    on = bool(cur["sig"])
+    raw_on = bool(cur["sig"])
     prev = w[w["sig"]]
     past_sig = prev.index[prev.index < w.index[-1]]
 
@@ -402,10 +454,15 @@ def main() -> None:
     # 판정은 주간이지만, 표시까지 주간으로 묶으면 화면이 최대 6일 묵는다.
     daily = build_daily(px)
     recent = daily.tail(30)
+    closed = week_is_closed(w.index[-1], daily.index[-1], px, now_utc=started)
+    # 공식 신호만 가드한다. w["sig"] 는 백테스트·국면 표용이라 그대로 둔다.
+    on = raw_on and closed
 
     state = {
         "checked_utc": started.isoformat(timespec="seconds"),
         "week": w.index[-1].strftime("%Y-%m-%d"),
+        "week_complete": closed,
+        "provisional": raw_on and not closed,
         "signal": on,
         "net": int(cur["net"]),
         "threshold": int(cur["thr"]),
@@ -478,7 +535,11 @@ def main() -> None:
     print(f"순매수율 {state['net_pct']}% / 문턱 {state['threshold_pct']}% "
           f"({'O' if state['thr_ok'] else 'X'})  낙폭 {state['dd_now']}% / {DD_FILTER}% "
           f"({'O' if state['dd_ok'] else 'X'})")
-    print(f"==> {'*** 매수 신호 ON ***' if on else '신호 OFF'}")
+    if state["provisional"]:
+        print("==> 조건은 맞지만 주가 안 닫힘 — 공식 신호 OFF")
+    else:
+        print(f"==> {'*** 매수 신호 ON ***' if on else '신호 OFF'}"
+              f"{'' if closed else '  (주 미완료)'}")
     print(f"TSLA ${state['price']} ({state['price_date']}), 사상최고 대비 {state['drawdown_from_ath']}%")
     print("=" * 60)
 
@@ -487,6 +548,8 @@ def main() -> None:
         with open(out, "a") as f:
             f.write(f"signal={'true' if on else 'false'}\n")
             f.write(f"week={state['week']}\n")
+            f.write(f"week_complete={'true' if closed else 'false'}\n")
+            f.write(f"provisional={'true' if state['provisional'] else 'false'}\n")
             f.write(f"net={state['net']}\n")
             f.write(f"threshold={state['threshold']}\n")
             f.write(f"price={state['price']}\n")
