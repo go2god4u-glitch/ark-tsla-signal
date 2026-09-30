@@ -329,9 +329,13 @@ def weekly_net(wide: pd.DataFrame, gap: pd.DataFrame | None = None):
     """
     wk = wide.resample("W-FRI").last()
     net = wk.diff().sum(axis=1, min_count=1)
-    if gap is not None:
-        net = net - gap.sum(axis=1).resample("W-FRI").sum().reindex(wk.index).fillna(0.0)
     base = wk.shift(1).sum(axis=1, min_count=1)
+    if gap is not None:
+        gw = gap.sum(axis=1).resample("W-FRI").sum().reindex(wk.index).fillna(0.0)
+        net = net - gw
+        # 재기준이 든 주는 분모도 새 수준으로 잡는다. 안 그러면 묵은(작은) 보유량으로
+        # 나눠 비율이 부풀고, 규칙 B(-7%)가 실제보다 일찍 걸린다.
+        base = base + gw
     return wk, net, base
 
 
@@ -360,7 +364,7 @@ def build(px: pd.Series) -> pd.DataFrame:
     w["dd_ok"] = w["dd"] <= DD_FILTER
     w["sig"] = w["thr_ok"] & w["dd_ok"]
     # 화면 표시는 주식 수가 직관적이므로 문턱을 주식 수로 환산해 함께 싣는다.
-    w["thr"] = w["thr_pct"] / 100 * w["shares"].shift(1)
+    w["thr"] = w["thr_pct"] / 100 * base.reindex(w.index)
     return w.dropna(subset=["thr_pct"])
 
 
@@ -461,11 +465,11 @@ def _signal_runs(w: pd.DataFrame, px: pd.Series) -> list:
             return min(c)
         return (e + MAX_HOLD, "상한 도달") if e + MAX_HOLD < len(V) else (None, None)
 
-    # 신호 시점의 종합 점수도 함께 싣는다 (수익률과 r=+0.54 로 상관이 있다)
+    # 신호 시점의 종합 점수도 함께 싣는다 (수익률과 r=+0.57 로 상관이 있다)
     try:
         from score_model import components
-        _sh = build_daily(px)["shares_net"]
-        _c = components(px, _sh.resample("W-FRI").last().dropna().diff())
+        _d = build_daily(px)
+        _c = components(px, weekly_net(_d.attrs["wide"], _d.attrs["gap"])[1].dropna())
         _cols = ["ark", "rsi", "dd", "macd", "ma", "bb"]
         _score = _c[_cols].mean(axis=1) * 100
     except Exception:

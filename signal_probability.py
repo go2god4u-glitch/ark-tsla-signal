@@ -73,7 +73,7 @@ def build_panel(px: pd.Series) -> pd.DataFrame:
             if pd.isna(cum):
                 continue
             rows.append({"week": wend, "day": k, "date": dt,
-                         "cum_pct": cum / base * 100,
+                         "cum_pct": cum / (base + gap_d.loc[g.index[0]:dt].sum()) * 100,
                          "thr": thr[wend], "final": netpct_w[wend],
                          "dd": float(dd_w.get(wend, np.nan)),
                          "sig": bool(sig[wend])})
