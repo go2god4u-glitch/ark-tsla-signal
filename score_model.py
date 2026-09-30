@@ -58,15 +58,14 @@ def pctrank(s: pd.Series) -> pd.Series:
     return r.reindex(s.index)
 
 
-def ark_netpct(wide: pd.DataFrame) -> pd.Series:
+def ark_netpct(wide: pd.DataFrame, gap: pd.DataFrame | None = None) -> pd.Series:
     """주간 순매수 **비율**(%). 신호 판정(signal_check.build)과 같은 정의다.
 
     펀드별로 먼저 차분한 뒤 합산한다. 레벨을 합쳐서 차분하면 ARKX 처럼 중간에
     편입되는 펀드의 첫 등장이 대량 매수로 잡힌다.
     """
-    wk = wide.resample("W-FRI").last()
-    net = wk.diff().sum(axis=1, min_count=1)
-    base = wk.shift(1).sum(axis=1, min_count=1)
+    from signal_check import weekly_net
+    _, net, base = weekly_net(wide, gap)
     return net / base * 100
 
 
@@ -173,7 +172,8 @@ def main() -> None:
     px = load_prices()
     V = px.values
 
-    ark_w = ark_netpct(build_daily(px).attrs["wide"])
+    _d = build_daily(px)
+    ark_w = ark_netpct(_d.attrs["wide"], _d.attrs["gap"])
 
     c = components(px, ark_w)
     cols = ["ark", "rsi", "dd", "macd", "ma", "bb"]

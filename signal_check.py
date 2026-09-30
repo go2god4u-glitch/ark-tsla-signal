@@ -42,7 +42,24 @@ FUNDS = ("ARKK", "ARKQ", "ARKW", "ARKX", "CTRU")
 
 AUM_JUMP = 0.10      # AUM 이 이만큼 튀고
 PX_CALM = 0.06       # 주가는 이만큼도 안 움직였으면 -> 소스 오류
-RE_BAND = 0.18       # 원래 수준의 이 범위로 돌아오면 정상 복귀
+# 재기준: 같은 펀드를 이만큼(거래일) 연속으로 버렸으면 새 수준을 받아들인다.
+#
+# 왜 필요한가 — 정제는 'AUM 이 기준점에서 10% 넘게 벗어났고 주가는 조용하다' 를
+#   소스 오류로 본다. 그런데 기준점은 **버린 날에는 움직이지 않는다.** 자금 유입으로
+#   AUM 이 실제로 한 단계 올라서면, 주가가 하루 6% 넘게 움직이는 날이 올 때까지
+#   그 펀드를 계속 버린다(실측: 2025-09-16 부터 32거래일, 2026-09-17 부터 9일째).
+#   그동안 그 펀드의 매매는 매수 신호에도 매도 규칙 B 에도 안 보인다.
+# 왜 8 인가 — 값이 아니라 경계에 근거가 있다.
+#   하한 7: 되돌아간 소스 오류 중 가장 긴 것이 6일(ARKK 2025-08-12, +15~70% 후 원위치).
+#           5 로 두면 그 오류를 받아들여 대량매도 주가 새로 생긴다.
+#   7~15 는 결과가 완전히 같다(신호 16주·완료 15건 동일). 사각지대를 짧게 하려고
+#   하한 바로 위 칸을 골랐다.
+# 받아들이는 날의 수준 차이는 **매매로 세지 않는다**(단절). 자금 유출입으로 생긴
+#   주식 수 변화이지 아크의 판단이 아니다 — 신규 편입 펀드를 0 으로 세는 것과 같은 원칙.
+#   세면 어떻게 되나: 2025-11-07 주 -28.9% '대량매도' 가 바로 그것이었다
+#   (32일 묵은 수준 차이가 하루에 풀린 것). 그 주 규칙 B 매도는 가짜 사건이었다.
+# 예전의 RE_BAND(복귀 범위 18%)는 어떤 값을 넣어도 결과가 같은 죽은 상수라 지웠다.
+REANCHOR_K = 8
 MIN_HIST = 52        # 문턱 계산에 필요한 최소 주 수
 QUANT = 0.90
 # 기술적 필터: 전고점(252일) 대비 이 수준 이하로 빠졌을 때만 매수한다.
@@ -121,6 +138,21 @@ def refresh_ark() -> None:
             json.dump(payload, f)
         print(f"  ARK {y}-{m:02d}: {len(payload.get('data', []))}일")
         time.sleep(1.2)
+        # 말일 행을 따로 받는다. 위 요청이 말일을 빼므로 그대로 두면 매달 말일이 영영 빠진다
+        # (실측: 2026-09-30 까지 말일 40여 개가 비어 있었다. 금요일 말일이면 그 주 판정이
+        #  목요일 값으로 굳는다). 말일이 끝점이면 500 이 날 수 있어 실패해도 넘어간다.
+        last = date(y, m, monthrange(y, m)[1])
+        if last <= today:
+            try:
+                url = f"{ARK_API}?symbol=TSLA&date_from={b}&date_to={last}&limit=100"
+                payload = json.loads(_get(url, tries=2).decode())
+                if payload.get("data"):
+                    with open(os.path.join(RAW, f"e_{y}-{m:02d}.json"), "w") as f:
+                        json.dump(payload, f)
+                    print(f"  ARK {y}-{m:02d} 말일: {payload['data'][-1]['date']}")
+            except Exception as e:                               # noqa: BLE001
+                print(f"  ARK {y}-{m:02d} 말일 실패 ({type(e).__name__}) — 건너뜀", file=sys.stderr)
+            time.sleep(1.2)
 
 
 def refresh_prices() -> pd.Series:
@@ -144,7 +176,8 @@ def score_state(px: pd.Series, sh: pd.Series) -> dict:
     """
     from score_model import components, ark_netpct   # 순환 임포트 방지: 함수 안에서
     # 아크 성분은 신호 문턱과 같은 자로 잰다 — 절대 주식 수가 아니라 비율.
-    c = components(px, ark_netpct(build_daily(px).attrs["wide"]))
+    _d = build_daily(px)
+    c = components(px, ark_netpct(_d.attrs["wide"], _d.attrs["gap"]))
     cols = ["ark", "rsi", "dd", "macd", "ma", "bb"]
     c = c.dropna(subset=cols)
     if c.empty:
@@ -177,15 +210,24 @@ def causal_clean(g: pd.DataFrame) -> pd.DataFrame:
     g = g.sort_values("date").reset_index(drop=True)
     a, p = g["aum"].values, g["close"].values
     keep = np.ones(len(g), bool)
+    brk = np.zeros(len(g), bool)      # 재기준으로 받아들인 날 (수준 단절)
     anchor = a[0]
+    run = 0
     for i in range(1, len(g)):
         moved = abs(np.log(a[i] / anchor))
         px_move = abs(np.log(p[i] / p[i - 1])) if p[i - 1] > 0 else 0.0
         if moved > AUM_JUMP and px_move < PX_CALM:
-            keep[i] = False
-        elif moved < RE_BAND or keep[i]:
+            run += 1
+            if run >= REANCHOR_K:
+                brk[i] = True
+                anchor = a[i]
+                run = 0
+            else:
+                keep[i] = False
+        else:
             anchor = a[i]
-    return g[keep]
+            run = 0
+    return g.assign(brk=brk)[keep]
 
 
 def tech_state(px: pd.Series) -> dict:
@@ -261,10 +303,36 @@ def build_daily(px: pd.Series) -> pd.DataFrame:
     present = (d.pivot_table(index="date", columns="fund", values="shares_adj", aggfunc="last")
                .reindex(index=filled.index, columns=cols).notna())
     filled = filled.where(filled.notna() | ~present, wide[cols].ffill())
-    out =pd.DataFrame({"shares": filled.sum(axis=1, min_count=1)}).dropna()
+    # 단절 몫: 재기준으로 받아들인 날, 직전에 들고 있던 값과의 차이.
+    # 보유량(`shares`)에는 그대로 들어가고, 매매(`net`, `shares_net`)에서는 뺀다.
+    gap = pd.DataFrame(0.0, index=filled.index, columns=cols)
+    prev = filled.shift(1)
+    for _, r in cleaned[cleaned["brk"]].iterrows():
+        if r["fund"] in cols and pd.notna(prev.at[r["date"], r["fund"]]):
+            gap.at[r["date"], r["fund"]] = r["shares_adj"] - prev.at[r["date"], r["fund"]]
+    out = pd.DataFrame({"shares": filled.sum(axis=1, min_count=1)}).dropna()
+    # 매도 규칙 A 가 보는 '아크 누적 증감' 용. 단절 몫을 뺀 일간 배율을 이어 붙인다.
+    # 단절이 없는 구간에서는 shares 와 비율이 같다.
+    g_ = gap.sum(axis=1).reindex(out.index).fillna(0.0)
+    step = ((out["shares"] - g_) / out["shares"].shift(1)).fillna(1.0)
+    out["shares_net"] = out["shares"].iloc[0] * step.cumprod()
     out["close"] = px.reindex(out.index).ffill()
     out.attrs["wide"] = filled
+    out.attrs["gap"] = gap
     return out
+
+
+def weekly_net(wide: pd.DataFrame, gap: pd.DataFrame | None = None):
+    """(주간 펀드별 보유, 주간 순매수, 직전 주 합계). 단절 몫은 순매수에서 뺀다.
+
+    주간 순매수를 쓰는 곳은 전부 이 함수를 부른다 — 각자 diff 하면 갈라진다.
+    """
+    wk = wide.resample("W-FRI").last()
+    net = wk.diff().sum(axis=1, min_count=1)
+    if gap is not None:
+        net = net - gap.sum(axis=1).resample("W-FRI").sum().reindex(wk.index).fillna(0.0)
+    base = wk.shift(1).sum(axis=1, min_count=1)
+    return wk, net, base
 
 
 def build(px: pd.Series) -> pd.DataFrame:
@@ -278,11 +346,8 @@ def build(px: pd.Series) -> pd.DataFrame:
     단위를 바로잡는 것이지 성적에 맞추는 것이 아니다.
     """
     daily = build_daily(px)
-    wide = daily.attrs["wide"]
-    wk = wide.resample("W-FRI").last()
     # 펀드별로 차분한 뒤 합산 — 신규 편입/매도가 매매로 잡히지 않는다
-    net = wk.diff().sum(axis=1, min_count=1)
-    base = wk.shift(1).sum(axis=1, min_count=1)
+    wk, net, base = weekly_net(daily.attrs["wide"], daily.attrs["gap"])
     w = pd.DataFrame({"shares": wk.sum(axis=1, min_count=1), "net": net}).dropna(subset=["net"])
     w["netpct"] = (net / base * 100).reindex(w.index)
     w["thr_pct"] = w["netpct"].expanding(MIN_HIST).quantile(QUANT).shift(1)  # 과거만 사용
@@ -376,7 +441,7 @@ def _signal_runs(w: pd.DataFrame, px: pd.Series) -> list:
     V = px.values
     # position_tracker 와 같은 규칙: 아크 -20% AND 낙폭 -20% 회복
     from position_tracker import ARK_DROP, DD_RECOVER, MAX_HOLD, BIG_SELL
-    H = build_daily(px)["shares"].reindex(px.index).ffill().values
+    H = build_daily(px)["shares_net"].reindex(px.index).ffill().values
     DDv = ((px / px.rolling(252, min_periods=60).max() - 1) * 100).values
     _big = sorted({px.index.searchsorted(t, side="right")
                    for t in w.index[(w["netpct"] <= BIG_SELL).fillna(False)]
@@ -399,7 +464,7 @@ def _signal_runs(w: pd.DataFrame, px: pd.Series) -> list:
     # 신호 시점의 종합 점수도 함께 싣는다 (수익률과 r=+0.54 로 상관이 있다)
     try:
         from score_model import components
-        _sh = build_daily(px)["shares"]
+        _sh = build_daily(px)["shares_net"]
         _c = components(px, _sh.resample("W-FRI").last().dropna().diff())
         _cols = ["ark", "rsi", "dd", "macd", "ma", "bb"]
         _score = _c[_cols].mean(axis=1) * 100
@@ -514,6 +579,10 @@ def main() -> None:
         "holdings_date": daily.index[-1].strftime("%Y-%m-%d"),
         "holdings": int(daily["shares"].iloc[-1]),
         "holdings_chg": int(daily["shares"].diff().iloc[-1]),
+        # 최근 30일 안에 재기준(단절)이 있으면 화면이 그 계단을 설명할 수 있게 싣는다.
+        "rebase": [{"d": d.strftime("%Y-%m-%d"), "fund": f, "gap": int(v)}
+                   for d, row in daily.attrs["gap"].reindex(recent.index).iterrows()
+                   for f, v in row.items() if v],
         "recent": [{"d": d.strftime("%Y-%m-%d"), "s": int(r["shares"]),
                     "c": (None if pd.isna(r["close"]) else round(float(r["close"]), 2))}
                    for d, r in recent.iterrows()],

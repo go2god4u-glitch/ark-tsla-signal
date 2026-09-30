@@ -75,7 +75,7 @@ def main() -> None:
     png = os.path.join(OUT, "dash.png")
     subprocess.run(
         [shell, "--headless", "--disable-gpu", "--no-sandbox",
-         "--hide-scrollbars", "--window-size=1280,2400",
+         "--hide-scrollbars", "--window-size=1280,10400",
          f"--screenshot={png}", "--virtual-time-budget=6000",
          f"http://127.0.0.1:{PORT}/index.html"],
         capture_output=True, check=True)

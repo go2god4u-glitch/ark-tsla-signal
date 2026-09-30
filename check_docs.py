@@ -38,6 +38,7 @@ def main():
         "규칙 A 낙폭 회복": const("position_tracker.py", "DD_RECOVER"),
         "규칙 B 대량매도": const("position_tracker.py", "BIG_SELL"),
         "보유 상한": const("position_tracker.py", "MAX_HOLD"),
+        "정제 재기준 일수": const("signal_check.py", "REANCHOR_K"),
     }
     # 문서에 나타나야 할 표기
     want = {
@@ -47,6 +48,7 @@ def main():
         "규칙 A 낙폭 회복": ["-20%"],
         "규칙 B 대량매도": ["-7%"],
         "보유 상한": ["504"],
+        "정제 재기준 일수": ["8거래일"],
     }
     # 남아 있으면 안 되는 옛 표현 (현재 사양 문서 기준)
     stale = [

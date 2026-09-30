@@ -29,7 +29,7 @@ close = pd.Series(raw['indicators']['quote'][0]['close'], index=ts).dropna().sor
 
 # 아크 보유·낙폭도 원본에서 다시 만든다
 from signal_check import build_daily
-HH = build_daily(close)['shares'].reindex(close.index).ffill().values
+HH = build_daily(close)['shares_net'].reindex(close.index).ffill().values
 DDv = ((close / close.rolling(252, min_periods=60).max() - 1) * 100).values
 from signal_check import build as _b
 _w = _b(close)

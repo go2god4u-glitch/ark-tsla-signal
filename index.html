@@ -401,6 +401,7 @@
     <div class="card-head"><span class="card-title">최근 30거래일 — 합산 보유 주식 수</span>
       <span class="readout" id="recentNow"></span></div>
     <div id="recentChart"></div>
+    <p class="stamp" id="rebaseNote" style="margin:0;padding:0 20px 14px"></p>
   </section>
 
   <section class="card">
@@ -548,6 +549,10 @@ function render() {
        v => (v / 1e6).toFixed(2) + "M");
   document.getElementById("recentNow").innerHTML =
     `<span style="color:var(--hold)">${(S.holdings / 1e6).toFixed(2)}M</span>`;
+  // 재기준(단절)이 있으면 보유량 선에 계단이 생긴다. 매매가 아니라고 먼저 말해 둔다.
+  document.getElementById("rebaseNote").innerHTML = (S.rebase || []).map(r =>
+    `${r.d} 의 계단(${r.fund} ${F.sgn(r.gap)}주)은 매매가 아니다 — 펀드 자금 유출입으로
+     바뀐 수준을 8거래일 확인 뒤 받아들인 것이고, 순매수에는 세지 않는다.`).join("<br>");
   bars("weeklyChart", S.weekly);
 }
 
@@ -1396,7 +1401,7 @@ function bars(id, wk) {
   s += `<polyline points="${cum.map((v, i) => v === null ? "" : `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ")}"
         fill="none" stroke="var(--buy)" stroke-width="1.6" stroke-dasharray="5 3"/>`;
   const lastCum = cum[cum.length - 1];
-  s += `<text class="axis-text" x="${W - P.r}" y="${Y(lastCum) - 6}" text-anchor="end"
+  s += `<text class="axis-text" x="${W - P.r}" y="${Y(lastCum) + (lastCum < cum[cum.length - 2] ? 14 : -6)}" text-anchor="end"
         fill="var(--buy)">신호 이후 누적 ${lastCum >= 0 ? "+" : ""}${(lastCum / 1000).toFixed(0)}k</text>`;
   // 날짜: 3주 간격으로 찍고 기울여 겹침을 피한다. 나머지는 hover 로 본다.
   wk.forEach((x, i) => {

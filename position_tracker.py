@@ -116,7 +116,7 @@ def main() -> None:
     sig_locs = {i for i in sig_locs if i < len(px)}
 
     from signal_check import build_daily
-    H = build_daily(px)["shares"].reindex(px.index).ffill().values
+    H = build_daily(px)["shares_net"].reindex(px.index).ffill().values
     DD = ((px / px.rolling(252, min_periods=60).max() - 1) * 100).values
     # 규칙 B 발동 시점 (주간 순매수율 <= BIG_SELL)
     big_locs = {px.index.searchsorted(t, side="right")

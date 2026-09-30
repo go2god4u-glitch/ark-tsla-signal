@@ -38,14 +38,13 @@ def load_prices() -> pd.Series:
 
 def build_panel(px: pd.Series) -> pd.DataFrame:
     """주 × 요일별 '그때까지의 진행률'과 '그 주의 최종 신호 여부'."""
-    from signal_check import build_daily, MIN_HIST, QUANT, DD_FILTER
+    from signal_check import build_daily, weekly_net, MIN_HIST, QUANT, DD_FILTER
     daily = build_daily(px)
     wide = daily.attrs["wide"]
 
     # 주간 확정치 (signal_check.build 와 동일한 정의)
-    wk = wide.resample("W-FRI").last()
-    net_w = wk.diff().sum(axis=1, min_count=1)
-    base_w = wk.shift(1).sum(axis=1, min_count=1)
+    gap_d = daily.attrs["gap"].sum(axis=1)      # 재기준 단절 몫 — 매매로 세지 않는다
+    wk, net_w, base_w = weekly_net(wide, daily.attrs["gap"])
     netpct_w = (net_w / base_w * 100).dropna()
     thr = netpct_w.expanding(MIN_HIST).quantile(QUANT).shift(1)
     # 낙폭 필터도 신호 조건이다. 낙폭은 주가만으로 정해지므로 주중에도 알 수 있고,
@@ -70,7 +69,7 @@ def build_panel(px: pd.Series) -> pd.DataFrame:
         prev_row = wk.shift(1).loc[wend]
         for k, (dt, row) in enumerate(g.iterrows(), start=1):
             # 그날까지의 누적 순매수 = (오늘 각 펀드 - 직전 주 금요일 각 펀드) 합
-            cum = (row - prev_row).sum(min_count=1)
+            cum = (row - prev_row).sum(min_count=1) - gap_d.loc[g.index[0]:dt].sum()
             if pd.isna(cum):
                 continue
             rows.append({"week": wend, "day": k, "date": dt,
